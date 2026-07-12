@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://eng5000phrases.com/sitemap.xml
