@@ -7,7 +7,7 @@ eng5000/
 │   ├── App.jsx          ← التطبيق الرئيسي
 │   └── main.jsx         ← نقطة الدخول
 ├── api/
-│   └── chat.js          ← Serverless function للـ API
+│   └── chat.js          ← Serverless function للـ API (Google Gemini)
 ├── public/
 │   ├── index.html       ← الصفحة الرئيسية + SEO
 │   ├── sitemap.xml      ← للـ Google
@@ -22,12 +22,12 @@ eng5000/
 
 ## 🆓 النشر المجاني خطوة بخطوة
 
-### الخطوة 1 — احصل على Anthropic API Key (مجاناً)
-1. روح على **https://console.anthropic.com**
-2. عمل حساب جديد
-3. روح Settings → API Keys
-4. اعمل **Create Key** → انسخ المفتاح
-> ✅ Anthropic بيدي $5 رصيد مجاني للحسابات الجديدة
+### الخطوة 1 — احصل على Google Gemini API Key (مجاناً)
+1. روح على **https://aistudio.google.com/app/apikey**
+2. سجل دخول بحساب Google بتاعك
+3. اضغط **"Create API Key"**
+4. انسخ المفتاح
+> ✅ Google بيدي رصيد مجاني شهرياً لمفتاح Gemini API
 
 ---
 
@@ -52,7 +52,7 @@ git push -u origin main
 3. اختار الـ repo `en-5000`
 4. اضغط **"Environment Variables"** وأضف:
    ```
-   ANTHROPIC_API_KEY = sk-ant-api03-xxxxx
+   GEMINI_API_KEY = your_gemini_api_key_here
    ```
 5. اضغط **"Deploy"** → انتظر دقيقة
 
@@ -90,7 +90,7 @@ git push -u origin main
 | Vercel Serverless Functions | **مجاناً** (100k calls/month) |
 | GitHub | **مجاناً** |
 | Google Search Console | **مجاناً** |
-| Anthropic API | **$5 رصيد مجاني** ← بعدين ~$0.01/كويز |
+| Google Gemini API | **مجاناً** (مع رصيد شهري) |
 | Domain `eng5000phrases.com` | **~$9/سنة** (اختياري) |
 
 ---
@@ -116,4 +116,4 @@ npm run dev
 ---
 
 ## 📞 الدعم
-أي مشكلة في النشر؟ ارجع لـ Claude وقوله المشكلة 🤝
+أي مشكلة في النشر؟ ارجع لـ Google Gemini واسأله 🤝

@@ -32,7 +32,6 @@ module.exports = async function handler(req, res) {
     if (data.error) return res.status(400).json({ error: data.error.message });
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    // Return in same format as Anthropic so frontend works without changes
     return res.status(200).json({
       content: [{ type: "text", text }]
     });
