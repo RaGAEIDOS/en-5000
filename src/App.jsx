@@ -40,11 +40,14 @@ async function sQ(d,qs,prefix=QK){try{localStorage.setItem(prefix+d,JSON.stringi
 
 async function genQs(day,ln,isCS=false){
   const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"gemini-2.0-flash",max_tokens:9000,messages:[{role:"user",content:`Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS?"CS/Programming":"General"} mode.\n${isCS?CS_TOPICS[ln]:TOPICS[ln]}\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.`}]})});
-  if(!res.ok)throw new Error(`API error ${res.status}`);
-  const d=await res.json();if(d.error)throw new Error(d.error.message);
-  const txt=d.content.map(b=>b.text||"").join(""),s=txt.indexOf("["),e=txt.lastIndexOf("]");
-  if(s<0||e<0)throw new Error("No JSON found");
-  const raw=JSON.parse(txt.slice(s,e+1));if(!Array.isArray(raw)||raw.length<5)throw new Error("Too few questions");
+  if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||`API error ${res.status}`);}
+  const d=await res.json();if(d.error)throw new Error(d.error);
+  const content=d.content;const txt=Array.isArray(content)?content.map(b=>b.text||"").join(""):"";
+  if(!txt)throw new Error("AI returned empty response. Please try again.");
+  const s=txt.indexOf("["),e=txt.lastIndexOf("]");
+  if(s<0||e<0)throw new Error("AI did not return valid JSON. Tap 'Try again'.");
+  let raw;try{raw=JSON.parse(txt.slice(s,e+1));}catch{throw new Error("Failed to parse AI response. Tap 'Try again'.");}
+  if(!Array.isArray(raw)||raw.length<5)throw new Error("AI returned too few questions. Tap 'Try again'.");
   return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);return{ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General"),qt:i%5>=3?"w":"m"};});
 }
 
@@ -510,6 +513,6 @@ export default function App(){
     </div>);
   }
 
-  if(view==="err")return(<div style={{...W,display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><div style={{textAlign:"center"}}><div style={{fontSize:44,marginBottom:12}}>⚠️</div><h2 style={{fontSize:18,fontWeight:700,color:T.txt,marginBottom:8}}>Something went wrong</h2><p style={{color:T.m,fontSize:13,maxWidth:380,margin:"0 auto 1.5rem"}}>{errMsg}</p><button style={Btn(LC.Easy.fill)} className="qbtn" onClick={()=>startQuiz(false,isCS)}>Try again</button></div></div>);
+  if(view==="err")return(<div style={{...W,display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><div style={{textAlign:"center"}}><div style={{fontSize:44,marginBottom:12}}>⚠️</div><h2 style={{fontSize:18,fontWeight:700,color:T.txt,marginBottom:8}}>Something went wrong</h2><p style={{color:T.m,fontSize:13,maxWidth:380,margin:"0 auto 1rem",lineHeight:1.6}}>{errMsg}</p>{errMsg.includes("GEMINI_API_KEY")&&<div style={{...K(),textAlign:"left",maxWidth:380,margin:"0 auto 1.5rem",background:"rgba(59,130,246,.06)",border:"0.5px solid rgba(59,130,246,.2)"}}><p style={{fontSize:12,color:T.txt,fontWeight:600,marginBottom:6}}>How to fix:</p><ol style={{fontSize:12,color:T.m,paddingLeft:16,lineHeight:2}}><li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style={{color:"#3B82F6"}}>Google AI Studio</a></li><li>Create a free API key</li><li>In Vercel → Project → Settings → Environment Variables</li><li>Add <code style={{background:T.s1,padding:"1px 5px",borderRadius:3}}>GEMINI_API_KEY</code> with your key</li><li>Redeploy the project</li></ol></div>}<button style={Btn(LC.Easy.fill)} className="qbtn" onClick={()=>startQuiz(false,isCS)}>Try again</button></div></div>);
   return null;
 }
