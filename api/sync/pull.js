@@ -12,10 +12,13 @@ module.exports = async function handler(req, res) {
   if (!user) return;
 
   try {
-    const result = await query(
-      "SELECT progress_type, day, streak, last_date, total_correct, total_answered, xp, best_streak FROM progress WHERE user_id = $1",
-      [user.id]
-    );
+    const [result, userResult] = await Promise.all([
+      query(
+        "SELECT progress_type, day, streak, last_date, total_correct, total_answered, xp, best_streak FROM progress WHERE user_id = $1",
+        [user.id]
+      ),
+      query("SELECT id, name, email, age, photo FROM users WHERE id = $1", [user.id])
+    ]);
 
     const progress = { general: null, cs: null };
     for (const row of result.rows) {
@@ -30,7 +33,9 @@ module.exports = async function handler(req, res) {
       };
     }
 
-    return res.status(200).json({ progress });
+    const profile = userResult.rows[0] || null;
+
+    return res.status(200).json({ progress, profile });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

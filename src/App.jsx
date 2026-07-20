@@ -394,6 +394,10 @@ export default function App(){
         if(d.progress.general){setProg(d.progress.general);sP(d.progress.general,PK);}
         if(d.progress.cs){setCsProg(d.progress.cs);sP(d.progress.cs,CS_PK);}
       }
+      if(d.profile){
+        const u={name:d.profile.name,email:d.profile.email,age:d.profile.age,photo:d.profile.photo,color:avC(d.profile.name||"?")};
+        setUser(u);sU(u);
+      }
       setCloudConnected(true);
     }catch(e){console.warn("Cloud pull failed:",e.message);}finally{setSyncing(false);}
   },[]);
@@ -458,7 +462,14 @@ export default function App(){
   const Btn=(bg,cl="#fff",e={})=>({width:"100%",padding:".82rem",borderRadius:10,border:"none",background:bg,color:cl,fontSize:15,fontWeight:700,cursor:"pointer",...e});
   const PC=["#22C55E","#3B82F6","#F59E0B","#EF4444","#8B5CF6","#06B6D4","#F97316","#EC4899"];
   const saveCfg=useCallback((upd)=>{lCfg().then(c=>sCfg({...c,...upd}));},[]);
-  const handlePhoto=(e)=>{const file=e.target.files[0];if(!file)return;const rd=new FileReader();rd.onload=(ev)=>{const img=new Image();img.onload=()=>{const cv=document.createElement("canvas");cv.width=cv.height=140;const ctx=cv.getContext("2d"),mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,140,140);const b64=cv.toDataURL("image/jpeg",.78);const nu={...user,photo:b64};setUser(nu);sU(nu);};img.src=ev.target.result;};rd.readAsDataURL(file);};
+  const handlePhoto=(e)=>{const file=e.target.files[0];if(!file)return;const rd=new FileReader();rd.onload=(ev)=>{const img=new Image();img.onload=()=>{const cv=document.createElement("canvas");cv.width=cv.height=140;const ctx=cv.getContext("2d"),mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,140,140);const b64=cv.toDataURL("image/jpeg",.78);const nu={...user,photo:b64};setUser(nu);sU(nu);if(authToken)apiCall("/api/auth/update-profile",{method:"POST",body:JSON.stringify({photo:b64})}).catch(()=>{});};img.src=ev.target.result;};rd.readAsDataURL(file);};
+  const saveProfile=useCallback(async(upd)=>{
+    setAuthErr("");setAuthMsg("");
+    try{
+      if(authToken){const d=await apiCall("/api/auth/update-profile",{method:"POST",body:JSON.stringify(upd)});setUser(d.user);sU(d.user);setAuthMsg("Profile updated!");}
+      else{const nu={...user,...upd};setUser(nu);sU(nu);setAuthMsg("Profile updated!");}
+    }catch(e){setAuthErr(e.message);}
+  },[authToken,apiCall,user]);
   const awardXp=useCallback((amt)=>{if(!amt)return;setSXp(s=>s+amt);setXpPop("+"+amt+" XP");setTimeout(()=>setXpPop(null),1100);},[]);
   const resetQ=useCallback(()=>{setSel(null);setInp("");setRes(null);setHl(0);setShowA(false);setTries(0);setShkIdx(null);},[]);
 
@@ -616,23 +627,30 @@ export default function App(){
   // Profile view
   if(profView)return(
     <div style={W}><style>{CSS}</style>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><button className="ibtn" style={{fontSize:20,color:T.m}} onClick={()=>setProfView(false)}>←</button><img src={LOGO} alt="EN-5000" style={{width:32,height:32,objectFit:"contain",borderRadius:7}}/><h2 style={{fontSize:18,fontWeight:700,color:T.txt}}>My Profile</h2></div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><button className="ibtn" style={{fontSize:20,color:T.m}} onClick={()=>{setProfView(false);setAuthErr("");setAuthMsg("");}}>←</button><img src={LOGO} alt="EN-5000" style={{width:32,height:32,objectFit:"contain",borderRadius:7}}/><h2 style={{fontSize:18,fontWeight:700,color:T.txt}}>My Profile</h2></div>
+      {authErr&&<div style={{padding:".5rem 1rem",borderRadius:8,background:"rgba(239,68,68,.08)",border:"0.5px solid rgba(239,68,68,.3)",color:"#DC2626",fontSize:13,marginBottom:10}}>{authErr}</div>}
+      {authMsg&&<div style={{padding:".5rem 1rem",borderRadius:8,background:"rgba(34,197,94,.08)",border:"0.5px solid rgba(34,197,94,.3)",color:"#16A34A",fontSize:13,marginBottom:10}}>{authMsg}</div>}
       <div style={{...K(),textAlign:"center",animation:"pop .4s ease"}}>
         <div style={{position:"relative",display:"inline-block",marginBottom:14}}>
           <Av user={user} size={90} onClick={()=>fileRef.current?.click()}/>
           <button onClick={()=>fileRef.current?.click()} style={{position:"absolute",bottom:0,right:0,width:26,height:26,borderRadius:"50%",background:lv.fill,border:`2px solid ${T.s2}`,color:"#fff",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>+</button>
           <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
         </div>
-        <div style={{fontSize:22,fontWeight:700,color:T.txt,fontFamily:"Cairo,sans-serif"}}>{user?.name}</div>
-        {user?.age&&<div style={{fontSize:13,color:T.m,marginTop:2}}>Age: {user.age}</div>}
-        {user?.email&&<div style={{fontSize:12,color:T.m,marginTop:2}}>📧 {user.email}</div>}
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:uLv.c+"22",border:`0.5px solid ${uLv.c}44`,borderRadius:20,padding:"4px 16px",marginTop:12}}><span style={{fontSize:16}}>{uLv.i}</span><span style={{fontSize:13,fontWeight:700,color:uLv.c}}>{uLv.n}</span></div>
+        <div style={{fontSize:11,color:T.m,marginBottom:12}}>Tap photo to change • {authToken?"☁️ Synced to cloud":"📱 Local only"}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:10,textAlign:"left"}}>
+          {[{l:"Name",v:user?.name||"",ph:"Your name",k:"name"},{l:"Age",v:user?.age||"",ph:"Your age",k:"age",t:"number"},{l:"Email",v:user?.email||"",ph:"Your email",k:"email",t:"email"}].map((f,i)=>(
+            <div key={i}><label style={{fontSize:11,fontWeight:600,color:T.m,display:"block",marginBottom:4}}>{f.l}</label>
+            <input type={f.t||"text"} defaultValue={f.v} placeholder={f.ph} id={`prof_${f.k}`} className="inp" style={{width:"100%",padding:".6rem .8rem",borderRadius:8,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:14,boxSizing:"border-box"}}/></div>
+          ))}
+        </div>
+        <button style={{...Btn(LC.Easy.fill),marginTop:14,fontSize:14}} className="qbtn" onClick={()=>saveProfile({name:document.getElementById("prof_name").value,age:document.getElementById("prof_age").value,email:document.getElementById("prof_email").value})}>Save Profile ✓</button>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
         {[{v:prog.xp||0,l:"Total XP",c:"#F59E0B"},{v:`🔥 ${prog.streak}`,l:"Day streak"},{v:prog.bestStreak||0,l:"Best streak"},{v:`${prog.totalAnswered>0?Math.round(prog.totalCorrect/prog.totalAnswered*100):0}%`,l:"General acc."},{v:prog.totalAnswered,l:"General phrases",c:LC.Easy.tx},{v:csProg.totalAnswered,l:"CS phrases",c:CS_LC.Easy.tx}].map((s,i)=>(
           <div key={i} style={{...K(),textAlign:"center",marginBottom:0}}><div style={{fontSize:17,fontWeight:700,color:s.c||T.txt}}>{s.v}</div><div style={{fontSize:11,color:T.m,marginTop:2}}>{s.l}</div></div>
         ))}
       </div>
+      {authToken&&<button style={{...Btn("transparent","#EF4444",{border:"1px solid rgba(239,68,68,.3)"}),fontSize:13}} className="qbtn" onClick={doSignOut}>🚪 Sign Out</button>}
     </div>
   );
 
