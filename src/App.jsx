@@ -10,6 +10,19 @@ const LVLS=[{n:"Beginner",min:0,c:"#9CA3AF",i:"🌱"},{n:"Elementary",min:500,c:
 const getLv=(xp)=>{let l=LVLS[0];for(const x of LVLS)if((xp||0)>=x.min)l=x;return l;};
 const getNext=(xp)=>{for(const x of LVLS)if((xp||0)<x.min)return x;return null;};
 const QDAY=d=>d<=33?"Easy":d<=66?"Medium":"Hard";
+const DIFF_ORDER=["Easy","Medium","Hard"];
+const PERF_PK="e5k_perf";
+function getPerfHistory(){try{return JSON.parse(localStorage.getItem(PERF_PK))||[];}catch{return[];}}
+function savePerfHistory(h){localStorage.setItem(PERF_PK,JSON.stringify(h.slice(-20)));}
+function recordPerf(acc){const h=getPerfHistory();h.push({acc,ts:Date.now()});savePerfHistory(h);}
+function getAdaptDiff(dayDiff){
+  const h=getPerfHistory();if(h.length<2)return dayDiff;
+  const last5=h.slice(-5);const avg=last5.reduce((s,x)=>s+x.acc,0)/last5.length;
+  const idx=DIFF_ORDER.indexOf(dayDiff);
+  if(avg>=80&&idx<2)return DIFF_ORDER[idx+1];
+  if(avg<45&&idx>0)return DIFF_ORDER[idx-1];
+  return dayDiff;
+}
 const LC={Easy:{fill:"#22C55E",bg:"rgba(34,197,94,.1)",br:"rgba(34,197,94,.32)",tx:"#16A34A"},Medium:{fill:"#3B82F6",bg:"rgba(59,130,246,.1)",br:"rgba(59,130,246,.32)",tx:"#2563EB"},Hard:{fill:"#EF4444",bg:"rgba(239,68,68,.1)",br:"rgba(239,68,68,.32)",tx:"#DC2626"}};
 const CS_LC={Easy:{fill:"#06B6D4",bg:"rgba(6,182,212,.1)",br:"rgba(6,182,212,.32)",tx:"#0891B2"},Medium:{fill:"#8B5CF6",bg:"rgba(139,92,246,.1)",br:"rgba(139,92,246,.32)",tx:"#7C3AED"},Hard:{fill:"#F97316",bg:"rgba(249,115,22,.1)",br:"rgba(249,115,22,.32)",tx:"#EA580C"}};
 const TH={light:{root:"#f3f5fb",s1:"#edf0f7",s2:"#fff",bd:"rgba(0,0,0,.07)",bdS:"rgba(0,0,0,.13)",txt:"#111827",m:"#6b7280",s:"#4b5563"},dark:{root:"#0c111a",s1:"#141c2b",s2:"#1c2540",bd:"rgba(255,255,255,.07)",bdS:"rgba(255,255,255,.14)",txt:"#e8edf5",m:"#8b95a8",s:"#9ca3af"}};
@@ -232,10 +245,21 @@ const FB_CS_HARD=[
 {ar:"الـ Kubernetes بي orchestrat الـ containers",en:"Kubernetes orchestrates containers.",pron:"كوبرنيتيس أركستريتس كونتينرز",opts:["Kubernetes orchestrates containers.","Kubernetes orchestrates contrasts.","Kubernetes orchestrates contractors.","Kubernetes orchestrates contributions."],c:0,cat:"Architecture"},
 ];
 
+function shuffleQOpts(q){
+  const opts=[...q.opts];const correct=opts[q.c];
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  const newC=opts.indexOf(correct);
+  return{...q,opts,c:newC};
+}
+
 function genLocalQs(isCS,difficulty){
   const bank=isCS?(difficulty==="Easy"?FB_CS_EASY:difficulty==="Medium"?FB_CS_MEDIUM:FB_CS_HARD):(difficulty==="Easy"?FB_EASY:difficulty==="Medium"?FB_MEDIUM:FB_HARD);
   const shuffled=[...bank].sort(()=>Math.random()-0.5);
-  return shuffled.slice(0,50).map((q,i)=>({...q,qt:i%5>=3?"w":"m"}));
+  return shuffled.slice(0,50).map((q,i)=>{
+    const sq=shuffleQOpts(q);
+    const qt=i%5>=2?"w":"m";
+    return{...sq,qt};
+  });
 }
 
 async function genQs(day,ln,isCS=false){
@@ -248,7 +272,7 @@ async function genQs(day,ln,isCS=false){
     const s=txt.indexOf("["),e=txt.lastIndexOf("]");
     if(s<0||e<0)throw new Error("No JSON found in response");
     let raw;try{raw=JSON.parse(txt.slice(s,e+1));}catch{throw new Error("Failed to parse JSON");}if(!Array.isArray(raw)||raw.length<5)throw new Error("Too few questions");
-    return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);return{ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General"),qt:i%5>=3?"w":"m"};});
+    return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);const sq=shuffleQOpts({ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General")});return{...sq,qt:i%5>=2?"w":"m"};});
   }catch(e){
     console.warn("AI failed, using local question bank:",e.message);
     return genLocalQs(isCS,ln);
@@ -449,7 +473,8 @@ export default function App(){
 
   const T=TH[dark?"dark":"light"];
   const curProg=isCS?csProg:prog;
-  const lvDay=QDAY(curProg.day>100?100:curProg.day);
+  const dayDiff=QDAY(curProg.day>100?100:curProg.day);
+  const lvDay=isCS?dayDiff:getAdaptDiff(dayDiff);
   const lv=isCS?CS_LC[lvDay]:LC[lvDay];
   const phrases=curProg.totalAnswered,pct=Math.min(phrases/5000*100,100),acc=phrases>0?Math.round(curProg.totalCorrect/phrases*100):0;
   const uLv=getLv(prog.xp),nLv=getNext(prog.xp);
@@ -486,6 +511,7 @@ export default function App(){
       if(!practice)Object.assign(np,{day:curProg.day+1,streak:ns,lastDate:toStr(),bestStreak:Math.max(curProg.bestStreak||0,ns)});
       if(isCS){setCsProg(np);sP(np,CS_PK);}else{setProg(np);sP(np,PK);}
       setFOk(nOk);setFXp(total);setView("results");cloudPush();
+      if(!practice)recordPerf(Math.round(nOk/qs.length*100));
       if(nOk>=qs.length*.9)play("done");
     }else{setOk(nOk);setQi(q=>q+1);resetQ();setQKey(k=>k+1);}
   },[ok,cStreak,qi,qs,sXp,curProg,practice,isCS,play,awardXp,resetQ]);
@@ -520,8 +546,9 @@ export default function App(){
   const startQuiz=async(isPrac=false,csMode=false)=>{
     setIsCS(csMode);setPractice(isPrac);setView("gen");setGs(0);setHrt(5);setOk(0);setSXp(0);setCStreak(0);setWrongQs([]);setShowWrong(false);
     const p=csMode?csProg:prog;const qkPrefix=csMode?CS_QK:QK;
+    const dayDiff=QDAY(p.day>100?100:p.day);const effDiff=csMode?dayDiff:getAdaptDiff(dayDiff);
     try{let questions=isPrac?null:await lQ(p.day,qkPrefix);
-      if(!questions){setGs(1);questions=await genQs(p.day,QDAY(p.day),csMode);if(!isPrac)await sQ(p.day,questions,qkPrefix);}
+      if(!questions){setGs(1);questions=await genQs(p.day,effDiff,csMode);if(!isPrac)await sQ(p.day,questions,qkPrefix);}
       setQs(questions);setQi(0);resetQ();setQKey(k=>k+1);setStudyIdx(0);setStudyFlipped(false);
       setView("study"); // Go to study/review first
     }catch(e){setErrMsg(String(e.message));setView("err");}
