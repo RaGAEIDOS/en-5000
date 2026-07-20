@@ -38,17 +38,221 @@ async function sU(u){try{localStorage.setItem(UK,JSON.stringify(u));}catch{}}
 async function lQ(d,prefix=QK){try{const v=localStorage.getItem(prefix+d);if(v){const x=JSON.parse(v);if(x.date===toStr()&&Array.isArray(x.qs)&&x.qs.length>=5)return x.qs;}return null;}catch{return null;}}
 async function sQ(d,qs,prefix=QK){try{localStorage.setItem(prefix+d,JSON.stringify({date:toStr(),qs}));}catch{}}
 
+const FB_EASY=[
+{ar:"إزيك؟",en:"How are you?",pron:"هاو أر يو؟",opts:["How are you?","Where are you?","Who are you?","What are you?"],c:0,cat:"Greetings"},
+{ar:"أنا بخير، شكراً",en:"I'm fine, thank you.",pron:"آيم فاين، ثانك يو",opts:["I'm fine, thank you.","I'm bad, thank you.","I'm fine, please.","I'm good, sorry."],c:0,cat:"Greetings"},
+{ar:"إسمي أحمد",en:"My name is Ahmed.",pron:"ماي نيم إز أحمد",opts:["My name is Ahmed.","My name is Ali.","I am Ahmed name.","Ahmed is my name."],c:0,cat:"Self Introduction"},
+{ar:"عندك كام سنة؟",en:"How old are you?",pron:"هاو أولد أر يو؟",opts:["How old are you?","How are you old?","Where are you old?","What old are you?"],c:0,cat:"Self Introduction"},
+{ar:"أنا عندي 25 سنة",en:"I am 25 years old.",pron:"آيم تونتي فايف ييرز أولد",opts:["I am 25 years old.","I have 25 years old.","I am 25 year old.","25 years old I am."],c:0,cat:"Self Introduction"},
+{ar:"شكراً ليك",en:"Thank you.",pron:"ثانك يو",opts:["Thank you.","Think you.","Tank you.","Three you."],c:0,cat:"Greetings"},
+{ar:"عفواً",en:"You're welcome.",pron:"يور ويلكوم",opts:["You're welcome.","You are welcome.","Your welcome.","Yore welcome."],c:0,cat:"Greetings"},
+{ar:"مع السلامة",en:"Goodbye.",pron:"جودباي",opts:["Goodbye.","Good buy.","Go bye.","Good day."],c:0,cat:"Greetings"},
+{ar:"تصبح على خير",en:"Good night.",pron:"جود نايت",opts:["Good night.","Good knight.","Good nit.","Good night."],c:0,cat:"Greetings"},
+{ar:"صباح الخير",en:"Good morning.",pron:"جود مورنينج",opts:["Good morning.","Good mourning.","Good morning.","Good moning."],c:0,cat:"Greetings"},
+{ar:"العربية بتاعتي حلوة",en:"My car is nice.",pron:"ماي كار إز نايس",opts:["My car is nice.","My cat is nice.","My cup is nice.","My can is nice."],c:0,cat:"Family"},
+{ar:"أمي جميلة",en:"My mother is beautiful.",pron:"ماي ماذر إز بيوتيفل",opts:["My mother is beautiful.","My father is beautiful.","My mother is big.","My mother is busy."],c:0,cat:"Family"},
+{ar:"أنا بحب أهلي",en:"I love my family.",pron:"آي لاف ماي فاميلي",opts:["I love my family.","I love my friend.","I live my family.","I left my family."],c:0,cat:"Family"},
+{ar:"أنا جعان",en:"I'm hungry.",pron:"آيم هانجري",opts:["I'm hungry.","I'm happy.","I'm hurry.","I'm heavy."],c:0,cat:"Food"},
+{ar:"أنا عطشان",en:"I'm thirsty.",pron:"آيم ثيرستي",opts:["I'm thirsty.","I'm thirty.","I'm thirsty.","I'm thirdy."],c:0,cat:"Food"},
+{ar:"عايز مية",en:"I want water.",pron:"آي وانت ووتر",opts:["I want water.","I want waiter.","I went water.","I want winter."],c:0,cat:"Food"},
+{ar:"القهوة دي حلوة",en:"This coffee is good.",pron:"ذيس كوفي إز جود",opts:["This coffee is good.","This coffee is god.","This copy is good.","This coffee is go."],c:0,cat:"Food"},
+{ar:"أنا رايح الشغل",en:"I'm going to work.",pron:"آيم جوينج تو ورك",opts:["I'm going to work.","I'm going to walk.","I'm going to wake.","I'm going to world."],c:0,cat:"Daily Activities"},
+{ar:"الجو حلو النهارده",en:"The weather is nice today.",pron:"ذه ويذر إز نايس تودي",opts:["The weather is nice today.","The weather is nice to day.","The weather is nine today.","The weather is new today."],c:0,cat:"Daily Activities"},
+{ar:"أنا بحب الإنجليزي",en:"I love English.",pron:"آي لاف إنقليزي",opts:["I love English.","I live English.","I left English.","I like English."],c:0,cat:"Daily Activities"},
+{ar:"القلم بتاعي فين؟",en:"Where is my pen?",pron:"وير إز ماي بين؟",opts:["Where is my pen?","When is my pen?","What is my pen?","Who is my pen?"],c:0,cat:"Daily Activities"},
+{ar:"أنا بدرس كل يوم",en:"I study every day.",pron:"آي ستادي إيفري داي",opts:["I study every day.","I study every day.","I start every day.","I stay every day."],c:0,cat:"Daily Activities"},
+{ar:"إنت محتاج كام؟",en:"How much do you need?",pron:"هاو ماش دو يو نيد؟",opts:["How much do you need?","How much do you eat?","How much do you nest?","How much do you near?"],c:0,cat:"Shopping"},
+{ar:"السعر كام؟",en:"How much is it?",pron:"هاو ماش إز إيت؟",opts:["How much is it?","How many is it?","How much are it?","How much is at?"],c:0,cat:"Shopping"},
+{ar:"أنا عايز أشتري تليفون",en:"I want to buy a phone.",pron:"آي وانت تو باي فون",opts:["I want to buy a phone.","I want to buy a home.","I want to by a phone.","I want to buy a fun."],c:0,cat:"Shopping"},
+{ar:"فيه خصم؟",en:"Is there a discount?",pron:"из ذير ديسكاونت؟",opts:["Is there a discount?","Is there a discount?","Is there a distant?","Is there a disk?"],c:0,cat:"Shopping"},
+{ar:"أنا تعبان",en:"I feel sick.",pron:"آي فيل سك",opts:["I feel sick.","I feel sick.","I fell sick.","I feel six."],c:0,cat:"Health"},
+{ar:"أنا رايح للدكتور",en:"I'm going to the doctor.",pron:"آيم جوينج تو ذه دوكتور",opts:["I'm going to the doctor.","I'm going to the daughter.","I'm going to the sector.","I'm going to the tractor."],c:0,cat:"Health"},
+{ar:"محتاج دوا",en:"I need medicine.",pron:"آي نيد ميديسن",opts:["I need medicine.","I need media.","I need medium.","I need medal."],c:0,cat:"Health"},
+{ar:"أنا مش فاهم",en:"I don't understand.",pron:"آي دونت أندرستاند",opts:["I don't understand.","I don't under stand.","I don't understand.","I don't under study."],c:0,cat:"Opinions"},
+{ar:"أنا موافق",en:"I agree.",pron:"آي أجري",opts:["I agree.","I green.","I greet.","I great."],c:0,cat:"Opinions"},
+{ar:"مش عايز",en:"I don't want it.",pron:"آي دونت وانت إيت",opts:["I don't want it.","I don't want eat.","I don't want is.","I don't want at."],c:0,cat:"Opinions"},
+{ar:"أنا بحب الأكل ده",en:"I like this food.",pron:"آي لايك ذيس فود",opts:["I like this food.","I like this foot.","I like this good.","I like this wood."],c:0,cat:"Opinions"},
+{ar:"الجو حر النهارده",en:"It's hot today.",pron:"إتس هوت تودي",opts:["It's hot today.","It's hat today.","It's hot to day.","It's hit today."],c:0,cat:"Weather"},
+{ar:"الجو برد",en:"It's cold.",pron:"إتس كولد",opts:["It's cold.","It's gold.","It's cool.","It's could."],c:0,cat:"Weather"},
+{ar:"مطر كتير",en:"It rains a lot.",pron:"إتس رينز لوت",opts:["It rains a lot.","It rains a lot.","It ran a lot.","It raise a lot."],c:0,cat:"Weather"},
+{ar:"الشمس طالعة",en:"The sun is rising.",pron:"ذه سان إز رايزينج",opts:["The sun is rising.","The sun is rising.","The son is rising.","The sun is running."],c:0,cat:"Weather"},
+{ar:"أنا عندي كلب",en:"I have a dog.",pron:"آي هاف دوج",opts:["I have a dog.","I have a cat.","I have a big.","I have a dug."],c:0,cat:"Family"},
+{ar:"أخويا أكبر مني",en:"My brother is older than me.",pron:"ماي بذر إز أولدёр ذان مي",opts:["My brother is older than me.","My brother is over than me.","My brother is order than me.","My brother is older then me."],c:0,cat:"Family"},
+{ar:"أنا ماشي",en:"I'm walking.",pron:"آيم ووكينج",opts:["I'm walking.","I'm working.","I'm waking.","I'm wanting."],c:0,cat:"Daily Activities"},
+{ar:"الباب مفتوح",en:"The door is open.",pron:"ذه دور إز أوپن",opts:["The door is open.","The door is open.","The bore is open.","The door is up."],c:0,cat:"Daily Activities"},
+{ar:"أنا بحب القراءة",en:"I love reading.",pron:"آي لاف ريدينج",opts:["I love reading.","I love riding.","I love ready.","I love reding."],c:0,cat:"Daily Activities"},
+{ar:"ممكن تساعدني؟",en:"Can you help me?",pron:"كان يو هيلب مي؟",opts:["Can you help me?","Can you held me?","Can you helm me?","Can you hell me?"],c:0,cat:"Greetings"},
+{ar:"فين الحمام؟",en:"Where is the bathroom?",pron:"وير إز ذه باذروم؟",opts:["Where is the bathroom?","Where is the bath room?","When is the bathroom?","What is the bathroom?"],c:0,cat:"Shopping"},
+{ar:"أنا راجع البيت",en:"I'm coming home.",pron:"آيم كمنج هوم",opts:["I'm coming home.","I'm coming hole.","I'm coming him.","I'm coming here."],c:0,cat:"Daily Activities"},
+{ar:"الوقت كام؟",en:"What time is it?",pron:"وات تايم إز إيت؟",opts:["What time is it?","What time is at?","What times is it?","What time are it?"],c:0,cat:"Daily Activities"},
+{ar:"أنا بحبك",en:"I love you.",pron:"آي لاف يو",opts:["I love you.","I live you.","I left you.","I like you."],c:0,cat:"Family"},
+{ar:"الكلام ده صح",en:"This is right.",pron:"ذيس إز رايت",opts:["This is right.","This is write.","This is light.","This is night."],c:0,cat:"Opinions"},
+{ar:"أنا مش فاضي",en:"I'm not free.",pron:"آيم نوت فري",opts:["I'm not free.","I'm not four.","I'm not from.","I'm not five."],c:0,cat:"Opinions"},
+{ar:"القهوة سخنة",en:"The coffee is hot.",pron:"ذه كوفي إز هوت",opts:["The coffee is hot.","The coffee is hat.","The coffee is hit.","The coffee is hut."],c:0,cat:"Food"},
+{ar:"أنا ما أكلتش",en:"I didn't eat.",pron:"آي ديدنت إيت",opts:["I didn't eat.","I didn't it.","I did eat.","I don't eat."],c:0,cat:"Food"},
+{ar:"هناك حد؟",en:"Is anyone there?",pron:"из إنوني ذير؟",opts:["Is anyone there?","Is any one three?","Is anyone their?","Is anyone then?"],c:0,cat:"Greetings"},
+];
+
+const FB_MEDIUM=[
+{ar:"ممكن تكرر الكلام؟",en:"Can you repeat that?",pron:"كان يو ريبيت ذت؟",opts:["Can you repeat that?","Can you repeat this?","Can you repair that?","Can you report that?"],c:0,cat:"Travel"},
+{ar:"أنا مسافر بكرة",en:"I'm traveling tomorrow.",pron:"آيم ترافلنج تو moro",opts:["I'm traveling tomorrow.","I'm traveling today.","I'm traveling tender.","I'm traveling to move."],c:0,cat:"Travel"},
+{ar:"فين المطار؟",en:"Where is the airport?",pron:"وير إز ذه إيرپورت؟",opts:["Where is the airport?","Where is the report?","Where is the airport?","When is the airport?"],c:0,cat:"Travel"},
+{ar:"أنا عايز أعمل ريزيرفشن",en:"I want to make a reservation.",pron:"آي وانت تو ميك ريزرفشن",opts:["I want to make a reservation.","I want to make a restaurant.","I want to make a resolution.","I want to make a relation."],c:0,cat:"Travel"},
+{ar:"الفندق غالي",en:"The hotel is expensive.",pron:"ذه هوتيل إز إكسبنسيو",opts:["The hotel is expensive.","The hotel is experience.","The hotel is export.","The hotel is express."],c:0,cat:"Travel"},
+{ar:"محتاج أدفع كام؟",en:"How much do I need to pay?",pron:"هاو ماش دو آي نيد تو باي؟",opts:["How much do I need to pay?","How much do I need to play?","How much do I need to pray?","How much do I need to stay?"],c:0,cat:"Shopping"},
+{ar:"ممكن أشوف منتجات تانية؟",en:"Can I see other products?",pron:"كان آي سي أذر پرودكتس؟",opts:["Can I see other products?","Can I see over products?","Can I see mother products?","Can I see order products?"],c:0,cat:"Shopping"},
+{ar:"فيه وصلالة ضريبية؟",en:"Is there a tax receipt?",pron:"из ذير تاكس ريسيت؟",opts:["Is there a tax receipt?","Is there a tax recite?","Is there a tax recent?","Is there a tax resort?"],c:0,cat:"Shopping"},
+{ar:"الحالة بتاعتي مش كويسة",en:"I'm not feeling well.",pron:"آيم نوت فيلينج ويل",opts:["I'm not feeling well.","I'm not feeling will.","I'm not filling well.","I'm not feeling while."],c:0,cat:"Health"},
+{ar:"أنا محتاج دكتور",en:"I need a doctor.",pron:"آي نيد دوكتور",opts:["I need a doctor.","I need a daughter.","I need a sector.","I need a tractor."],c:0,cat:"Health"},
+{ar:"البروجكت اﺗأجل",en:"The project is postponed.",pron:"ذه پروجكت إز پوستپوند",opts:["The project is postponed.","The project is post point.","The project is past pond.","The project is best bond."],c:0,cat:"Work"},
+{ar:"محتاج أعمل ريبورت",en:"I need to make a report.",pron:"آي نيد تو ميك ريبورت",opts:["I need to make a report.","I need to make a resort.","I need to make a record.","I need to make a result."],c:0,cat:"Work"},
+{ar:"meeting بكرة الساعة 3",en:"Meeting tomorrow at 3.",pron:"ميتنج تو moro آت ثري",opts:["Meeting tomorrow at 3.","Meeting today at 3.","Meeting tender at 3.","Meeting to move at 3."],c:0,cat:"Work"},
+{ar:"ممكن تبعتلي الإيمايل؟",en:"Can you send me the email?",pron:"كان يو سيند مي ذه إيميل؟",opts:["Can you send me the email?","Can you send me the email?","Can you sand me the email?","Can you sent me the email?"],c:0,cat:"Work"},
+{ar:"الطقس حلو أوي النهارده",en:"The weather is very nice today.",pron:"ذه ويذر إز فيري نايس تودي",opts:["The weather is very nice today.","The weather is very nine today.","The weather is very new today.","The weather is vary nice today."],c:0,cat:"Weather"},
+{ar:"هتمطر بكرة",en:"It will rain tomorrow.",pron:"إت ويل رين تو moro",opts:["It will rain tomorrow.","It will run tomorrow.","It will right tomorrow.","It will write tomorrow."],c:0,cat:"Weather"},
+{ar:"أنا عندي رأي تاني",en:"I have another opinion.",pron:"آي هاف أذر أوبينيون",opts:["I have another opinion.","I have an other opinion.","I have another openion.","I have another opening."],c:0,cat:"Opinions"},
+{ar:"الشغل ده صعب",en:"This work is hard.",pron:"ذيس ورك إز هارد",opts:["This work is hard.","This work is heart.","This work is heard.","This work is harm."],c:0,cat:"Work"},
+{ar:"ممكن نأجل الموضوع؟",en:"Can we postpone the matter?",pron:"كان وي پوستپون ذه ماتر؟",opts:["Can we postpone the matter?","Can we post point the matter?","Can we post bone the matter?","Can we post pond the matter?"],c:0,cat:"Work"},
+{ar:"أنا بحب أسافر",en:"I love traveling.",pron:"آي لاف ترافلنج",opts:["I love traveling.","I love training.","I love trying.","I love trading."],c:0,cat:"Travel"},
+{ar:"ممكن تدلني على المطعم؟",en:"Can you direct me to the restaurant?",pron:"كان يو ديركت مي تو ذه ريستورانت؟",opts:["Can you direct me to the restaurant?","Can you detect me to the restaurant?","Can you direct me to the resort?","Can you direct me to the resident?"],c:0,cat:"Travel"},
+{ar:"عايز أغير الفلوس",en:"I want to exchange money.",pron:"آي وانت تو إكستشينج موني",opts:["I want to exchange money.","I want to exit money.","I want to excuse money.","I want to expand money."],c:0,cat:"Travel"},
+{ar:"البطاقة بتاعتي اﺗسرقت",en:"My card was stolen.",pron:"ماي كارد واز ستولن",opts:["My card was stolen.","My card was stone.","My card was stop.","My card was story."],c:0,cat:"Travel"},
+{ar:"محتاج فاتورة",en:"I need a receipt.",pron:"آي نيد ريسيت",opts:["I need a receipt.","I need a recent.","I need a recite.","I need a record."],c:0,cat:"Shopping"},
+{ar:"أنا مش لاقي الشارع ده",en:"I can't find this street.",pron:"آي كاونت فايند ذيس ستريت",opts:["I can't find this street.","I can't find this strict.","I can't find this stress.","I can't find this straight."],c:0,cat:"Travel"},
+{ar:"الخدمة هنا مش كويسة",en:"The service here is not good.",pron:"ذه سيرفيس هير إز نوت جود",opts:["The service here is not good.","The service here is not gold.","The service here is not gone.","The service here is not god."],c:0,cat:"Opinions"},
+{ar:"أنا محتاج أعمل update",en:"I need to do an update.",pron:"آي نيد تو دو أن أبديت",opts:["I need to do an update.","I need to do an upload.","I need to do an upgrade.","I need to do an upset."],c:0,cat:"Work"},
+{ar:"ممكن تديني فرصة؟",en:"Can you give me a chance?",pron:"كان يو جيف مي تشارنس؟",opts:["Can you give me a chance?","Can you give me a change?","Can you give me a charge?","Can you give me a chart?"],c:0,cat:"Work"},
+{ar:"الحاجة دي مش شغالة",en:"This thing is not working.",pron:"ذيس ثينج إز نوت وركينج",opts:["This thing is not working.","This thing is not waking.","This thing is not walking.","This thing is not wanting."],c:0,cat:"Work"},
+{ar:"أنا بفكر أغير الشغل",en:"I'm thinking of changing jobs.",pron:"آيم ثينكينج أوف تشينجينج جوبز",opts:["I'm thinking of changing jobs.","I'm thinking of charging jobs.","I'm thinking of chasing jobs.","I'm thinking of checking jobs."],c:0,cat:"Work"},
+{ar:"ممكن نتكلم شوية؟",en:"Can we talk a little?",pron:"كان وي توك ليتل؟",opts:["Can we talk a little?","Can we take a little?","Can we walk a little?","Can we work a little?"],c:0,cat:"Opinions"},
+{ar:"أنا مش فاهم النقطة دي",en:"I don't understand this point.",pron:"آي دونت أندرستاند ذيس پوينت",opts:["I don't understand this point.","I don't understand this print.","I don't understand this paint.","I don't understand this plant."],c:0,cat:"Opinions"},
+{ar:"الجو مش مستقر",en:"The weather is unstable.",pron:"ذه ويذر إز أنستيبل",opts:["The weather is unstable.","The weather is unable.","The weather is unable.","The weather is enjoyble."],c:0,cat:"Weather"},
+{ar:"الشمس مش ظاهرة",en:"The sun is not showing.",pron:"ذه سان إز نوت شوينج",opts:["The sun is not showing.","The sun is not sewing.","The sun is not shoring.","The sun is not knowing."],c:0,cat:"Weather"},
+{ar:"أنا رايح اتصور",en:"I'm going to take a photo.",pron:"آيم جوينج تو تيك فوتو",opts:["I'm going to take a photo.","I'm going to take a photo.","I'm going to take a fate.","I'm going to take a fun."],c:0,cat:"Daily Activities"},
+{ar:"النت بتاعي بطيء",en:"My internet is slow.",pron:"ماي إنترنت إز سلو",opts:["My internet is slow.","My internet is snow.","My internet is show.","My internet is sole."],c:0,cat:"Daily Activities"},
+{ar:"أنا لسه ماخلصتش",en:"I haven't finished yet.",pron:"آي هيفنت فينيشت يت",opts:["I haven't finished yet.","I haven't finish yet.","I haven't fined yet.","I haven't found yet."],c:0,cat:"Daily Activities"},
+{ar:"ممكن تعمليللي كوباية شاي؟",en:"Can you make me a cup of tea?",pron:"كان يو ميك مي كب أف تي؟",opts:["Can you make me a cup of tea?","Can you make me a cap of tea?","Can you make me a cup of tie?","Can you make me a cut of tea?"],c:0,cat:"Food"},
+{ar:"الأكل عايز تتبيل",en:"The food needs seasoning.",pron:"ذه فود نيدز سونينج",opts:["The food needs seasoning.","The food needs sewing.","The food needs seeing.","The food needs singing."],c:0,cat:"Food"},
+{ar:"أنا مش بشرب سجاير",en:"I don't smoke.",pron:"آي دونت سموك",opts:["I don't smoke.","I don't small.","I don't smart.","I don't smell."],c:0,cat:"Health"},
+{ar:"أنا بتمرن كل يوم",en:"I exercise every day.",pron:"آي إك萨 size إيفري داي",opts:["I exercise every day.","I exit every day.","I expect every day.","I export every day."],c:0,cat:"Health"},
+{ar:"الدكتور قاللي أستريح",en:"The doctor told me to rest.",pron:"ذه دوكتور تولد مي تو رست",opts:["The doctor told me to rest.","The doctor told me to rust.","The doctor told me to rush.","The doctor told me to race."],c:0,cat:"Health"},
+{ar:"أنا محتاج أغير حياتي",en:"I need to change my life.",pron:"آي نيد تو تشينج ماي لايف",opts:["I need to change my life.","I need to charge my life.","I need to chase my life.","I need to check my life."],c:0,cat:"Health"},
+];
+
+const FB_HARD=[
+{ar:"الأفعال دي شاذة",en:"These verbs are irregular.",pron:"ذيز فربز أر إريجولر",opts:["These verbs are irregular.","These verbs are regular.","These verbs are popular.","These verbs are similar."],c:0,cat:"Grammar"},
+{ar:"لما بتتكلم في الشغل لازم تكون رسمي",en:"When you speak at work, you must be formal.",pron:"ون يو سپيك آت ورك، يو ماست بي فورمل",opts:["When you speak at work, you must be formal.","When you speak at work, you must be normal.","When you speak at work, you must be final.","When you speak at work, you must be funny."],c:0,cat:"Formal English"},
+{ar:"الشركة بتحقق أرباح كبيرة",en:"The company is making huge profits.",pron:"ذه كمپاني إز ميكينج هوج پروفتس",opts:["The company is making huge profits.","The company is making huge prophets.","The company is making huge products.","The company is making huge projects."],c:0,cat:"Business"},
+{ar:"لازم تعمل بحث شامل",en:"You must conduct comprehensive research.",pron:"يو ماست كنداكت كمپريهنسيو ريسيرتش",opts:["You must conduct comprehensive research.","You must conduct comprehensive research.","You must conduct competitive research.","You must conduct complete research."],c:0,cat:"Academic"},
+{ar:"الاقتصاد بيميل للاختصار",en:"The economy is leaning toward recession.",pron:"ذه أيكونومي إز لينينج تو وارد ريسيشن",opts:["The economy is leaning toward recession.","The economy is leaning toward recreation.","The economy is leaning toward reaction.","The economy is leaning toward rotation."],c:0,cat:"Business"},
+{ar:"المatter ده معقد أوي",en:"This matter is very complicated.",pron:"ذيس ماتر إز فيري كمپليكيتيد",opts:["This matter is very complicated.","This matter is very calculated.","This matter is very cultivated.","This matter is very concentrated."],c:0,cat:"Formal English"},
+{ar:"لازم تاخد بيرميشن قبل ما تدخل",en:"You must get permission before entering.",pron:"يو ماست جت پرمشن بيفور إنترنج",opts:["You must get permission before entering.","You must get position before entering.","You must get participation before entering.","You must get production before entering."],c:0,cat:"Formal English"},
+{ar:"الساعةems بتبين إني مش مرتاح",en:"My body language shows I'm uncomfortable.",pron:"ماي بادي لينجج شوز آي أنكمفورتبل",opts:["My body language shows I'm uncomfortable.","My body language shows I'm comfortable.","My body language shows I'm considerable.","My body language shows I'm considerable."],c:0,cat:"Formal English"},
+{ar:"لازم تعمل evaluation للبرنامج",en:"You must evaluate the program.",pron:"يو ماست إفالوبيت ذه پروجروم",opts:["You must evaluate the program.","You must evolve the program.","You must evaluate the progress.","You must evaluate the project."],c:0,cat:"Business"},
+{ar:"فيه اختلاف في الـ perspective بتاعتنا",en:"There is a difference in our perspective.",pron:"ذر إز دفرنس إن أور پرسبكتفو",opts:["There is a difference in our perspective.","There is a difference in our perceptive.","There is a difference in our preventive.","There is a difference in our protective."],c:0,cat:"Academic"},
+{ar:"لازم نعمل brainstorming لل pomysł ده",en:"We need to brainstorm this idea.",pron:"وي نيد تو برين ستورم ذيس آيديا",opts:["We need to brainstorm this idea.","We need to brain storm this idea.","We need to break storm this idea.","We need to brain stream this idea."],c:0,cat:"Business"},
+{ar:"الـ deadline اقترب",en:"The deadline is approaching.",pron:"ذه ديدلاين إز أپروتشينج",opts:["The deadline is approaching.","The deadline is approving.","The deadline is attaching.","The deadline is attacking."],c:0,cat:"Business"},
+{ar:"لازم ناخد الـ feedback بجدية",en:"We must take the feedback seriously.",pron:"وي ماست تيك ذه فيدبك سيريسلي",opts:["We must take the feedback seriously.","We must take the feedback seriously.","We must take the feedback separately.","We must take the feedback spiritually."],c:0,cat:"Business"},
+{ar:"الاقتصاد العالمي فيه ركود",en:"The global economy is in recession.",pron:"ذه جلوبال أيكونومي إز إن ريسيشن",opts:["The global economy is in recession.","The global economy is in recreation.","The global economy is in rotation.","The global economy is in reaction."],c:0,cat:"Business"},
+{ar:"لازم تعرف تتعامل مع الضغط",en:"You must know how to handle pressure.",pron:"يو ماست نو هاو تو هندل پريشر",opts:["You must know how to handle pressure.","You must know how to handle pleasure.","You must know how to handle practice.","You must know how to handle promise."],c:0,cat:"Formal English"},
+{ar:"فيه تحديات كتير في الـ project ده",en:"There are many challenges in this project.",pron:"ذر أر ميني تشالينجز إن ذيس پروجكت",opts:["There are many challenges in this project.","There are many channels in this project.","There are many changes in this project.","There are many chapters in this project."],c:0,cat:"Business"},
+{ar:"لازم نحسّن الـ workflow بتاعتنا",en:"We must improve our workflow.",pron:"وي ماست إمپروو أور ورك فلو",opts:["We must improve our workflow.","We must improve our word flow.","We must improve our work floor.","We must improve our worth flow."],c:0,cat:"Business"},
+{ar:"العميل مش راضي عن الخدمة",en:"The client is not satisfied with the service.",pron:"ذه كلاينت إز نوت ساتيسفايد ويز ذه سيرفيس",opts:["The client is not satisfied with the service.","The client is not satisfied with the surface.","The client is not satisfied with the survey.","The client is not satisfied with the surplus."],c:0,cat:"Business"},
+{ar:"لازم نعمل delegation للشغل",en:"We need to delegate the work.",pron:"وي نيد تو ديليقيت ذه ورك",opts:["We need to delegate the work.","We need to delete the work.","We need to delight the work.","We need to deliver the work."],c:0,cat:"Business"},
+{ar:"الـ candidate ده مؤهل أوي",en:"This candidate is highly qualified.",pron:"ذيس كنديديت إز هايلي كواليفاييد",opts:["This candidate is highly qualified.","This candidate is highly quantified.","This candidate is highly quality fire.","This candidate is highly quiet."],c:0,cat:"Business"},
+{ar:"لازم نعمل presentation للإدارة",en:"We must present to the management.",pron:"وي ماست پريزنت تو ذه مانيجمنت",opts:["We must present to the management.","We must present to the measurement.","We must present to the movement.","We must present to the monument."],c:0,cat:"Business"},
+];
+
+const FB_CS_EASY=[
+{ar:"الكود شغال!",en:"It works!",pron:"إت وركس!",opts:["It works!","It walks!","It waits!","It wakes!"],c:0,cat:"Developer Phrases"},
+{ar:"فيه bug في البرنامج",en:"There is a bug in the program.",pron:"ذر إز بق إن ذه پروجرام",opts:["There is a bug in the program.","There is a bag in the program.","There is a big in the program.","There is a bed in the program."],c:0,cat:"Error Messages"},
+{ar:"احفظ الملف",en:"Save the file.",pron:"سيف ذه فايل",opts:["Save the file.","Save the pile.","Save the fail.","Save the fill."],c:0,cat:"Developer Phrases"},
+{ar:"افتح الترمينال",en:"Open the terminal.",pron:"أوپن ذه تيرمينل",opts:["Open the terminal.","Open the terrible.","Open the terminal.","Open the turtle."],c:0,cat:"Linux Basics"},
+{ar:"روّح على الـ directory",en:"Go to the directory.",pron:"جيو تو ذه ديركتوري",opts:["Go to the directory.","Go to the dictionary.","Go to the dirty.","Go to the doctor."],c:0,cat:"Linux Basics"},
+{ar:"اعمل list للملفات",en:"List the files.",pron:"ليست ذه فايلز",opts:["List the files.","List the piles.","List the fills.","List the fails."],c:0,cat:"Linux Basics"},
+{ar:"عمل commit للchanges",en:"Commit the changes.",pron:"كوميت ذه تشينجز",opts:["Commit the changes.","Comment the changes.","Commit the challenges.","Commit the chapters."],c:0,cat:"Git"},
+{ar:"ارفع الكود على الـ remote",en:"Push the code to remote.",pron:"بوش ذه كود تو ريموت",opts:["Push the code to remote.","Push the code to remove.","Push the code to report.","Push the code to resort."],c:0,cat:"Git"},
+{ar:"فيه syntax error",en:"There is a syntax error.",pron:"ذر إز سينتاكس إيرور",opts:["There is a syntax error.","There is a system error.","There is a synth error.","There is a single error."],c:0,cat:"Error Messages"},
+{ar:"البرنامج وقع",en:"The program crashed.",pron:"ذه پروجرام كراشت",opts:["The program crashed.","The program crushed.","The program crossed.","The program closed."],c:0,cat:"Error Messages"},
+{ar:"اعمل run للـ code",en:"Run the code.",pron:"ران ذه كود",opts:["Run the code.","Run the card.","Run the cold.","Run the cord."],c:0,cat:"Developer Phrases"},
+{ar:"اعمل debug للبرنامج",en:"Debug the program.",pron:"ديبج ذه پروجرام",opts:["Debug the program.","Delay the program.","Delete the program.","Deploy the program."],c:0,cat:"Developer Phrases"},
+{ar:"الملف موجود فين؟",en:"Where is the file?",pron:"وير إز ذه فايل؟",opts:["Where is the file?","Where is the pile?","Where is the fire?","Where is the mile?"],c:0,cat:"Linux Basics"},
+{ar:"اعمل mkdir لفولدر جديد",en:"Create a new directory with mkdir.",pron:"كريت نيو ديركتوري ويز mkdir",opts:["Create a new directory with mkdir.","Create a new dictionary with mkdir.","Create a new dirty with mkdir.","Create a new doctor with mkdir."],c:0,cat:"Linux Basics"},
+{ar:"permission denied",en:"Permission denied.",pron:"بيرميشن دينايد",opts:["Permission denied.","Position denied.","Permission defined.","Permission decided."],c:0,cat:"Error Messages"},
+{ar:"الكود مش شغال عليا",en:"The code is not working for me.",pron:"ذه كود إز نوت وركنج فور مي",opts:["The code is not working for me.","The code is not walking for me.","The code is not waking for me.","The code is not waiting for me."],c:0,cat:"Developer Phrases"},
+{ar:"اعمل copy للـ code",en:"Copy the code.",pron:"كوباي ذه كود",opts:["Copy the code.","Copy the card.","Copy the cold.","Copy the cord."],c:0,cat:"Developer Phrases"},
+{ar:"الـ variable دي فاضية",en:"The variable is empty.",pron:"ذه فيريبل إز إمپتي",opts:["The variable is empty.","The variable is happy.","The variable is heavy.","The variable is hurry."],c:0,cat:"Code Basics"},
+{ar:"اعمل reset للمتغيرات",en:"Reset the variables.",pron:"ريسيت ذه فيريبلز",opts:["Reset the variables.","Reset the variables.","Reset the valuable.","Reset the variety."],c:0,cat:"Code Basics"},
+{ar:"الـ output غلط",en:"The output is wrong.",pron:"ذه أوتبوت إز رونج",opts:["The output is wrong.","The output is long.","The output is right.","The output is run."],c:0,cat:"Error Messages"},
+];
+
+const FB_CS_MEDIUM=[
+{ar:"الكود محتاج compile",en:"The code needs to be compiled.",pron:"ذه كود نيدز تو بي كومبايلد",opts:["The code needs to be compiled.","The code needs to be completed.","The code needs to be collected.","The code needs to be corrected."],c:0,cat:"C/C++"},
+{ar:"فيه memory leak في الـ program",en:"There is a memory leak in the program.",pron:"ذر إز ميموري ليك إن ذه پروجرام",opts:["There is a memory leak in the program.","There is a memory lake in the program.","There is a memory link in the program.","There is a memory late in the program."],c:0,cat:"C/C++"},
+{ar:"الـ pointer مششير على حاجة فاضية",en:"The pointer is pointing to null.",pron:"ذه پوينتر إز پوينتينج تو نل",opts:["The pointer is pointing to null.","The pointer is printing to null.","The pointer is pulling to null.","The pointer is pausing to null."],c:0,cat:"C/C++"},
+{ar:"اعمل pull request",en:"Make a pull request.",pron:"ميك پل ريكويست",opts:["Make a pull request.","Make a full request.","Make a poll request.","Make a push request."],c:0,cat:"GitHub Workflow"},
+{ar:"الـ code review خلص",en:"The code review is done.",pron:"ذه كود ريفيو إز دان",opts:["The code review is done.","The code reveal is done.","The code revenge is done.","The code resort is done."],c:0,cat:"GitHub Workflow"},
+{ar:"فيه exception في الـ code",en:"There is an exception in the code.",pron:"ذر إز إكسيبشن إن ذه كود",opts:["There is an exception in the code.","There is an execution in the code.","There is an exercise in the code.","There is an example in the code."],c:0,cat:"Python"},
+{ar:"الـ function بترجع null",en:"The function returns null.",pron:"ذه فنكشن ريتورنز نل",opts:["The function returns null.","The function returns new.","The function returns net.","The function returns now."],c:0,cat:"C/C++"},
+{ar:"اعمل merge للـ branch",en:"Merge the branch.",pron:"مرج ذه برانش",opts:["Merge the branch.","March the branch.","Match the branch.","Watch the branch."],c:0,cat:"GitHub Workflow"},
+{ar:"الـ debugger مش شغال",en:"The debugger is not working.",pron:"ذه ديبيغر إز نوت وركنج",opts:["The debugger is not working.","The debugger is not waking.","The debugger is not walking.","The debugger is not waiting."],c:0,cat:"Debugging"},
+{ar:"فيه infinite loop",en:"There is an infinite loop.",pron:"ذر إز إنفينيت لوب",opts:["There is an infinite loop.","There is an infinite loot.","There is an infinite lost.","There is an infinite love."],c:0,cat:"Debugging"},
+{ar:"الـ deploy على الـ production خلص",en:"Deployment to production is complete.",pron:"دبلويمنت تو پروداكشن إز كمپليت",opts:["Deployment to production is complete.","Deployment to production is competitive.","Deployment to production is connected.","Deployment to production is computed."],c:0,cat:"GitHub Workflow"},
+{ar:"الـ build فشل",en:"The build failed.",pron:"ذه بيلد فيلد",opts:["The build failed.","The build filed.","The build filled.","The build found."],c:0,cat:"Debugging"},
+{ar:"اعمل commit message واضح",en:"Write a clear commit message.",pron:"رايت كليير كوميت ميسج",opts:["Write a clear commit message.","Write a close commit message.","Write a clever commit message.","Write a clean commit message."],c:0,cat:"GitHub Workflow"},
+{ar:"الـ variable دي private",en:"This variable is private.",pron:"ذيس فيريبل إز پرايفت",opts:["This variable is private.","This variable is perfect.","This variable is pretty.","This variable is protected."],c:0,cat:"Python"},
+{ar:"الكود محتاج refactor",en:"The code needs refactoring.",pron:"ذه كود نيدز ريفاكتورنج",opts:["The code needs refactoring.","The code needs rewriting.","The code needs reloading.","The code needs refreshing."],c:0,cat:"Debugging"},
+{ar:"فيه مشكلة في الـ database",en:"There is a problem with the database.",pron:"ذر إز پروبلم ويز ذه ديتابيز",opts:["There is a problem with the database.","There is a problem with the date base.","There is a problem with the desk base.","There is a problem with the device."],c:0,cat:"Debugging"},
+{ar:"اعمل test case للـ function",en:"Write a test case for the function.",pron:"رايت تيست كيس فور ذه فنكشن",opts:["Write a test case for the function.","Write a text case for the function.","Write a taste case for the function.","Write a task case for the function."],c:0,cat:"Debugging"},
+{ar:"الـ API بترجع error",en:"The API is returning an error.",pron:"ذه إيه بي آي إز ريتورنينج أن إيرور",opts:["The API is returning an error.","The API is retiring an error.","The API is reviewing an error.","The API is returning an era."],c:0,cat:"Debugging"},
+{ar:"الـ terminal مقفول",en:"The terminal is closed.",pron:"ذه تيرمينل إز كلوзд",opts:["The terminal is closed.","The terminal is clean.","The terminal is clear.","The terminal is clever."],c:0,cat:"Linux Basics"},
+{ar:"اعمل chmod للملف",en:"Change permissions with chmod.",pron:"تشينج پرمشنز ويز chmod",opts:["Change permissions with chmod.","Change positions with chmod.","Change parents with chmod.","Change patterns with chmod."],c:0,cat:"Linux Basics"},
+];
+
+const FB_CS_HARD=[
+{ar:"الـ gradient descent بيتناقص ببطء",en:"Gradient descent is decreasing slowly.",pron:"جراديينت ديسينت إز ديسريسينج سلولي",opts:["Gradient descent is decreasing slowly.","Gradient descent is describing slowly.","Gradient descent is displaying slowly.","Gradient descent is discovering slowly."],c:0,cat:"AI/ML"},
+{ar:"الـ model overfitted على الـ training data",en:"The model is overfitted on training data.",pron:"ذه مودل إز أوفرفيتد أون تريننج ديتا",opts:["The model is overfitted on training data.","The model is overrated on training data.","The model is overfilled on training data.","The model is overpassed on training data."],c:0,cat:"AI/ML"},
+{ar:"الـ mutex بيثبط الـ race conditions",en:"Mutex prevents race conditions.",pron:"ميوتكس بريفينتس ريس كونديشنز",opts:["Mutex prevents race conditions.","Mutex prevents rich conditions.","Mutex prevents right conditions.","Mutex prevents rate conditions."],c:0,cat:"Systems"},
+{ar:"الـ time complexity بتاع الخوارزمية O(n log n)",en:"The algorithm has O(n log n) time complexity.",pron:"ذه ألgoritم هاز O(n log n) تايم كومبليكسيتي",opts:["The algorithm has O(n log n) time complexity.","The algorithm has O(n log n) type complexity.","The algorithm has O(n log n) tiny complexity.","The algorithm has O(n log n) total complexity."],c:0,cat:"Algorithms"},
+{ar:"الـ backpropagation بتحسب الـ gradients",en:"Backpropagation computes gradients.",pron:"باك پروباجيشن كمپيوتس جرادينتس",opts:["Backpropagation computes gradients.","Backpropagation computes graphics.","Backpropagation computes greatings.","Backpropagation computes groupings."],c:0,cat:"AI/ML"},
+{ar:"الـ container محتاج أكتر من الـ memory",en:"The container needs more memory than available.",pron:"ذه كونتينر نيدز مور ميموري ذان أفيلبل",opts:["The container needs more memory than available.","The container needs more memory than avoidable.","The container needs more memory than admirable.","The container needs more memory than affordable."],c:0,cat:"Architecture"},
+{ar:"فيه deadlock في الـ threads",en:"There is a deadlock in the threads.",pron:"ذر إز ديدلوك إن ذه ثريدز",opts:["There is a deadlock in the threads.","There is a deadlock in the threats.","There is a dead lock in the threads.","There is a dead lock in the throws."],c:0,cat:"Systems"},
+{ar:"الـ stack overflow بسبب recursion عميق",en:"Stack overflow caused by deep recursion.",pron:"stack أوفرلو كوزد باي ديب ريكرجن",opts:["Stack overflow caused by deep recursion.","Stack overflow caused by deep reaction.","Stack overflow caused by deep reduction.","Stack overflow caused by deep recognition."],c:0,cat:"Systems"},
+{ar:"الـ Docker image محتاج أصغر حجم",en:"The Docker image needs to be smaller.",pron:"ذه دوكر إميج نيدز تو بي سمولر",opts:["The Docker image needs to be smaller.","The Docker image needs to be smarter.","The Docker image needs to be smoother.","The Docker image needs to be stronger."],c:0,cat:"Architecture"},
+{ar:"الـ CI/CD pipeline بيعمل auto deploy",en:"The CI/CD pipeline auto-deploys.",pron:"ذه CI/CD بايبلاين أوتو دبليوز",opts:["The CI/CD pipeline auto-deploys.","The CI/CD pipeline auto-displays.","The CI/CD pipeline auto-describes.","The CI/CD pipeline auto-decides."],c:0,cat:"Architecture"},
+{ar:"الـ SOLID principles مهمة جداً",en:"SOLID principles are very important.",pron:"سوليد پرينسپلز أر فيري إمپورنت",opts:["SOLID principles are very important.","SOLID principles are very imported.","SOLID principles are very improved.","SOLID principles are very impressed."],c:0,cat:"Architecture"},
+{ar:"الـ hyperparameter tuning محتاج شغل كتير",en:"Hyperparameter tuning needs a lot of work.",pron:"هايبرپيراميتر تيونينج نيدز لوت أف ورك",opts:["Hyperparameter tuning needs a lot of work.","Hyperparameter tuning needs a lot of world.","Hyperparameter tuning needs a lot of word.","Hyperparameter tuning needs a lot of worth."],c:0,cat:"AI/ML"},
+{ar:"الـ thread safety مش مضمون في الكود ده",en:"Thread safety is not guaranteed in this code.",pron:"ثريد سيفتي إز نوت غيرنتيد إن ذيس كود",opts:["Thread safety is not guaranteed in this code.","Thread safety is not granted in this code.","Thread safety is not guarded in this code.","Thread safety is not guessed in this code."],c:0,cat:"Systems"},
+{ar:"الـ binary search أسرع من الـ linear search",en:"Binary search is faster than linear search.",pron:"باينري سيرتش إز فاستر ذان لينيئر سيرتش",opts:["Binary search is faster than linear search.","Binary search is faster than linear research.","Binary search is further than linear search.","Binary search is faster than linear reach."],c:0,cat:"Algorithms"},
+{ar:"الـ dynamic programming بيحل المشاكل بذكاء",en:"Dynamic programming solves problems smartly.",pron:"ديناميك پروجرامينج سولفز پروبلمز سمارتلي",opts:["Dynamic programming solves problems smartly.","Dynamic programming solves problems slowly.","Dynamic programming solves problems simply.","Dynamic programming solves problems sadly."],c:0,cat:"Algorithms"},
+{ar:"الـ neural network محتاج أكتر data",en:"The neural network needs more data.",pron:"ذه نيرال نيتورك نيدز مور ديتا",opts:["The neural network needs more data.","The neural network needs more dates.","The neural network needs more date.","The neural network needs more dead."],c:0,cat:"AI/ML"},
+{ar:"الـ microservices architecture أفضل للـ scaling",en:"Microservices architecture is better for scaling.",pron:"مايكروسيرفيسيز أركيتكشر إز بتر فور سكيلينج",opts:["Microservices architecture is better for scaling.","Microservices architecture is better for schooling.","Microservices architecture is better for scanning.","Microservices architecture is better for scoring."],c:0,cat:"Architecture"},
+{ar:"الـ divide and conquer strategy بتقسم المشكلة",en:"Divide and conquer strategy splits the problem.",pron:"ديفايد أند كنكوي ستراتيجي سپلتس ذه پروبلم",opts:["Divide and conquer strategy splits the problem.","Divide and conquer strategy splits the project.","Divide and conquer strategy splits the promise.","Divide and conquer strategy splits the process."],c:0,cat:"Algorithms"},
+{ar:"الـ kernel بيمد الـ memory management",en:"The kernel handles memory management.",pron:"ذه كيرنل هندلز ميموري مانيجمنت",opts:["The kernel handles memory management.","The kernel handles memory manager.","The kernel handles memory market.","The kernel handles memory manner."],c:0,cat:"Systems"},
+{ar:"الـ Kubernetes بي orchestrat الـ containers",en:"Kubernetes orchestrates containers.",pron:"كوبرنيتيس أركستريتس كونتينرز",opts:["Kubernetes orchestrates containers.","Kubernetes orchestrates contrasts.","Kubernetes orchestrates contractors.","Kubernetes orchestrates contributions."],c:0,cat:"Architecture"},
+];
+
+function genLocalQs(isCS,difficulty){
+  const bank=isCS?(difficulty==="Easy"?FB_CS_EASY:difficulty==="Medium"?FB_CS_MEDIUM:FB_CS_HARD):(difficulty==="Easy"?FB_EASY:difficulty==="Medium"?FB_MEDIUM:FB_HARD);
+  const shuffled=[...bank].sort(()=>Math.random()-0.5);
+  return shuffled.slice(0,50).map((q,i)=>({...q,qt:i%5>=3?"w":"m"}));
+}
+
 async function genQs(day,ln,isCS=false){
-  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"gemini-2.0-flash",max_tokens:9000,messages:[{role:"user",content:`Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS?"CS/Programming":"General"} mode.\n${isCS?CS_TOPICS[ln]:TOPICS[ln]}\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.`}]})});
-  if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||`API error ${res.status}`);}
-  const d=await res.json();if(d.error)throw new Error(d.error);
-  const content=d.content;const txt=Array.isArray(content)?content.map(b=>b.text||"").join(""):"";
-  if(!txt)throw new Error("AI returned empty response. Please try again.");
-  const s=txt.indexOf("["),e=txt.lastIndexOf("]");
-  if(s<0||e<0)throw new Error("AI did not return valid JSON. Tap 'Try again'.");
-  let raw;try{raw=JSON.parse(txt.slice(s,e+1));}catch{throw new Error("Failed to parse AI response. Tap 'Try again'.");}
-  if(!Array.isArray(raw)||raw.length<5)throw new Error("AI returned too few questions. Tap 'Try again'.");
-  return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);return{ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General"),qt:i%5>=3?"w":"m"};});
+  try{
+    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"gemini-2.0-flash",max_tokens:9000,messages:[{role:"user",content:`Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS?"CS/Programming":"General"} mode.\n${isCS?CS_TOPICS[ln]:TOPICS[ln]}\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.`}]})});
+    if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||`API error ${res.status}`);}
+    const d=await res.json();if(d.error)throw new Error(d.error);
+    const content=d.content;const txt=Array.isArray(content)?content.map(b=>b.text||"").join(""):"";
+    if(!txt)throw new Error("AI returned empty response");
+    const s=txt.indexOf("["),e=txt.lastIndexOf("]");
+    if(s<0||e<0)throw new Error("No JSON found in response");
+    let raw;try{raw=JSON.parse(txt.slice(s,e+1));}catch{throw new Error("Failed to parse JSON");}if(!Array.isArray(raw)||raw.length<5)throw new Error("Too few questions");
+    return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);return{ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General"),qt:i%5>=3?"w":"m"};});
+  }catch(e){
+    console.warn("AI failed, using local question bank:",e.message);
+    return genLocalQs(isCS,ln);
+  }
 }
 
 const editDist=(a,b)=>{const m=a.length,n=b.length,dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i||j));for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];};
