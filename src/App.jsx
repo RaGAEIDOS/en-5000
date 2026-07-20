@@ -359,11 +359,89 @@ export default function App(){
   const [sName,setSName]=useState("");
   const [sAge,setSAge]=useState("");
   const [sEmail,setSEmail]=useState("");
+  const [authToken,setAuthToken]=useState(null);
+  const [authView,setAuthView]=useState("");
+  const [authEmail,setAuthEmail]=useState("");
+  const [authPass,setAuthPass]=useState("");
+  const [authName,setAuthName]=useState("");
+  const [authAge,setAuthAge]=useState("");
+  const [authErr,setAuthErr]=useState("");
+  const [authMsg,setAuthMsg]=useState("");
+  const [authLoading,setAuthLoading]=useState(false);
+  const [syncing,setSyncing]=useState(false);
+  const [cloudConnected,setCloudConnected]=useState(false);
   const topAd=useRef(Math.floor(Math.random()*4));
   const botAd=useRef((Math.floor(Math.random()*4)+2)%4);
   const inRef=useRef(null);
   const fileRef=useRef(null);
   const play=useSnd(snd);
+
+  const apiCall=useCallback(async(url,opts={})=>{
+    const headers={"Content-Type":"application/json",...(opts.headers||{})};
+    if(authToken)headers.Authorization=`Bearer ${authToken}`;
+    const res=await fetch(url,{...opts,headers});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||`Request failed (${res.status})`);
+    return data;
+  },[authToken]);
+
+  const cloudPull=useCallback(async(token)=>{
+    try{
+      setSyncing(true);
+      const r=await fetch("/api/sync/pull",{headers:{Authorization:`Bearer ${token}`}});
+      const d=await r.json();
+      if(d.progress){
+        if(d.progress.general){setProg(d.progress.general);sP(d.progress.general,PK);}
+        if(d.progress.cs){setCsProg(d.progress.cs);sP(d.progress.cs,CS_PK);}
+      }
+      setCloudConnected(true);
+    }catch(e){console.warn("Cloud pull failed:",e.message);}finally{setSyncing(false);}
+  },[]);
+
+  const cloudPush=useCallback(async()=>{
+    if(!authToken)return;
+    try{await apiCall("/api/sync/push",{method:"POST",body:JSON.stringify({general:prog,cs:csProg})});}catch(e){console.warn("Cloud push failed:",e.message);}
+  },[authToken,prog,csProg,apiCall]);
+
+  const doSignUp=useCallback(async()=>{
+    setAuthErr("");setAuthMsg("");setAuthLoading(true);
+    try{
+      const d=await apiCall("/api/auth/signup",{method:"POST",body:JSON.stringify({name:authName,email:authEmail,password:authPass,age:authAge})});
+      localStorage.setItem("e5k_token",d.token);setAuthToken(d.token);setUser(d.user);sU(d.user);
+      await cloudPull(d.token);setView("setup");
+    }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
+  },[authName,authEmail,authPass,authAge,apiCall,cloudPull]);
+
+  const doSignIn=useCallback(async()=>{
+    setAuthErr("");setAuthMsg("");setAuthLoading(true);
+    try{
+      const d=await apiCall("/api/auth/signin",{method:"POST",body:JSON.stringify({email:authEmail,password:authPass})});
+      localStorage.setItem("e5k_token",d.token);setAuthToken(d.token);setUser(d.user);sU(d.user);
+      await cloudPull(d.token);setView("home");
+    }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
+  },[authEmail,authPass,apiCall,cloudPull]);
+
+  const doForgot=useCallback(async()=>{
+    setAuthErr("");setAuthMsg("");setAuthLoading(true);
+    try{
+      const d=await apiCall("/api/auth/forgot-password",{method:"POST",body:JSON.stringify({email:authEmail})});
+      setAuthMsg(d.message||"Reset link sent! Check your email.");
+      if(d.resetToken)setAuthToken(d.resetToken);
+    }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
+  },[authEmail,apiCall]);
+
+  const doResetPass=useCallback(async()=>{
+    setAuthErr("");setAuthMsg("");setAuthLoading(true);
+    try{
+      const d=await apiCall("/api/auth/reset-password",{method:"POST",body:JSON.stringify({token:authToken,password:authPass})});
+      setAuthMsg(d.message||"Password reset! You can now sign in.");
+      setAuthView("signin");setAuthToken(null);localStorage.removeItem("e5k_token");
+    }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
+  },[authToken,authPass,apiCall]);
+
+  const doSignOut=useCallback(()=>{
+    localStorage.removeItem("e5k_token");setAuthToken(null);setCloudConnected(false);setUser(null);setView("landing");
+  },[]);
 
   const T=TH[dark?"dark":"light"];
   const curProg=isCS?csProg:prog;
@@ -372,7 +450,7 @@ export default function App(){
   const phrases=curProg.totalAnswered,pct=Math.min(phrases/5000*100,100),acc=phrases>0?Math.round(curProg.totalCorrect/phrases*100):0;
   const uLv=getLv(prog.xp),nLv=getNext(prog.xp);
 
-  useEffect(()=>{Promise.all([lP(PK),lP(CS_PK),lCfg(),lU()]).then(([p,cp,c,u])=>{setProg(p);setCsProg(cp);setDark(c.dark||false);setSnd(c.sound!==false);setUser(u);if(!u?.name)setView("setup");else setView("home");});},[]);
+  useEffect(()=>{const savedToken=localStorage.getItem("e5k_token");Promise.all([lP(PK),lP(CS_PK),lCfg(),lU()]).then(([p,cp,c,u])=>{setProg(p);setCsProg(cp);setDark(c.dark||false);setSnd(c.sound!==false);setUser(u);if(savedToken){setAuthToken(savedToken);cloudPull(savedToken).then(()=>{if(!u?.name)setView("setup");else setView("home");});}else if(!u?.name)setView("landing");else setView("home");});},[]);
   useEffect(()=>{if(view==="quiz"&&qs[qi]?.qt==="w"&&inRef.current)setTimeout(()=>inRef.current?.focus(),80);},[view,qKey]);
 
   const W={maxWidth:620,margin:"0 auto",padding:"1rem",color:T.txt,background:T.root,minHeight:"100vh",fontFamily:"system-ui,sans-serif",direction:"ltr",textAlign:"left"};
@@ -396,7 +474,7 @@ export default function App(){
       const np={...curProg,totalCorrect:curProg.totalCorrect+nOk,totalAnswered:curProg.totalAnswered+qs.length,xp:(curProg.xp||0)+total};
       if(!practice)Object.assign(np,{day:curProg.day+1,streak:ns,lastDate:toStr(),bestStreak:Math.max(curProg.bestStreak||0,ns)});
       if(isCS){setCsProg(np);sP(np,CS_PK);}else{setProg(np);sP(np,PK);}
-      setFOk(nOk);setFXp(total);setView("results");
+      setFOk(nOk);setFXp(total);setView("results");cloudPush();
       if(nOk>=qs.length*.9)play("done");
     }else{setOk(nOk);setQi(q=>q+1);resetQ();setQKey(k=>k+1);}
   },[ok,cStreak,qi,qs,sXp,curProg,practice,isCS,play,awardXp,resetQ]);
@@ -438,7 +516,86 @@ export default function App(){
     }catch(e){setErrMsg(String(e.message));setView("err");}
   };
   const doReset=async(csMode=false)=>{const p={...DEF};if(csMode){setCsProg(p);await sP(p,CS_PK);}else{setProg(p);await sP(p,PK);}setRst(false);};
-  const doSetup=async()=>{if(!sName.trim())return;const u={name:sName.trim(),age:sAge,email:sEmail,color:avC(sName.trim())};setUser(u);await sU(u);setView("home");};
+  const doSetup=async()=>{if(!sName.trim())return;const u={name:sName.trim(),age:sAge,email:sEmail,color:avC(sName.trim())};setUser(u);await sU(u);cloudPush();setView("home");};
+
+  // ── LANDING PAGE ──────────────────────────────────────
+  if(view==="landing")return(
+    <div style={{...W,display:"flex",flexDirection:"column",minHeight:"100vh",direction:"ltr",textAlign:"left"}}><style>{CSS}</style>
+      <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",padding:"2rem 1.5rem",textAlign:"center"}}>
+        <div style={{marginBottom:24,animation:"pop .6s ease"}}><img src={LOGO} alt="EN-5000" style={{width:120,height:120,objectFit:"contain",borderRadius:24,boxShadow:"0 8px 40px rgba(30,80,200,.25)"}}/></div>
+        <div style={{animation:"fUp .5s ease .1s both"}}>
+          <h1 style={{fontSize:32,fontWeight:700,color:T.txt,marginBottom:4,letterSpacing:"-0.5px"}}>EN-5000</h1>
+          <p style={{fontSize:16,color:T.m,marginBottom:6,fontWeight:600}}>Learn 5,000 English Phrases</p>
+          <p style={{fontSize:13,color:T.m,marginBottom:32,lineHeight:1.6,maxWidth:300}}>Master English & programming vocabulary with AI-powered lessons, Arabic pronunciation, and daily streaks.</p>
+        </div>
+        <div style={{width:"100%",maxWidth:340,animation:"fUp .5s ease .2s both",marginBottom:20}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:24}}>
+            {[{ic:"🗣️",t:"5,000+",s:"Phrases"},{ic:"🎯",t:"100",s:"Day Plan"},{ic:"💻",t:"CS/Dev",s:"English"},{ic:"🤖",t:"AI",s:"Powered"}].map((f,i)=>(
+              <div key={i} style={{...K({marginBottom:0}),textAlign:"center",padding:"14px 10px"}}><div style={{fontSize:22,marginBottom:4}}>{f.ic}</div><div style={{fontSize:15,fontWeight:700,color:T.txt}}>{f.t}</div><div style={{fontSize:11,color:T.m}}>{f.s}</div></div>
+            ))}
+          </div>
+        </div>
+        <div style={{width:"100%",maxWidth:340,animation:"fUp .5s ease .3s both"}}>
+          <button style={{...Btn(LC.Easy.fill),marginBottom:10,fontSize:16,padding:".9rem"}} className="qbtn" onClick={()=>{setAuthView("signup");setView("auth");}}>Create Free Account ✨</button>
+          <button style={{...Btn("transparent",T.txt,{border:`1.5px solid ${T.bdS}`}),marginBottom:12,fontSize:15}} className="qbtn" onClick={()=>{setAuthView("signin");setView("auth");}}>Sign In</button>
+          <p style={{fontSize:12,color:T.m,lineHeight:1.5}}>Free forever. No credit card needed.<br/>Sync progress across devices.</p>
+        </div>
+      </div>
+      <div style={{padding:"1rem",textAlign:"center",borderTop:`0.5px solid ${T.bd}`}}>
+        <p style={{fontSize:11,color:T.m}}>100 Days • General + Programming English<br/>Egyptian Arabic Pronunciation</p>
+      </div>
+    </div>
+  );
+
+  // ── AUTH SCREENS ──────────────────────────────────────
+  if(view==="auth"){
+    const authTitle=authView==="signup"?"Create Account":authView==="signin"?"Welcome Back":authView==="forgot"?"Reset Password":"Set New Password";
+    const authIcon=authView==="signup"?"✨":authView==="signin"?"👋":authView==="forgot"?"🔑":"🔒";
+    return(
+    <div style={{...W,display:"flex",alignItems:"center",justifyContent:"center",direction:"ltr",textAlign:"left"}}><style>{CSS}</style>
+      <div style={{...K(),width:"100%",maxWidth:400,animation:"pop .4s ease"}}>
+        <button className="ibtn" style={{fontSize:14,color:T.m,marginBottom:12,display:"flex",alignItems:"center",gap:4}} onClick={()=>{setAuthErr("");setAuthMsg("");setView("landing");}}>← Back</button>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:36,marginBottom:8}}>{authIcon}</div>
+          <h2 style={{fontSize:20,fontWeight:700,color:T.txt,marginBottom:4}}>{authTitle}</h2>
+          <p style={{fontSize:13,color:T.m}}>
+            {authView==="signup"?"Start your English learning journey":authView==="signin"?"Continue learning where you left off":authView==="forgot"?"Enter your email to get a reset token":"Enter your new password below"}
+          </p>
+        </div>
+        {authErr&&<div style={{padding:".6rem 1rem",borderRadius:8,background:"rgba(239,68,68,.08)",border:"0.5px solid rgba(239,68,68,.3)",color:"#DC2626",fontSize:13,marginBottom:12}}>{authErr}</div>}
+        {authMsg&&<div style={{padding:".6rem 1rem",borderRadius:8,background:"rgba(34,197,94,.08)",border:"0.5px solid rgba(34,197,94,.3)",color:"#16A34A",fontSize:13,marginBottom:12}}>{authMsg}</div>}
+        {authView==="signup"&&<>
+          <input value={authName} onChange={e=>setAuthName(e.target.value)} placeholder="Your name" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
+          <input value={authAge} onChange={e=>setAuthAge(e.target.value)} type="number" placeholder="Age (optional)" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
+          <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} type="email" placeholder="Email" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
+          <input value={authPass} onChange={e=>setAuthPass(e.target.value)} type="password" placeholder="Password (min 6 chars)" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:14,boxSizing:"border-box"}}/>
+          <button style={Btn(LC.Easy.fill)} className="qbtn" onClick={doSignUp} disabled={authLoading||!authName.trim()||!authEmail.trim()||authPass.length<6}>{authLoading?"Creating account...":"Sign Up ✨"}</button>
+          <p style={{fontSize:13,color:T.m,textAlign:"center",marginTop:14}}>Already have an account? <button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("signin");}} style={{background:"none",border:"none",color:LC.Easy.tx,cursor:"pointer",fontWeight:600,textDecoration:"underline",fontSize:13}}>Sign In</button></p>
+        </>}
+        {authView==="signin"&&<>
+          <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} type="email" placeholder="Email" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
+          <input value={authPass} onChange={e=>setAuthPass(e.target.value)} type="password" placeholder="Password" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:14,boxSizing:"border-box"}}/>
+          <button style={Btn(LC.Easy.fill)} className="qbtn" onClick={doSignIn} disabled={authLoading||!authEmail.trim()||!authPass}>{authLoading?"Signing in...":"Sign In 👋"}</button>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}>
+            <button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("signup");}} style={{background:"none",border:"none",color:T.m,cursor:"pointer",fontSize:12}}>Create account</button>
+            <button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("forgot");}} style={{background:"none",border:"none",color:T.m,cursor:"pointer",fontSize:12,textDecoration:"underline"}}>Forgot password?</button>
+          </div>
+        </>}
+        {authView==="forgot"&&<>
+          <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} type="email" placeholder="Your email" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:14,boxSizing:"border-box"}}/>
+          <button style={Btn(LC.Easy.fill)} className="qbtn" onClick={doForgot} disabled={authLoading||!authEmail.trim()}>{authLoading?"Sending...":"Send Reset Token 🔑"}</button>
+          {authMsg&&<button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("reset");}} style={{display:"block",width:"100%",marginTop:10,background:"none",border:`1px solid ${T.bdS}`,color:T.txt,cursor:"pointer",fontSize:14,padding:".7rem",borderRadius:10,fontWeight:600}}>Enter Reset Token →</button>}
+          <p style={{fontSize:13,color:T.m,textAlign:"center",marginTop:14}}><button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("signin");}} style={{background:"none",border:"none",color:T.m,cursor:"pointer",fontSize:13}}>← Back to Sign In</button></p>
+        </>}
+        {authView==="reset"&&<>
+          <input value={authToken||""} onChange={e=>setAuthToken(e.target.value)} placeholder="Reset token (from email/API)" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:14,marginBottom:10,boxSizing:"border-box",fontFamily:"monospace"}}/>
+          <input value={authPass} onChange={e=>setAuthPass(e.target.value)} type="password" placeholder="New password (min 6 chars)" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:14,boxSizing:"border-box"}}/>
+          <button style={Btn(LC.Easy.fill)} className="qbtn" onClick={doResetPass} disabled={authLoading||!authToken||authPass.length<6}>{authLoading?"Resetting...":"Reset Password 🔒"}</button>
+          <p style={{fontSize:13,color:T.m,textAlign:"center",marginTop:14}}><button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("forgot");}} style={{background:"none",border:"none",color:T.m,cursor:"pointer",fontSize:13}}>← Back</button></p>
+        </>}
+      </div>
+    </div>);
+  }
 
   if(view==="loading")return(<div style={{...W,display:"flex",alignItems:"center",justifyContent:"center"}}><style>{CSS}</style><div style={{textAlign:"center"}}><div style={{width:44,height:44,border:`3px solid ${T.bd}`,borderTopColor:LC.Easy.fill,borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 1rem"}}/><p style={{color:T.m,fontSize:14}}>Loading...</p></div></div>);
 
@@ -492,6 +649,8 @@ export default function App(){
         <Av user={user} size={50} onClick={()=>setProfView(true)}/>
         <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:T.txt,fontFamily:"Cairo,sans-serif"}}>مرحباً، {user?.name}! 👋</div><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:11,fontWeight:700,color:uLv.c}}>{uLv.i} {uLv.n}</span><span style={{fontSize:11,color:T.m}}>· {prog.xp||0} XP</span></div><div style={{height:4,background:T.s1,borderRadius:2,overflow:"hidden",marginTop:5}}><div style={{height:"100%",width:`${nLv?Math.min(((prog.xp||0)-uLv.min)/(nLv.min-uLv.min)*100,100):100}%`,background:uLv.c,borderRadius:2,transition:"width .5s"}}/></div></div>
         <div style={{display:"flex",flexDirection:"column",gap:4}}>
+          {syncing&&<span style={{fontSize:10,color:LC.Easy.tx,textAlign:"center"}}>☁️</span>}
+          {cloudConnected&&!syncing&&<span style={{fontSize:10,color:LC.Easy.tx,textAlign:"center",opacity:.6}} title="Cloud synced">☁️</span>}
           <button className="ibtn" style={{fontSize:18,color:T.m}} onClick={()=>{const n=!dark;setDark(n);saveCfg({dark:n});}}>{dark?"☀️":"🌙"}</button>
           <button className="ibtn" style={{fontSize:16,color:T.m}} onClick={()=>setShowCfg(v=>!v)}>⚙️</button>
         </div>
@@ -528,9 +687,10 @@ export default function App(){
         {[{l:"🔊 Sound effects",v:snd,fn:()=>{const n=!snd;setSnd(n);saveCfg({sound:n});}},{l:dark?"☀️ Light mode":"🌙 Dark mode",v:dark,fn:()=>{const n=!dark;setDark(n);saveCfg({dark:n});}}].map((s,i,a)=>(
           <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:i<a.length-1?12:0,marginBottom:i<a.length-1?12:0,borderBottom:i<a.length-1?`0.5px solid ${T.bd}`:"none"}}><span style={{fontSize:13,color:T.s}}>{s.l}</span><Tog v={s.v} fn={s.fn} fill={LC.Easy.fill}/></div>
         ))}
-        <div style={{marginTop:12,paddingTop:12,borderTop:`0.5px solid ${T.bd}`,display:"flex",gap:10,justifyContent:"center"}}>
+        <div style={{marginTop:12,paddingTop:12,borderTop:`0.5px solid ${T.bd}`,display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
           {rst?<span style={{fontSize:12,color:T.m}}>Reset? <button onClick={()=>{doReset(false);}} style={{background:"none",border:"none",color:LC.Easy.tx,cursor:"pointer",fontSize:12,fontWeight:700,textDecoration:"underline"}}>General</button> <button onClick={()=>{doReset(true);}} style={{background:"none",border:"none",color:CS_LC.Easy.tx,cursor:"pointer",fontSize:12,fontWeight:700,textDecoration:"underline"}}>CS</button> <button onClick={()=>setRst(false)} style={{background:"none",border:"none",color:T.m,cursor:"pointer",fontSize:12,textDecoration:"underline"}}>Cancel</button></span>
           :<button className="ibtn" style={{color:T.m,fontSize:12}} onClick={()=>setRst(true)}>🗑️ Reset progress</button>}
+          {authToken&&<button className="ibtn" style={{color:"#EF4444",fontSize:12}} onClick={doSignOut}>🚪 Sign Out</button>}
         </div>
       </div>}
       <div style={{marginTop:12}}><Ad idx={botAd.current} T={T}/></div>
