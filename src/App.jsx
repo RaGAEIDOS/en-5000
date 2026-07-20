@@ -284,7 +284,7 @@ function genLocalQs(isCS,difficulty){
   const shuffled=[...bank].sort(()=>Math.random()-0.5);
   return shuffled.slice(0,50).map((q,i)=>{
     const sq=shuffleQOpts(q);
-    const qt=i%5>=2?"w":"m";
+    const qt=i%7>=5?"p":i%7>=2?"w":"m";
     return{...sq,qt};
   });
 }
@@ -299,7 +299,7 @@ async function genQs(day,ln,isCS=false){
     const s=txt.indexOf("["),e=txt.lastIndexOf("]");
     if(s<0||e<0)throw new Error("No JSON found in response");
     let raw;try{raw=JSON.parse(txt.slice(s,e+1));}catch{throw new Error("Failed to parse JSON");}if(!Array.isArray(raw)||raw.length<5)throw new Error("Too few questions");
-    return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);const sq=shuffleQOpts({ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General")});return{...sq,qt:i%5>=2?"w":"m"};});
+    return raw.slice(0,50).map((q,i)=>{const c=typeof q.c==="number"&&q.c>=0&&q.c<=3?q.c:0;const opts=Array.isArray(q.opts)&&q.opts.length===4?q.opts.map(String):["A","B","C","D"];if(q.en&&opts[c]!==String(q.en))opts[c]=String(q.en);const sq=shuffleQOpts({ar:String(q.ar||"?"),en:String(q.en||"?"),pron:String(q.pron||""),opts,c,cat:String(q.cat||"General")});const qt=i%7>=5?"p":i%7>=2?"w":"m";return{...sq,qt};});
   }catch(e){
     console.warn("AI failed, using local question bank:",e.message);
     return genLocalQs(isCS,ln);
@@ -344,7 +344,32 @@ function Hearts({n,max=5}){return(<div style={{display:"flex",gap:2}}>{Array.fro
 function Ad({idx,T,sm}){const a=ADS[idx%ADS.length];return(<div style={{background:a.c+"0d",border:`1px solid ${a.c}22`,borderRadius:sm?8:10,padding:sm?"6px 12px":"10px 14px",display:"flex",alignItems:"center",gap:sm?8:12,marginBottom:sm?8:10}}>{sm?<span style={{fontSize:16}}>{a.ic}</span>:<div style={{width:36,height:36,borderRadius:9,background:a.c,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:19}}>{a.ic}</div>}<div style={{flex:1,minWidth:0}}><div style={{fontSize:sm?12:13,fontWeight:600,color:T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.t}</div><div style={{fontSize:sm?10:11,color:T.m}}>{a.s}</div></div><button style={{background:a.c,color:"#fff",border:"none",borderRadius:6,padding:sm?"3px 8px":"5px 12px",fontSize:12,cursor:"pointer",fontWeight:600,flexShrink:0}}>Free Trial</button><span style={{fontSize:9,color:T.m,flexShrink:0}}>Ad</span></div>);}
 function Tog({v,fn,fill}){return(<button onClick={fn} style={{position:"relative",width:40,height:22,borderRadius:11,border:"none",cursor:"pointer",background:v?fill:"rgba(128,128,128,.28)",transition:"background .2s"}}><span style={{position:"absolute",top:3,left:v?20:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left .2s",display:"block",boxShadow:"0 1px 4px rgba(0,0,0,.2)"}}/></button>);}
 function Av({user,size=46,onClick}){return(<div onClick={onClick} style={{width:size,height:size,borderRadius:"50%",background:user?.photo?"#000":avC(user?.name||"?"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*.38,fontWeight:700,color:"#fff",flexShrink:0,cursor:onClick?"pointer":"default",overflow:"hidden",boxShadow:"0 2px 10px rgba(0,0,0,.15)"}}>{user?.photo?<img src={user.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(user?.name||"?").charAt(0).toUpperCase()}</div>);}
-function PronBox({pron,T,lv}){if(!pron)return null;return(<div style={{marginTop:10,padding:".6rem 1rem",borderRadius:8,background:lv.bg,border:`0.5px solid ${lv.br}`,animation:"pronIn .3s ease"}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>🔊</span><div><div style={{fontSize:10,fontWeight:600,color:lv.tx,letterSpacing:".06em",textTransform:"uppercase",marginBottom:2}}>النطق بالعربي</div><div style={{direction:"rtl",fontSize:18,fontWeight:600,color:"var(--text-primary,#111)",fontFamily:"Cairo,sans-serif",lineHeight:1.6}}>{pron}</div></div></div></div>);}
+function PronBox({pron,T,lv,en}){if(!pron)return null;return(<div style={{marginTop:10,padding:".6rem 1rem",borderRadius:8,background:lv.bg,border:`0.5px solid ${lv.br}`,animation:"pronIn .3s ease"}}><div style={{display:"flex",alignItems:"center",gap:8}}>
+  {en&&<button onClick={(e)=>{e.stopPropagation();try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(en);u.lang="en-US";u.rate=0.85;u.pitch=1;window.speechSynthesis.speak(u);}catch(e){}}} style={{background:lv.fill,color:"#fff",border:"none",borderRadius:8,padding:"6px 10px",fontSize:16,cursor:"pointer",flexShrink:0}} title="Listen">🔊</button>}
+  <div><div style={{fontSize:10,fontWeight:600,color:lv.tx,letterSpacing:".06em",textTransform:"uppercase",marginBottom:2}}>النطق بالعربي</div><div style={{direction:"rtl",fontSize:18,fontWeight:600,color:"var(--text-primary,#111)",fontFamily:"Cairo,sans-serif",lineHeight:1.6}}>{pron}</div></div></div></div>);}
+
+const WORD_DICT={i:"أنا",you:"إنت",he:"هو",she:"هي",it:"هو(حاجة)",we:"إحنا",they:"هم",am:"(أنا)كون",is:"(هو/هي)كون",are:"(إنت/هم)كون",was:"(كان)我当时",were:"(هم) كانوا",have:"عند(ي)",has:"عند(ه)",had:"كان عند(ه)",do:"يفعل",does:"(هو/هي)يفعل",did:"فعل",will:"هـ(مستقبل)",would:"(كان)هـ",can:"يقدر",could:"(كان)يقدر",may:"ممكن",might:"(ربما)",must:"لازم",should:"المفروض",shall:"(هـ-رسمي)",not:"مش",no:"لا",yes:"أه",and:"و",or:"أو",but:"بس",if:"لو",when:"لما",where:"فين",what:"إيه",who:"مين",why:"ليه",how:"إزاي",this:"ده",that:"ديك",these:"دول",those:"ديك(بعيد)",the:"(أداة تعريف)",a:"(أداة تنكير)",an:"(أداة تنكير)",my:"بتاعي",your:"بتاعك",his:"بتاعه",her:"بتاعها",its:"بتاعه(حاجة)",our:"بتاعنا",their:"بتاعهم",good:"كويس",bad:"وحش",big:"كبير",small:"صغير",new:"جديد",old:"قديم",hot:"سخن",cold:"بارد",fast:"سريع",slow:"بطيء",happy:"مبسوط",sad:"زعلان",eat:"ياكل",drink:"يشرب",go:"يروح",come:"يجي",see:"يشوف",look:"ينظر",give:"يدي",take:"ياخد",make:"يعمل",get:"يحصل",know:"يعرف",think:"يفكر",want:"يوريد",need:"محتاج",like:"يحب",love:"يحب(بشكل كبير)",buy:"يشتري",sell:"يبيع",pay:"يدفع",work:"يشتغل",play:"يلعب",run:"يركض",walk:"يمشي",sit:"يقعد",stand:"يقف",sleep:"ينام",wake:"يصحى",open:"يفتح",close:"يغلق",read:"يقرأ",write:"يكتب",speak:"يتكلم",listen:"يسمع",stop:"يقف",start:"يبدأ",finish:"يختم",help:"يساعد",try:"يحاول",use:"يستخدم",find:"يجد",tell:"يقول",ask:"يسأل",answer:"يجاوب",give:"يعطي",put:"يضع",keep:"يحتفظ",begin:"يبدأ",seem:"يبدو",feel:"يشعر",leave:"يمشي",call:"يتصل",turn:"يدور",move:"يتحرك",live:"يعيش",believe:"يصدق",bring:"يجيب",happen:"يحدث",include:"يشمل",provide:"يوفر",hold:"يمسك",follow:"يتبع",stop:"يتوقف",create:"يصنع",speak:"يتكلم",read:"يقرأ",allow:"يسمح",add:"يضيف",spend:"يقضي(وقت)",grow:"يكبر",open:"يفتح",walk:"يمشي",win:"يكسب",offer:"يعرض",remember:"يفتكر",love:"يحب",consider:"يعتبر",appear:"يظهر",buy:"يشتري",wait:"يستنى",serve:"يخدم",die:"يموت",send:"يرسل",expect:" يتوقع",build:"يبني",stay:"يقعد",fall:"يقع",cut:"يقطع",reach:"يوصل",kill:"يقتل",remain:"يفضل",suggest:"يقترح",raise:"يرفع",pass:"يعدي",sell:"يبيع",require:"يحتاج",report:"يبلغ",decide:"يقرر",pull:"يسحب",develop:"يطور",eat:"ياكل",meet:"يقابل",type:"يكتب(كيبورد)",connect:"يتصل",check:"يفحص",save:"يحفظ",change:"يغير",delete:"يحذف",install:"يثبت",download:"يحمل",upload:"يرفع",run:"يشتغل",debug:"يصلح",fix:"يصلح",test:"يختبر",compile:"يكومبايل",deploy:"ينشر",push:"يرفع",pull:"يسحب",merge:"يمزج",clone:"يكلون",commit:"يكوميت",branch:"يفرع",merge:"يمزج",push:"يرفع",error:"غلط",bug:"خلل",code:"كود",function:"دالة",variable:"متغير",array:"مصفوفة",string:"نص",number:"رقم",object:"كائن",class:"فئة",method:"طريقة",property:"خاصية",return:"يرجع",if:"لو",else:"وإلا",while:"بينما",for:"لفترة",switch:"حالة",case:"حالة",break:"يوقف",continue:"يكمل",try:"يحاول",catch:"يلتقط",throw:"يرمي",new:"جديد",this:"ده",import:"يستورد",export:"يصدّر",from:"من",const:"ثابت",let:"اترك",var:"متغير",true:"صح",false:"غلط",null:"فارغ",undefined:"غير محدد",void:"فارغ",typeof:"نوع",instanceof:"من نوع",delete:"يحذف",in:"في",of:"من",with:"مع",async:"غير متزامن",await:"ينتظر",promise:"وعد",callback:"استدعاء",event:"حدث",listener:"مستمع",DOM:"مستند",node:"عقدة",element:"عنصر",tag:"وسم",attribute:"خاصية",value:"قيمة",key:"مفتاح",map:"خريطة",set:"مجموعة",weak:"ضعيف",strong:"قوي",public:"عام",private:"خاص",protected:"محفوظ",static:"ثابت",abstract:"تجريدي",interface:"واجهة",extends:"يمتد",implements:"ينفذ",super:"فوق",this:"هذا",return:"يرجع",import:"يورد",export:"يصدّر",default:"افتراضي",from:"من",type:"نوع",as:"كـ",module:"وحدة",package:"حزمة",library:"مكتبة",framework:"إطار",runtime:"وقت التشغيل",compiler:"مترجم",interpreter:"مفسّر",debugger:" debugger",console:"وحدة التحكم",terminal:"طرفيّة",shell:"صدفة",browser:"متصفّح",server:"خادم",client:"عميل",database:"قاعدة بيانات",table:"جدول",query:"استعلام",index:"فهرس",column:"عمود",row:"صف",schema:"مخطط",migration:"ترحيل",seed:"بذرة",cache:"خزّنة",cookie:"كوكيز",session:"جلسة",token:"رمز",auth:"مصادقة",jwt:"رمز JWT",oauth:"OAuth",cors:"CORS",ssl:"SSL",tls:"TLS",http:"HTTP",https:"HTTPS",api:"واجهة برمجة",rest:"REST",graphql:"GraphQL",websocket:"وصلة ويب",socket:"مأخذ",port:"منفذ",host:"مضيف",domain:"نطاق",url:"رابط",uri:"معرّف",dns:"DNS",ip:"عنوان IP",tcp:"TCP",udp:"UDP",ssh:"SSH",ftp:"FTP",cdn:"CDN",aws:"AWS",azure:"Azure",gcp:"GCP",docker:"Docker",kubernetes:"كوبرنيتيس",ci:"CI",cd:"CD",pipeline:"خط أنابيب",build:"بناء",test:"اختبار",lint:"فحص",format:"تنسيق",refactor:"إعادة هيكلة",deploy:"نشر",monitor:"مراقبة",log:"سجل",metric:"قياس",alert:"تنبيه",scale:"قياس",load:"حمل",balance:"توازن",performance:"أداء",security:"أمان",privacy:"خصوصية",compliance:"امتثال",audit:"تدقيق",encrypt:"تشفير",decrypt:"فك تشفير",hash:"تجزئة",token:"رمز",key:"مفتاح",secret:"سر",certificate:"شهادة",firewall:"جدار حماية",intrusion:"اختراق",malware:"برمجيات خبيثة",vulnerability:"ثغرة",patch:"ترقية",update:"تحديث",upgrade:"ترقية",version:"إصدار",release:"إصدار",changelog:"سجل التغييرات",documentation:"توثيق",wiki:"ويكي",README:"README",license:"رخصة",copyright:"حقوق النشر", trademark:"علامة تجارية",patent:"براءة اختراع",warranty:"ضمان",liability:"مسؤولية",indemnify:"يعوض",arbitration:"تحكيم",jurisdiction:"اختصاص",governing:"يخضع",law:"قانون",regulation:"نظام",policy:"سياسة",terms:"شروط",privacy:"خصوصية",cookie:"كوكيز",gdpr:"GDPR",hipaa:"HIPAA",soc2:"SOC 2",iso27001:"ISO 27001",pci:"PCI",stripe:"Stripe",paypal:"PayPal",bitcoin:"بيتكوين",ethereum:"إيــريـــوم",blockchain:"سلسلة كتل",smart:"ذكي",contract:"عقد",token:"رمز",wallet:"محفظة",mining:"تعدين",hash:"تجزئة",nonce:"nonce",block:"كتلة",chain:"سلسلة",node:"عقدة",peer:"نظير",consensus:"إجماع",fork:"فرع",merge:"دمج",deploy:"نشر",test:"اختبار",mainnet:"الشبكة الرئيسية",testnet:"شبكة الاختبار",gas:"وقود",fee:"رسوم",transfer:"تحويل",balance:"رصيد",address:"عنوان",private:"خاص",public:"عام",seed:"بذرة",recovery:"استرداد",backup:"نسخ احتياطي",import:"استيراد",export:"تصدير",sync:"مزامنة",offline:"غير متصل",online:"متصل",connect:"اتصل",disconnect:"قطع",disconnect:"قطع الاتصال",reconnect:"إعادة الاتصال",timeout:"مهلة",retry:"إعادة محاولة",fail:"فشل",success:"نجاح",error:"خطأ",warning:"تحذير",info:"معلومات",debug:"تصحيح",trace:"تتبع",log:"سجل",level:"مستوى",channel:"قناة",topic:"موضوع",subscribe:"اشترك",publish:"نشر",broadcast:"بث",unicast:"بث أحادي",multicast:"بث متعدد",webhook:"webhook",callback:"استدعاء",endpoint:"نقطة نهاية",route:"مسار",method:"طريقة",header:"رأس",body:"جسم",status:"حالة",code:"شفرة",message:"رسالة",data:"بيانات",payload:"حمولة",query:"استعلام",param:"معامل",param:"معامل",arg:"معامل",config:"إعدادات",env:"بيئة",secret:"سر",key:"مفتاح",token:"رمز",auth:"مصادقة",role:"دور",permission:"صلاحية",access:"وصول",deny:"رفض",allow:"سماح",grant:"منح",revoke:"إلغاء",audit:"تدقيق",log:"سجل",track:"تتبع",monitor:"مراقبة",alert:"تنبيه",notify:"إشعار",email:"بريد",sms:"رسالة نصية",push:"دفع",web:"ويب",mobile:"محمول",desktop:"مكتبي",server:"خادم",client:"عميل",user:"مستخدم",admin:"مدير",guest:"ضيف",member:"عضو",owner:"مالك",creator:"منشئ",manager:"مدير",developer:"مطور",designer:"مصمم",tester:"مختبر",analyst:"محلل",analyst:"محلل",architect:"مهندس معماري",lead:"قائد",senior:"كبير",junior:"صغير",intern:"تدريبي",freelance:"حر",contractor:"مقاول",vendor:"بائع",supplier:"مورّد",partner:"شريك",affiliate:"تابع",reseller:"معيد بيع",distributor:"موزّع",customer:"عميل",client:"عميل",user:"مستخدم",audience:"جمهور",visitor:"زائر",subscriber:"مشترك",follower:"متابع",fan:"معجب",critic:"ناقد",reviewer:"مراجع",reporter:"مراسل",journalist:"صحفي",editor:"محرر",publisher:"ناشر",blogger:"مدوّن",influencer:"مؤثّر",celebrity:"مشهور",star:"نجم",idol:"أيقونة",legend:"أسطورة",genius:"عبقري",expert:"خبير",master:"سيد",pro:"محترف",amateur:"هاوي",beginner:"مبتدئ",novice:"متوحد",intermediate:"متوسط",advanced:"متقدم",expert:"خبير",guru:"गुरु",sensei:"sensei",maestro:"maestro",virtuoso:"virtuoso",champion:"بطل",winner:"فاتح",loser:"خاسر",rival:"منافس",opponent:"خصم",ally:"حليف",friend:"صديق",enemy:"عدو",buddy:"رفيق",pal:"صاحب",mate:"صاحب",companion:"رفيق",colleague:"زميل",associate:"مساعد",partner:"شريك",peer:"نظير",superior:"رئيس",subordinate:"مرؤوس",boss:"رئيس",employee:"موظف",worker:"عامل",staff:"موظفين",team:"فريق",group:"مجموعة",organization:"منظمة",company:"شركة",corporation:"شركة",enterprise:"شركة",business:"شركة",startup:"شركة ناشئة",firm:"مكتب",agency:"وكالة",bureau:"مكتب",institution:"مؤسسة",foundation:"مؤسسة",association:"جمعية",union:"اتحاد",committee:"لجنة",board:"مجلس",council:"مجلس",parliament:"برلمان",congress:"كونغرس",senate:"مجلس شيوخ",government:"حكومة",state:"دولة",country:"دولة",nation:"أمة",republic:"جمهورية",democracy:"ديمقراطية",dictatorship:"دكتاتورية",monarchy:"ملكية",empire:"إمبراطورية",kingdom:"مملكة",colony:"مستعمرة",territory:"إقليم",province:"مقاطعة",state:"ولاية",county:"مقاطعة",city:"مدينة",town:"بلدة",village:"قرية",neighborhood:"حي",district:"منطقة",region:"منطقة",zone:"منطقة",area:"منطقة",place:"مكان",location:"موقع",position:"موضع",address:"عنوان",coordinates:"إحداثيات",latitude:"خط العرض",longitude:"خط الطول",altitude:"ارتفاع",elevation:"ارتفاع",depth:"عمق",distance:"مسافة",range:"مدى",size:"حجم",area:"مساحة",volume:"حجم",capacity:"سعة",mass:"كتلة",weight:"وزن",density:"كثافة",temperature:"درجة حرارة",pressure:"ضغط",humidity:"رطوبة",wind:"رياح",rain:"مطر",snow:"ثلج",sun:"شمس",moon:"قمر",star:"نجمة",planet:"كوكب",earth:"أرض",mars:"المريخ",jupiter:"المشترى",saturn:"زحل",venus:"الزهرة",mercury:"عطارد",uranus:"أورانوس",neptune:"نبتون",pluto:"بلوتو",galaxy:"مجرة",universe:"كون",space:"فضاء",time:"وقت",past:"ماضي",present:"حاضر",future:"مستقبل",year:"سنة",month:"شهر",week:"أسبوع",day:"يوم",hour:"ساعة",minute:"دقيقة",second:"ثانية",millisecond:"ميلي ثانية",microsecond:"ميكرو ثانية",nanosecond:"نانو ثانية",century:"قرن",decade:"عقد",millennium:"ألف سنة",era:"عصر",epoch:"حقبة",moment:"لحظة",instant:"لحظة",duration:"مدة",period:"فترة",interval:"فاصل",schedule:"جدولة",deadline:"موعد نهائي",milestone:"معلم",checkpoint:"نقطة تحقق",phase:"مرحلة",stage:"مرحلة",step:"خطوة",level:"مستوى",grade:"درجة",rank:"مرتبة",position:"مركز",status:"حالة",condition:"حالة",situation:"وضع",circumstance:"ظروف",event:"حدث",incident:"حادثة",accident:"حادث",emergency:"طوارئ",crisis:"أزمة",disastor:"كارثة",catastrophe:"كارثة",tragedy:"مأساة",disaster:"كارثة",calamity:"كارثة",emergency:"طوارئ",crisis:"أزمة",panic:"ذعر",fear:"خوف",anxiety:"قلق",stress:"توتر",tension:"توتر",pressure:"ضغط",burden:"عبء",load:"حمل",weight:"ثقل",responsibility:"مسؤولية",duty:"واجب",obligation:"التزام",commitment:"التزام",promise:"وعد",contract:"عقد",agreement:"اتفاق",treaty:"معاهدة",pact:"معاهد",alliance:"تحالف",coalition:"تحالف",partnership:"شراكة",collaboration:"تعاون",cooperation:"تعاون",teamwork:"عمل جماعي",synergy:"تناغم",integration:"تكامل",unification:"توحيد",consolidation:"تثبيت",merger:"اندماج",acquisition:"استحواذ",takeover:"استحواذ",buyout:"شراء",sale:"بيع",purchase:"شراء",transaction:"معاملة",deal:"صفقة",bargain:"مساومة",discount:"خصم",refund:"استرداد",exchange:"ambio",return:"إرجاع",warranty:"ضمان",guarantee:"كفالة",insurance:"تأمين",coverage:"تغطية",premium:"قسط",deductible:"مبلغ م.cms",claim:"مطالبة",settlement:"تسوية",arbitration:"تحكيم",litigation:"دعاوى",lawsuit:"دعاوى",court:"محكمة",judge:"قاضي",jury:"هيئة المحلفين",witness:"شاهد",evidence:"دليل",proof:"برهان",testimony:"شهادة",verdict:"حكم",sentence:"حكم",penalty:"عقوبة",fine:"غرامة",imprisonment:"سجن",probation:"إشراف",parole:"إفراج مشروط",pardon:"عفو",amnesty:"عفو عام",reprieve:"تأجيل",appeal:"استئناف",review:"مراجعة",reconsideration:"إعادة النظر",amendment:"تعديل",revision:"مراجعة",update:"تحديث",upgrade:"ترقية",improvement:"تحسين",enhancement:"تحسين",optimization:"تحسين",refactoring:"إعادة هيكلة",reorganization:"إعادة تنظيم",restructuring:"إعادة هيكلة",reform:"إصلاح",revolution:"ثورة",evolution:"تطور",progress:"تقدم",advancement:"تقدم",development:"تطوير",growth:"نمو",expansion:"توسع",extension:"امتداد",prolongation:"إطالة",continuation:"استمرار",sustainability:"استدامة",resilience:"مرونة",adaptability:"قدرة التكيّف",flexibility:"مرونة",versatility:"تنوع",diversity:"تنوّع",variety:"نوعية",range:"مدى",scope:"نطاق",extent:"مدى",degree:"درجة",level:"مستوى",intensity:"شدة",magnitude:"حجم",scale:"مقياس",proportion:"نسبة",ratio:"نسبة",percentage:"نسبة مئوية",fraction:"كسر",decimal:"عشري",integer:"عدد صحيح",number:"رقم",digit:"رقم",zero:"صفر",one:"واحد",two:"اثنين",three:"ثلاثة",four:"أربعة",five:"خمسة",six:"ستة",seven:"سبعة",eight:"ثمانية",nine:"تسعة",ten:"عشرة",hundred:"مئة",thousand:"ألف",million:"مليون",billion:"مليار",trillion:"تريليون",quadrillion:"كوادريليون"};
+function speakEn(text){try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=0.82;u.pitch=1;window.speechSynthesis.speak(u);}catch(e){}}
+function WordTrans({text,T:Th,lv}){
+  const [open,setOpen]=useState(null);
+  if(!text)return null;
+  const words=text.split(/\s+/);
+  return(<div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center",alignItems:"center"}}>
+    {words.map((w,i)=>{
+      const clean=w.replace(/[^a-zA-Z'-]/g,"");
+      const trans=WORD_DICT[clean.toLowerCase()];
+      const isOpen=open===i;
+      return(
+        <span key={i} style={{position:"relative",display:"inline-block"}}>
+          <span onClick={(e)=>{e.stopPropagation();setOpen(isOpen?null:i);}} style={{padding:"3px 6px",borderRadius:6,cursor:"pointer",fontSize:16,fontWeight:600,color:lv?lv.tx:"#2563EB",background:isOpen?(lv?lv.bg:"rgba(59,130,246,.12)"):"transparent",border:trans?`1px dashed ${lv?lv.br:"rgba(59,130,246,.3)"}`:"1px solid transparent",transition:"all .15s",userSelect:"none"}}>{w} </span>
+          {isOpen&&trans&&<span style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",background:"#1E293B",color:"#fff",padding:"4px 10px",borderRadius:8,fontSize:12,fontWeight:600,whiteSpace:"nowrap",zIndex:50,boxShadow:"0 4px 12px rgba(0,0,0,.25)",fontFamily:"Cairo,sans-serif",animation:"pop .15s ease"}}>{trans}</span>}
+          {isOpen&&!trans&&<span style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",background:"#1E293B",color:"#94A3B8",padding:"4px 10px",borderRadius:8,fontSize:11,whiteSpace:"nowrap",zIndex:50,boxShadow:"0 4px 12px rgba(0,0,0,.25)"}}>—</span>}
+        </span>
+      );
+    })}
+    <button onClick={()=>speakEn(text)} style={{background:lv?lv.fill:"#3B82F6",color:"#fff",border:"none",borderRadius:8,padding:"4px 8px",fontSize:14,cursor:"pointer",flexShrink:0,marginLeft:4}} title="Listen">🔊</button>
+  </div>);
+}
 
 function GenScreen({prog,lv,T,gs,isCS}){
   const [tick,setTick]=useState(0);const [msgIdx,setMsgIdx]=useState(0);
@@ -423,6 +448,10 @@ export default function App(){
   const [cloudConnected,setCloudConnected]=useState(false);
   const [gramTopic,setGramTopic]=useState(null);
   const [gramSection,setGramSection]=useState(0);
+  const [puzzleChips,setPuzzleChips]=useState([]);
+  const [puzzleAnswer,setPuzzleAnswer]=useState([]);
+  const [puzzleDone,setPuzzleDone]=useState(false);
+  const [puzzleOk,setPuzzleOk]=useState(false);
   const topAd=useRef(Math.floor(Math.random()*4));
   const botAd=useRef((Math.floor(Math.random()*4)+2)%4);
   const inRef=useRef(null);
@@ -525,7 +554,7 @@ export default function App(){
     }catch(e){setAuthErr(e.message);}
   },[authToken,apiCall,user]);
   const awardXp=useCallback((amt)=>{if(!amt)return;setSXp(s=>s+amt);setXpPop("+"+amt+" XP");setTimeout(()=>setXpPop(null),1100);},[]);
-  const resetQ=useCallback(()=>{setSel(null);setInp("");setRes(null);setHl(0);setShowA(false);setTries(0);setShkIdx(null);},[]);
+  const resetQ=useCallback(()=>{setSel(null);setInp("");setRes(null);setHl(0);setShowA(false);setTries(0);setShkIdx(null);setPuzzleDone(false);setPuzzleOk(false);},[]);
 
   const advance=useCallback((xpAmt)=>{
     const isOk=xpAmt>0;const curQ=qs[qi];
@@ -563,8 +592,18 @@ export default function App(){
 
   useEffect(()=>{
     if(view!=="quiz")return;
+    const q=qs[qi];if(!q||q.qt!=="p")return;
+    const words=q.en.split(/\s+/);
+    const shuffled=[...words].sort(()=>Math.random()-0.5);
+    setPuzzleChips(shuffled.map((w,i)=>({id:i+Math.random(),word:w,used:false})));
+    setPuzzleAnswer([]);setPuzzleDone(false);setPuzzleOk(false);
+  },[view,qKey]);
+
+  useEffect(()=>{
+    if(view!=="quiz")return;
     const fn=(e)=>{const k=e.key.toLowerCase();const q=qs[qi];if(!q)return;
       if(q.qt==="m"){if(sel!==null){if(k==="enter"||k===" "){e.preventDefault();advance(sel===q.c?XP.mcq:0);}}else{const i=["w","a","s","d"].indexOf(k);if(i!==-1){e.preventDefault();handleMCQ(i);}}}
+      else if(q.qt==="p"){if(puzzleDone&&(k==="enter"||k===" ")){e.preventDefault();advance(puzzleOk?XP.wrt0:0);}}
       else{const done=res!==null||showA;if(done){if(k==="enter"){e.preventDefault();const wXp=showA?0:res==="ok"||res==="close"?(hl===0?XP.wrt0:hl===1?XP.wrt1:XP.wrt2):0;advance(wXp);}}else if(k==="enter"){e.preventDefault();handleWrite();}}
     };
     window.addEventListener("keydown",fn);return()=>window.removeEventListener("keydown",fn);
@@ -810,9 +849,10 @@ export default function App(){
           ):(
             <div style={{animation:"pop .25s ease"}}>
               <div style={{fontSize:11,fontWeight:600,color:lv.tx,letterSpacing:".07em",textTransform:"uppercase",marginBottom:10}}>{q.cat} ✓</div>
-              <div style={{fontSize:20,fontWeight:700,color:lv.tx,lineHeight:1.5,marginBottom:12}}>{q.en}</div>
-              {q.pron&&<div style={{direction:"rtl",fontSize:18,fontWeight:600,fontFamily:"Cairo,sans-serif",background:T.s2,border:`0.5px solid ${lv.br}`,borderRadius:10,padding:".6rem 1rem",display:"inline-flex",alignItems:"center",gap:8,animation:"fUp .2s ease"}}><span style={{fontSize:16}}>🔊</span><span>{q.pron}</span></div>}
-              <p style={{fontSize:11,color:T.m,marginTop:12,opacity:.7}}>👆 اضغط للرجوع / Tap to flip back</p>
+              <WordTrans text={q.en} T={T} lv={lv}/>
+              {q.pron&&<div style={{marginTop:12}}><PronBox pron={q.pron} T={T} lv={lv} en={q.en}/></div>}
+              <p style={{fontSize:11,color:T.m,marginTop:12,opacity:.7}}>👆 اضغط على الكلمة لترجمتها · اضغط 🔊 للنطق</p>
+              <p style={{fontSize:11,color:T.m,marginTop:4,opacity:.7}}>👆 اضغط للرجوع / Tap to flip back</p>
             </div>
           )}
         </div>
@@ -835,11 +875,11 @@ export default function App(){
 
   // ── QUIZ ──────────────────────────────────────────────────────
   if(view==="quiz"&&qs[qi]){
-    const q=qs[qi],isMCQ=q.qt==="m";
+    const q=qs[qi],isMCQ=q.qt==="m",isPuzzle=q.qt==="p";
     const pp=(qi/qs.length*100).toFixed(1);
     const mcqDone=isMCQ&&sel!==null,mcqOk=isMCQ&&sel===q.c;
-    const wDone=!isMCQ&&(res!==null||showA),wOk=!isMCQ&&(res==="ok"||res==="close");
-    const done=mcqDone||wDone,corr=mcqOk||wOk;
+    const wDone=(!isMCQ&&!isPuzzle)&&(res!==null||showA),wOk=(!isMCQ&&!isPuzzle)&&(res==="ok"||res==="close");
+    const done=mcqDone||wDone||puzzleDone,corr=mcqOk||wOk||puzzleOk;
     const gSt=(i)=>sel===null?"idle":i===q.c?"ok":i===sel?"bad":"dim";
     const wXp=showA?0:(res==="ok"||res==="close")?(hl===0?XP.wrt0:hl===1?XP.wrt1:XP.wrt2):0;
     return(
@@ -879,12 +919,12 @@ export default function App(){
         </div>
         <Ad idx={topAd.current} T={T} sm/>
         <div style={{display:"flex",gap:8,marginBottom:10,alignItems:"center"}}>
-          <span style={{fontSize:10,fontWeight:700,color:isMCQ?"#3B82F6":"#8B5CF6",background:isMCQ?"rgba(59,130,246,.1)":"rgba(139,92,246,.1)",border:`0.5px solid ${isMCQ?"rgba(59,130,246,.28)":"rgba(139,92,246,.28)"}`,padding:"2px 8px",borderRadius:20}}>{isMCQ?"⊙ MCQ":"✍️ TYPE"}</span>
+          <span style={{fontSize:10,fontWeight:700,color:isMCQ?"#3B82F6":isPuzzle?"#F59E0B":"#8B5CF6",background:isMCQ?"rgba(59,130,246,.1)":isPuzzle?"rgba(245,158,11,.1)":"rgba(139,92,246,.1)",border:`0.5px solid ${isMCQ?"rgba(59,130,246,.28)":isPuzzle?"rgba(245,158,11,.28)":"rgba(139,92,246,.28)"}`,padding:"2px 8px",borderRadius:20}}>{isMCQ?"⊙ MCQ":isPuzzle?"🧩 PUZZLE":"✍️ TYPE"}</span>
           <span style={{fontSize:10,color:T.m}}>{q.cat}</span>
         </div>
         <div key={qKey} style={{...K(),animation:"sIn .3s ease",position:"relative",overflow:"hidden",background:lv.bg,border:`0.5px solid ${lv.br}`}}>
           <div style={{direction:"rtl",textAlign:"center",fontSize:24,fontWeight:700,lineHeight:1.7,color:T.txt,fontFamily:"'Cairo',sans-serif",padding:".4rem 0"}}>{q.ar}</div>
-          <p style={{textAlign:"center",fontSize:12,color:T.m,marginTop:4,fontFamily:"Cairo,sans-serif"}}>{isMCQ?"اختار الترجمة الصح":"اكتب الترجمة الصح بالإنجليزي"}</p>
+          <p style={{textAlign:"center",fontSize:12,color:T.m,marginTop:4,fontFamily:"Cairo,sans-serif"}}>{isMCQ?"اختار الترجمة الصح":isPuzzle?"رتّب الكلمات عشان تكوّن الجملة":"اكتب الترجمة الصح بالإنجليزي"}</p>
           {ptcl&&PC.map((c,i)=><div key={i} style={{position:"absolute",top:"50%",left:`${4+i*12}%`,width:10,height:10,borderRadius:"50%",background:c,animation:`ptc .7s ease ${i*.04}s forwards`,pointerEvents:"none"}}/>)}
         </div>
         {isMCQ&&<div key={`m${qKey}`} style={{animation:"fUp .28s ease .06s both"}}>
@@ -895,14 +935,49 @@ export default function App(){
             {st==="bad"&&<span style={{fontSize:15,marginTop:3}}>✗</span>}
           </button>);})}
           {!mcqDone&&<div style={{display:"flex",justifyContent:"center",gap:12,marginTop:4,opacity:.35}}>{["W","A","S","D"].map((k,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:3,fontSize:10,color:T.m}}><span style={{background:T.s2,border:`1px solid ${T.bdS}`,borderRadius:3,padding:"0 5px",fontFamily:"monospace",fontSize:10}}>{k}</span>→{["A","B","C","D"][i]}</span>)}</div>}
-          {mcqDone&&<div style={{animation:"fUp .2s ease"}}><PronBox pron={q.pron} T={T} lv={lv}/><div style={{padding:".75rem 1rem",borderRadius:10,margin:"10px 0",background:mcqOk?"rgba(34,197,94,.12)":"rgba(239,68,68,.12)",border:`0.5px solid ${mcqOk?"#22C55E":"#EF4444"}`,color:mcqOk?"#16A34A":"#DC2626",fontSize:14,fontWeight:600,lineHeight:1.5}}>{mcqOk?`✓ Correct! ممتاز! (+${XP.mcq} XP) 🎉`:`✗ Wrong! The answer is: "${q.en}"`}</div><button style={Btn(lv.fill)} className="qbtn" onClick={()=>advance(mcqOk?XP.mcq:0)}>{qi+1>=qs.length?"See results →":"Next →"} <span style={{fontSize:12,opacity:.7}}>(Enter)</span></button></div>}
+          {mcqDone&&<div style={{animation:"fUp .2s ease"}}><PronBox pron={q.pron} T={T} lv={lv} en={q.en}/><div style={{padding:".75rem 1rem",borderRadius:10,margin:"10px 0",background:mcqOk?"rgba(34,197,94,.12)":"rgba(239,68,68,.12)",border:`0.5px solid ${mcqOk?"#22C55E":"#EF4444"}`,color:mcqOk?"#16A34A":"#DC2626",fontSize:14,fontWeight:600,lineHeight:1.5}}>{mcqOk?`✓ Correct! ممتاز! (+${XP.mcq} XP) 🎉`:`✗ Wrong! The answer is: "${q.en}"`}</div><button style={Btn(lv.fill)} className="qbtn" onClick={()=>advance(mcqOk?XP.mcq:0)}>{qi+1>=qs.length?"See results →":"Next →"} <span style={{fontSize:12,opacity:.7}}>(Enter)</span></button></div>}
         </div>}
         {!isMCQ&&<div key={`w${qKey}`} style={{animation:"fUp .28s ease .06s both"}}>
           {hl>0&&!wDone&&<div style={{padding:".6rem 1rem",borderRadius:8,marginBottom:10,background:"rgba(245,158,11,.1)",border:"0.5px solid rgba(245,158,11,.32)",color:"#D97706",fontSize:14,letterSpacing:1.5,fontFamily:"monospace",animation:"hnt .6s ease"}}>💡 {mkHint(q.en,hl)}</div>}
           {!wDone&&<><div style={{animation:shkIdx===-1?"shk .5s ease":undefined}}><input ref={inRef} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleWrite()} placeholder="Type the English translation here..." dir="ltr" className="inp" style={{width:"100%",padding:".9rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:16,boxSizing:"border-box",transition:"border-color .2s",marginBottom:10,fontFamily:"system-ui"}}/></div>
           <button style={Btn(lv.fill)} className="qbtn" onClick={handleWrite} disabled={!inp.trim()}>Check ✓ <span style={{fontSize:12,opacity:.7}}>(Enter)</span></button>
           <div style={{display:"flex",gap:8,marginTop:9}}>{hl<2&&<button style={{...Btn("rgba(245,158,11,.12)","#D97706",{flex:1,border:"0.5px solid rgba(245,158,11,.3)"}),fontSize:13}} className="qbtn" onClick={handleHint}>💡 Hint {hl+1}/2</button>}{(tries>=2||hl>=2)&&!showA&&<button style={{...Btn("rgba(239,68,68,.1)","#DC2626",{flex:1,border:"0.5px solid rgba(239,68,68,.28)"}),fontSize:13}} className="qbtn" onClick={handleShowA}>👁 Show answer</button>}</div></>}
-          {wDone&&<div style={{animation:"fUp .2s ease"}}><PronBox pron={q.pron} T={T} lv={lv}/><div style={{padding:".75rem 1rem",borderRadius:10,margin:"10px 0",background:wOk?"rgba(34,197,94,.12)":"rgba(239,68,68,.12)",border:`0.5px solid ${wOk?"#22C55E":"#EF4444"}`,color:wOk?"#16A34A":"#DC2626",fontSize:14,fontWeight:600,lineHeight:1.5}}>{showA?`👁 Answer: "${q.en}"`:res==="ok"?`✓ Perfect! (+${wXp} XP) 🎉`:res==="close"?`✓ Close! Answer: "${q.en}" (+${wXp} XP) 👍`:`✗ Wrong! Answer: "${q.en}"`}</div>{!wOk&&!showA&&tries<=3&&<button style={{...Btn("rgba(59,130,246,.1)","#2563EB",{border:"0.5px solid rgba(59,130,246,.28)",marginBottom:10}),fontSize:14}} className="qbtn" onClick={()=>{setRes(null);setInp("");}}>🔄 Try again</button>}<button style={Btn(lv.fill)} className="qbtn" onClick={()=>advance(wOk?wXp:0)}>{qi+1>=qs.length?"See results →":"Next →"} <span style={{fontSize:12,opacity:.7}}>(Enter)</span></button></div>}
+          {wDone&&<div style={{animation:"fUp .2s ease"}}><PronBox pron={q.pron} T={T} lv={lv} en={q.en}/><div style={{padding:".75rem 1rem",borderRadius:10,margin:"10px 0",background:wOk?"rgba(34,197,94,.12)":"rgba(239,68,68,.12)",border:`0.5px solid ${wOk?"#22C55E":"#EF4444"}`,color:wOk?"#16A34A":"#DC2626",fontSize:14,fontWeight:600,lineHeight:1.5}}>{showA?`👁 Answer: "${q.en}"`:res==="ok"?`✓ Perfect! (+${wXp} XP) 🎉`:res==="close"?`✓ Close! Answer: "${q.en}" (+${wXp} XP) 👍`:`✗ Wrong! Answer: "${q.en}"`}</div>{!wOk&&!showA&&tries<=3&&<button style={{...Btn("rgba(59,130,246,.1)","#2563EB",{border:"0.5px solid rgba(59,130,246,.28)",marginBottom:10}),fontSize:14}} className="qbtn" onClick={()=>{setRes(null);setInp("");}}>🔄 Try again</button>}<button style={Btn(lv.fill)} className="qbtn" onClick={()=>advance(wOk?wXp:0)}>{qi+1>=qs.length?"See results →":"Next →"} <span style={{fontSize:12,opacity:.7}}>(Enter)</span></button></div>}
+        </div>}
+        {/* ── PUZZLE MODE ── */}
+        {isPuzzle&&!puzzleDone&&<div style={{animation:"fUp .28s ease .06s both",marginBottom:12}}>
+          {/* Answer zone */}
+          <div style={{...K({marginBottom:12,minHeight:50}),display:"flex",flexWrap:"wrap",gap:6,alignItems:"center",justifyContent:"center",background:T.s1,border:`2px dashed ${T.bdS}`,padding:puzzleAnswer.length?".7rem":"1.2rem",transition:"all .2s"}}>
+            {puzzleAnswer.length===0&&<span style={{fontSize:13,color:T.m,fontFamily:"Cairo,sans-serif"}}>اضبط الكلمات هنا 👇</span>}
+            {puzzleAnswer.map((chip,i)=>(
+              <span key={chip.id} onClick={()=>{setPuzzleAnswer(a=>a.filter((_,j)=>j!==i));setPuzzleChips(ch=>ch.map(c=>c.id===chip.id?{...c,used:false}:c));}}
+                style={{padding:"7px 14px",borderRadius:10,background:lv.fill,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",animation:"pop .15s ease",boxShadow:`0 2px 6px ${lv.fill}44`,userSelect:"none",transition:"transform .1s"}}
+                onMouseDown={e=>e.currentTarget.style.transform="scale(.92)"}
+                onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>{chip.word}</span>
+            ))}
+          </div>
+          {/* Word bank */}
+          <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",marginBottom:12}}>
+            {puzzleChips.map(chip=>(
+              <span key={chip.id} onClick={()=>{if(!chip.used)setPuzzleAnswer(a=>[...a,chip]);setPuzzleChips(ch=>ch.map(c=>c.id===chip.id?{...c,used:true}:c));}}
+                style={{padding:"7px 14px",borderRadius:10,background:chip.used?"rgba(128,128,128,.1)":T.s2,color:chip.used?"rgba(128,128,128,.3)":T.txt,fontSize:14,fontWeight:600,cursor:chip.used?"default":"pointer",border:`1.5px solid ${chip.used?"transparent":T.bdS}`,opacity:chip.used?.35:1,transition:"all .15s",userSelect:"none",transform:chip.used?"scale(.9)":"none"}}>{chip.word}</span>
+            ))}
+          </div>
+          <button style={Btn(lv.fill)} className="qbtn" onClick={()=>{
+            const userStr=puzzleAnswer.map(c=>c.word).join(" ");
+            const ok=userStr.toLowerCase().trim()===q.en.toLowerCase().trim();
+            setPuzzleOk(ok);setPuzzleDone(true);
+            if(!ok)setHrt(h=>Math.max(0,h-1));
+            if(ok){play("ok");setPtcl(true);setTimeout(()=>setPtcl(false),700);}
+            else{play("no");}
+          }} disabled={puzzleAnswer.length===0}>Check ✓</button>
+        </div>}
+        {isPuzzle&&puzzleDone&&<div style={{animation:"fUp .2s ease",marginBottom:12}}>
+          <PronBox pron={q.pron} T={T} lv={lv} en={q.en}/>
+          <div style={{padding:".75rem 1rem",borderRadius:10,margin:"10px 0",background:puzzleOk?"rgba(34,197,94,.12)":"rgba(239,68,68,.12)",border:`0.5px solid ${puzzleOk?"#22C55E":"#EF4444"}`,color:puzzleOk?"#16A34A":"#DC2626",fontSize:14,fontWeight:600,lineHeight:1.5}}>
+            {puzzleOk?`✓ Perfect! 🎉 (+${XP.wrt0} XP)`:`✗ Wrong! The correct sentence is:\n"${q.en}"`}
+          </div>
+          <button style={Btn(lv.fill)} className="qbtn" onClick={()=>advance(puzzleOk?XP.wrt0:0)}>{qi+1>=qs.length?"See results →":"Next →"} <span style={{fontSize:12,opacity:.7}}>(Enter)</span></button>
         </div>}
         {qi>0&&qi%12===0&&<div style={{marginTop:10}}><Ad idx={botAd.current} T={T} sm/></div>}
       </div>
