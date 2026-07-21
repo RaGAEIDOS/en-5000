@@ -1369,7 +1369,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={S.footerBottom(c)}>
-            {'\u00A9'} 2024 EN-5000 — eng5000phrases. {'\u2764\uFE0F'} في مصر.
+            {'\u00A9'} 2026 EN-5000 — eng5000phrases. {'\u2764\uFE0F'} في مصر.
           </div>
         </footer>
       </div>
