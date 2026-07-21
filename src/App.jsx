@@ -397,7 +397,7 @@ function GenScreen({prog,lv,T,gs,isCS}){
   </div>);}
 
 export default function App(){
-  const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";return"landing";};
+  const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";if(h==="landing")return"landing";return window.innerWidth>=1024?"desktop":"app";};
   const [route,setRoute]=useState(getRoute);
   useEffect(()=>{const h=()=>setRoute(getRoute());window.addEventListener("hashchange",h);return()=>window.removeEventListener("hashchange",h);},[]);
 
@@ -429,7 +429,7 @@ export default function App(){
   const [studyFlipped,setStudyFlipped]=useState(false);
   const [dark,setDark]=useState(false);
   const [snd,setSnd]=useState(true);
-  const [viewMode,setViewMode]=useState(()=>{try{return localStorage.getItem("e5k_viewMode")||"mobile";}catch{return"mobile";}});
+  const [viewMode,setViewMode]=useState(()=>{try{return localStorage.getItem("e5k_viewMode")||(window.innerWidth>=1024?"desktop":"mobile");}catch{return window.innerWidth>=1024?"desktop":"mobile";}});
   const [gs,setGs]=useState(0);
   const [errMsg,setErrMsg]=useState("");
   const [user,setUser]=useState(null);
