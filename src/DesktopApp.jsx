@@ -402,7 +402,11 @@ export default function DesktopApp() {
       { ar: "الوقت كام؟", en: "What time is it?", pron: "وات تايم إز إيت؟", opts: ["What time is it?", "What time is at?", "What times is it?", "What time are it?"], c: 0, cat: "Daily Activities" },
     ];
     const shuffled = [...FB].sort(() => Math.random() - 0.5).slice(0, 10);
-    shuffled.forEach(q => { q.opts = [...q.opts].sort(() => Math.random() - 0.5); });
+    shuffled.forEach(q => {
+      const correctAnswer = q.opts[q.c];
+      q.opts = [...q.opts].sort(() => Math.random() - 0.5);
+      q.c = q.opts.indexOf(correctAnswer);
+    });
     setQuizQuestions(shuffled);
     setQuizIndex(0);
     setQuizSelected(null);
