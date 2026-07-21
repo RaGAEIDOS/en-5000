@@ -462,6 +462,9 @@ export default function App(){
   const [puzzleAnswer,setPuzzleAnswer]=useState([]);
   const [puzzleDone,setPuzzleDone]=useState(false);
   const [puzzleOk,setPuzzleOk]=useState(false);
+  const [leaderboard,setLeaderboard]=useState([]);
+  const [leaderboardRank,setLeaderboardRank]=useState(null);
+  const [leaderboardLoading,setLeaderboardLoading]=useState(false);
   const topAd=useRef(Math.floor(Math.random()*4));
   const botAd=useRef((Math.floor(Math.random()*4)+2)%4);
   const inRef=useRef(null);
@@ -505,6 +508,17 @@ export default function App(){
     if(!authToken)return;
     try{const body={general:prog,cs:csProg,...extra};await apiCall("/api/sync/push",{method:"POST",body:JSON.stringify(body)});}catch(e){console.warn("Cloud push failed:",e.message);}
   },[authToken,prog,csProg,apiCall]);
+
+  async function fetchLeaderboard(){
+    setLeaderboardLoading(true);
+    try{
+      const headers={"Content-Type":"application/json"};
+      if(authToken)headers["Authorization"]=`Bearer ${authToken}`;
+      const res=await fetch("/api/leaderboard",{method:"GET",headers});
+      if(res.ok){const d=await res.json();setLeaderboard(d.leaderboard||[]);setLeaderboardRank(d.myRank);}
+    }catch(e){console.warn("Leaderboard fetch failed:",e.message);}
+    setLeaderboardLoading(false);
+  }
 
   function switchViewMode(mode){
     setViewMode(mode);
@@ -829,6 +843,15 @@ export default function App(){
         </div>
         <span style={{fontSize:18,color:T.m}}>←</span>
       </div>
+      {/* Leaderboard shortcut */}
+      <div onClick={()=>{setView("leaderboard");fetchLeaderboard();}} style={{...K(),cursor:"pointer",display:"flex",alignItems:"center",gap:12,background:"linear-gradient(135deg,rgba(245,158,11,.08),rgba(239,68,68,.08))",border:"0.5px solid rgba(245,158,11,.2)"}}>
+        <div style={{width:44,height:44,borderRadius:10,background:"#F59E0B",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🏆</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:14,fontWeight:700,color:T.txt}}>لوحة الصدارة</div>
+          <div style={{fontSize:11,color:T.m,marginTop:1}}>شوف أفضل المتعلمين</div>
+        </div>
+        <span style={{fontSize:18,color:T.m}}>←</span>
+      </div>
       {prog.streak>=2&&<div style={{...K(),background:LC[QDAY(prog.day)].bg,border:`0.5px solid ${LC[QDAY(prog.day)].br}`}}><p style={{color:LC[QDAY(prog.day)].tx,fontSize:14,fontWeight:700,marginBottom:2}}>{prog.streak>=7?`🔥 ${prog.streak} day streak!`:`🔥 ${prog.streak} day streak — keep going!`}</p><p style={{fontSize:12,color:T.m}}>Come back every day!</p></div>}
       {showCfg&&<div style={{...K(),animation:"fUp .2s ease"}}>
         <div style={{fontSize:13,fontWeight:700,color:T.txt,marginBottom:14}}>⚙️ Settings</div>
@@ -1141,6 +1164,72 @@ export default function App(){
         {gramSection>0&&<button style={{...Btn(T.s1,T.txt,{flex:1,border:`0.5px solid ${T.bdS}`}),fontSize:13}} className="qbtn" onClick={()=>setGramSection(s=>s-1)}>← السابق</button>}
         {gramSection<gramTopic.sections.length-1&&<button style={{...Btn(LC.Easy.fill,{flex:1}),fontSize:13}} className="qbtn" onClick={()=>setGramSection(s=>s+1)}>التالي →</button>}
         {gramSection===gramTopic.sections.length-1&&<button style={{...Btn(LC.Easy.fill,{flex:1}),fontSize:13}} className="qbtn" onClick={()=>setView("grammar")}>✓ خلصت</button>}
+      </div>
+    </div>
+  );
+
+  // ── LEADERBOARD ──────────────────────────────────
+  if(view==="leaderboard")return(
+    <div style={W}><style>{CSS}</style>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+        <button className="ibtn" style={{fontSize:20,color:T.m}} onClick={()=>setView("home")}>←</button>
+        <span style={{fontSize:22}}>🏆</span>
+        <h2 style={{fontSize:18,fontWeight:700,color:T.txt}}>لوحة الصدارة</h2>
+      </div>
+
+      {/* My rank card */}
+      {leaderboardRank&&<div style={{...K(),background:"linear-gradient(135deg,rgba(245,158,11,.1),rgba(239,68,68,.1))",border:"1px solid rgba(245,158,11,.2)",marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{fontSize:24,fontWeight:800,color:"#F59E0B",minWidth:36,textAlign:"center"}}>#{leaderboardRank}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:T.txt}}>ترتيبك الحالي</div>
+            <div style={{fontSize:11,color:T.m,marginTop:2}}>{prog.xp||0} XP · {prog.bestStreak||0} streak</div>
+          </div>
+          <div style={{fontSize:13,fontWeight:700,color:uLv.c}}>{uLv.i} {uLv.n}</div>
+        </div>
+      </div>}
+
+      {/* Loading */}
+      {leaderboardLoading&&<div style={{textAlign:"center",padding:40,color:T.m}}>⏳ جاري التحميل...</div>}
+
+      {/* Leaderboard list */}
+      {!leaderboardLoading&&leaderboard.length===0&&<div style={{textAlign:"sharp",padding:40,color:T.m}}>لا يوجد مستخدمين بعد</div>}
+
+      {!leaderboardLoading&&leaderboard.map((u,i)=>{
+        const isMe=u.id===user?.id;
+        return(
+          <div key={u.id} style={{...K(),marginBottom:8,display:"flex",alignItems:"center",gap:12,animation:`fUp .${i%10+2}s ease`,border:isMe?`1.5px solid #3B82F6`:undefined,background:isMe?"rgba(59,130,246,.06)":undefined}}>
+            <div style={{width:32,textAlign:"center",flexShrink:0}}>
+              {u.medal?<span style={{fontSize:22}}>{u.medal}</span>:<span style={{fontSize:14,fontWeight:700,color:T.m}}>#{u.rank}</span>}
+            </div>
+            <div style={{width:36,height:36,borderRadius:"50%",background:u.photo?"#000":avC(u.name||"?"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0,overflow:"hidden"}}>
+              {u.photo?<img src={u.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(u.name||"?").charAt(0).toUpperCase()}
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}{isMe?" (أنت)":""}</div>
+              <div style={{fontSize:11,color:T.m,marginTop:1,display:"flex",gap:8}}>
+                <span>{u.levelIcon} {u.level}</span>
+                <span>🔥 {u.bestStreak}</span>
+                <span>🎯 {u.accuracy}%</span>
+              </div>
+            </div>
+            <div style={{textAlign:"center",flexShrink:0}}>
+              <div style={{fontSize:15,fontWeight:800,color:"#F59E0B"}}>{u.xp.toLocaleString()}</div>
+              <div style={{fontSize:9,color:T.m}}>XP</div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Rank explanation */}
+      <div style={{...K(),marginTop:10,background:T.s1}}>
+        <div style={{fontSize:12,fontWeight:700,color:T.txt,marginBottom:6}}>📊 كيف بيتحسب الترتيب؟</div>
+        <div style={{fontSize:11,color:T.m,lineHeight:1.7}}>
+          الترتيب الذكي بيجمع بين:<br/>
+          • <b>60%</b> إجمالي النقاط (XP)<br/>
+          • <b>20%</b> أفضل سلسلة يومية (Streak)<br/>
+          • <b>20%</b> نسبة الإجابة الصحيحة (Accuracy)
+        </div>
       </div>
     </div>
   );

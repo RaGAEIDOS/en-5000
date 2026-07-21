@@ -10,6 +10,7 @@ const LC = { Easy: { fill: "#22C55E", bg: "rgba(34,197,94,.1)", br: "rgba(34,197
 const TH = { light: { root: "#f3f5fb", s1: "#edf0f7", s2: "#fff", bd: "rgba(0,0,0,.07)", bdS: "rgba(0,0,0,.13)", txt: "#111827", m: "#6b7280", s: "#4b5563" }, dark: { root: "#0c111a", s1: "#141c2b", s2: "#1c2540", bd: "rgba(255,255,255,.07)", bdS: "rgba(255,255,255,.14)", txt: "#e8edf5", m: "#8b95a8", s: "#9ca3af" } };
 const getLv = (xp) => { let l = LVLS[0]; for (const x of LVLS) if ((xp || 0) >= x.min) l = x; return l; };
 const getNext = (xp) => { for (const x of LVLS) if ((xp || 0) < x.min) return x; return null; };
+const avC = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); const c = ['#3B82F6','#8B5CF6','#EC4899','#EF4444','#F59E0B','#22C55E','#06B6D4']; return c[Math.abs(h) % c.length]; };
 
 async function lP(k = PK) { try { const v = localStorage.getItem(k); return v ? { ...DEF, ...JSON.parse(v) } : { ...DEF }; } catch { return { ...DEF }; } }
 async function sP(p, k = PK) { try { localStorage.setItem(k, JSON.stringify(p)); } catch {} }
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { id: 'grammar', icon: '📖', label: 'قواعد اللغة' },
   { id: 'cs-quiz', icon: '💻', label: 'اختبار البرمجة' },
   { id: 'progress', icon: '📊', label: 'التقدم' },
+  { id: 'leaderboard', icon: '🏆', label: 'لوحة الصدارة' },
   { id: 'profile', icon: '👤', label: 'الملف الشخصي' },
 ];
 
@@ -95,6 +97,9 @@ export default function DesktopApp() {
   const [authToken,setAuthToken]=useState(()=>{try{return localStorage.getItem("e5k_token")||null;}catch{return null;}});
   const [syncing,setSyncing]=useState(false);
   const [cloudConnected,setCloudConnected]=useState(!!authToken);
+  const [leaderboard,setLeaderboard]=useState([]);
+  const [leaderboardRank,setLeaderboardRank]=useState(null);
+  const [leaderboardLoading,setLeaderboardLoading]=useState(false);
 
   async function apiCall(url,opts={},token){
     const t=token||authToken;
@@ -103,6 +108,17 @@ export default function DesktopApp() {
     const res=await fetch(url,{...opts,headers});
     if(!res.ok)throw new Error(`API ${res.status}`);
     return res.json();
+  }
+
+  async function fetchLeaderboard(){
+    setLeaderboardLoading(true);
+    try{
+      const headers={"Content-Type":"application/json"};
+      if(authToken)headers["Authorization"]=`Bearer ${authToken}`;
+      const res=await fetch("/api/leaderboard",{method:"GET",headers});
+      if(res.ok){const d=await res.json();setLeaderboard(d.leaderboard||[]);setLeaderboardRank(d.myRank);}
+    }catch(e){console.warn("Leaderboard fetch failed:",e.message);}
+    setLeaderboardLoading(false);
   }
 
   async function cloudPull(token){
@@ -669,6 +685,75 @@ export default function DesktopApp() {
       case 'grammar-lesson': return renderGrammar();
       case 'cs-quiz': return renderCSQuiz();
       case 'progress': return renderProgress();
+      case 'leaderboard':
+        if(leaderboard.length===0&&!leaderboardLoading)fetchLeaderboard();
+        return(
+          <div style={{padding:"24px 32px",maxWidth:1200}}>
+            <h2 style={{fontSize:22,fontWeight:700,color:darkMode?"#e8edf5":"#111827",marginBottom:20}}>🏆 لوحة الصدارة</h2>
+            <div style={{display:"flex",gap:24}}>
+              {/* Left: My rank */}
+              <div style={{width:320,flexShrink:0}}>
+                <div style={{background:"linear-gradient(135deg,rgba(245,158,11,.1),rgba(239,68,68,.1))",border:"1px solid rgba(245,158,11,.2)",borderRadius:12,padding:20,marginBottom:16}}>
+                  <div style={{fontSize:13,fontWeight:700,color:darkMode?"#e8edf5":"#111827",marginBottom:8}}>ترتيبك الحالي</div>
+                  {leaderboardRank?<div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{fontSize:36,fontWeight:800,color:"#F59E0B"}}>#{leaderboardRank}</div>
+                    <div>
+                      <div style={{fontSize:13,color:darkMode?"#8b95a8":"#6b7280"}}>{(JSON.parse(localStorage.getItem("e5k_p13")||"{}").xp||0).toLocaleString()} XP</div>
+                      <div style={{fontSize:13,color:darkMode?"#8b95a8":"#6b7280"}}>{(JSON.parse(localStorage.getItem("e5k_p13")||"{}").bestStreak||0)} streak</div>
+                    </div>
+                  </div>:<div style={{fontSize:13,color:darkMode?"#8b95a8":"#6b7280"}}>سجّل دخول عشان تشوف ترتيبك</div>}
+                </div>
+                <div style={{background:darkMode?"#1c2540":"#fff",border:`1px solid ${darkMode?"rgba(255,255,255,.07)":"rgba(0,0,0,.07)"}`,borderRadius:12,padding:20}}>
+                  <div style={{fontSize:13,fontWeight:700,color:darkMode?"#e8edf5":"#111827",marginBottom:8}}>📊 كيف بيتحسب الترتيب؟</div>
+                  <div style={{fontSize:12,color:darkMode?"#8b95a8":"#6b7280",lineHeight:1.8}}>
+                    الترتيب الذكي بيجمع بين:<br/>
+                    • <b>60%</b> إجمالي النقاط (XP)<br/>
+                    • <b>20%</b> أفضل سلسلة يومية (Streak)<br/>
+                    • <b>20%</b> نسبة الإجابة الصحيحة
+                  </div>
+                </div>
+              </div>
+              {/* Right: Full leaderboard */}
+              <div style={{flex:1}}>
+                {leaderboardLoading?<div style={{textAlign:"center",padding:40,color:darkMode?"#8b95a8":"#6b7280"}}>⏳ جاري التحميل...</div>:(
+                  <div style={{background:darkMode?"#1c2540":"#fff",border:`1px solid ${darkMode?"rgba(255,255,255,.07)":"rgba(0,0,0,.07)"}`,borderRadius:12,overflow:"hidden"}}>
+                    {/* Table header */}
+                    <div style={{display:"flex",padding:"12px 20px",borderBottom:`1px solid ${darkMode?"rgba(255,255,255,.07)":"rgba(0,0,0,.07)"}`,background:darkMode?"#141c2b":"#f8fafc",fontSize:11,fontWeight:700,color:darkMode?"#8b95a8":"#6b7280",textTransform:"uppercase",letterSpacing:".05em"}}>
+                      <div style={{width:60}}>الترتيب</div>
+                      <div style={{flex:1}}>المستخدم</div>
+                      <div style={{width:100,textAlign:"center"}}>المستوى</div>
+                      <div style={{width:80,textAlign:"center"}}>🔥 Streak</div>
+                      <div style={{width:80,textAlign:"center"}}>🎯 Accuracy</div>
+                      <div style={{width:100,textAlign:"center"}}>XP</div>
+                    </div>
+                    {/* Rows */}
+                    {leaderboard.map((u,i)=>{
+                      const isMe=u.id===JSON.parse(localStorage.getItem("e5k_u13")||"{}").id;
+                      return(
+                        <div key={u.id} style={{display:"flex",padding:"12px 20px",borderBottom:`1px solid ${darkMode?"rgba(255,255,255,.04)":"rgba(0,0,0,.04)"}`,background:isMe?(darkMode?"rgba(59,130,246,.08)":"rgba(59,130,246,.05)"):"transparent",alignItems:"center",fontSize:13}}>
+                          <div style={{width:60,fontWeight:700,color:u.medal?"#F59E0B":darkMode?"#e8edf5":"#111827"}}>
+                            {u.medal?<span style={{fontSize:20}}>{u.medal}</span>:<span>#{u.rank}</span>}
+                          </div>
+                          <div style={{flex:1,display:"flex",alignItems:"center",gap:10}}>
+                            <div style={{width:32,height:32,borderRadius:"50%",background:u.photo?"#000":avC(u.name||"?"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",flexShrink:0,overflow:"hidden"}}>
+                              {u.photo?<img src={u.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(u.name||"?").charAt(0).toUpperCase()}
+                            </div>
+                            <span style={{fontWeight:isMe?700:500,color:isMe?"#3B82F6":darkMode?"#e8edf5":"#111827"}}>{u.name}{isMe?" (أنت)":""}</span>
+                          </div>
+                          <div style={{width:100,textAlign:"center",fontSize:12,color:u.levelColor}}>{u.levelIcon} {u.level}</div>
+                          <div style={{width:80,textAlign:"center",fontWeight:600,color:darkMode?"#e8edf5":"#111827"}}>{u.bestStreak}</div>
+                          <div style={{width:80,textAlign:"center",color:u.accuracy>=80?"#22C55E":u.accuracy>=50?"#F59E0B":"#EF4444"}}>{u.accuracy}%</div>
+                          <div style={{width:100,textAlign:"center",fontWeight:800,color:"#F59E0B"}}>{u.xp.toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                    {leaderboard.length===0&&<div style={{padding:40,textAlign:"center",color:darkMode?"#8b95a8":"#6b7280"}}>لا يوجد مستخدمين بعد</div>}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
       case 'profile': return renderProfile();
       default: return renderHome();
     }
