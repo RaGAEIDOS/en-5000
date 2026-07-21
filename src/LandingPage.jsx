@@ -730,7 +730,7 @@ export default function LandingPage() {
     setMobileNav(false);
   };
 
-  const goApp = () => { window.location.hash = '#/desktop'; };
+  const goApp = () => { window.location.hash = window.innerWidth < 900 ? '#/app' : '#/desktop'; };
 
   return (
     <>
