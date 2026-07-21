@@ -432,6 +432,7 @@ export default function App(){
   const [studyFlipped,setStudyFlipped]=useState(false);
   const [dark,setDark]=useState(false);
   const [snd,setSnd]=useState(true);
+  const [viewMode,setViewMode]=useState(()=>{try{return localStorage.getItem("e5k_viewMode")||"mobile";}catch{return"mobile";}});
   const [gs,setGs]=useState(0);
   const [errMsg,setErrMsg]=useState("");
   const [user,setUser]=useState(null);
@@ -489,14 +490,28 @@ export default function App(){
         const u={name:d.profile.name,email:d.profile.email,age:d.profile.age,photo:d.profile.photo,color:avC(d.profile.name||"?")};
         setUser(u);sU(u);
       }
+      if(d.settings){
+        setDark(!!d.settings.dark);
+        setSnd(d.settings.sound!==false);
+        sCfg({sound:d.settings.sound!==false,dark:!!d.settings.dark,viewMode:d.settings.viewMode||"mobile"});
+        if(d.settings.viewMode){setViewMode(d.settings.viewMode);try{localStorage.setItem("e5k_viewMode",d.settings.viewMode);}catch{}}
+      }
+      if(Array.isArray(d.perfHistory)){localStorage.setItem("e5k_perf",JSON.stringify(d.perfHistory.slice(-20)));}
       setCloudConnected(true);
     }catch(e){console.warn("Cloud pull failed:",e.message);}finally{setSyncing(false);}
   },[]);
 
-  const cloudPush=useCallback(async()=>{
+  const cloudPush=useCallback(async(extra={})=>{
     if(!authToken)return;
-    try{await apiCall("/api/sync/push",{method:"POST",body:JSON.stringify({general:prog,cs:csProg})});}catch(e){console.warn("Cloud push failed:",e.message);}
+    try{const body={general:prog,cs:csProg,...extra};await apiCall("/api/sync/push",{method:"POST",body:JSON.stringify(body)});}catch(e){console.warn("Cloud push failed:",e.message);}
   },[authToken,prog,csProg,apiCall]);
+
+  function switchViewMode(mode){
+    setViewMode(mode);
+    try{localStorage.setItem("e5k_viewMode",mode);}catch{}
+    if(authToken)cloudPush({settings:{sound:snd,dark,viewMode:mode}});
+    window.location.hash=mode==="desktop"?"#/desktop":"#/app";
+  }
 
   const doSignUp=useCallback(async()=>{
     setAuthErr("");setAuthMsg("");setAuthLoading(true);
@@ -548,12 +563,14 @@ export default function App(){
 
   useEffect(()=>{const savedToken=localStorage.getItem("e5k_token");Promise.all([lP(PK),lP(CS_PK),lCfg(),lU()]).then(([p,cp,c,u])=>{setProg(p);setCsProg(cp);setDark(c.dark||false);setSnd(c.sound!==false);setUser(u);if(savedToken){setAuthToken(savedToken);cloudPull(savedToken).then(()=>{if(!u?.name)setView("setup");else setView("home");});}else if(!u?.name)setView("landing");else setView("home");});},[]);
   useEffect(()=>{if(view==="quiz"&&qs[qi]?.qt==="w"&&inRef.current)setTimeout(()=>inRef.current?.focus(),80);},[view,qKey]);
+  useEffect(()=>{if(!authToken)return;const interval=setInterval(()=>{cloudPush();},300000);return()=>clearInterval(interval);},[authToken,prog,csProg]);
+  useEffect(()=>{const handle=()=>{if(document.visibilityState==="visible"&&authToken)cloudPush();};document.addEventListener("visibilitychange",handle);return()=>document.removeEventListener("visibilitychange",handle);},[authToken]);
 
   const W={maxWidth:620,margin:"0 auto",padding:"1rem",color:T.txt,background:T.root,minHeight:"100vh",fontFamily:"system-ui,sans-serif",direction:"ltr",textAlign:"left"};
   const K=(e={})=>({background:T.s2,border:`0.5px solid ${T.bd}`,borderRadius:14,padding:"1.1rem 1.25rem",marginBottom:".85rem",...e});
   const Btn=(bg,cl="#fff",e={})=>({width:"100%",padding:".82rem",borderRadius:10,border:"none",background:bg,color:cl,fontSize:15,fontWeight:700,cursor:"pointer",...e});
   const PC=["#22C55E","#3B82F6","#F59E0B","#EF4444","#8B5CF6","#06B6D4","#F97316","#EC4899"];
-  const saveCfg=useCallback((upd)=>{lCfg().then(c=>sCfg({...c,...upd}));},[]);
+  const saveCfg=useCallback((upd)=>{lCfg().then(c=>sCfg({...c,...upd}));if(authToken&&upd){cloudPush({settings:upd});}},[authToken,cloudPush]);
   const handlePhoto=(e)=>{const file=e.target.files[0];if(!file)return;const rd=new FileReader();rd.onload=(ev)=>{const img=new Image();img.onload=()=>{const cv=document.createElement("canvas");cv.width=cv.height=140;const ctx=cv.getContext("2d"),mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,140,140);const b64=cv.toDataURL("image/jpeg",.78);const nu={...user,photo:b64};setUser(nu);sU(nu);if(authToken)apiCall("/api/auth/update-profile",{method:"POST",body:JSON.stringify({photo:b64})}).catch(()=>{});};img.src=ev.target.result;};rd.readAsDataURL(file);};
   const saveProfile=useCallback(async(upd)=>{
     setAuthErr("");setAuthMsg("");
@@ -818,6 +835,18 @@ export default function App(){
         {[{l:"🔊 Sound effects",v:snd,fn:()=>{const n=!snd;setSnd(n);saveCfg({sound:n});}},{l:dark?"☀️ Light mode":"🌙 Dark mode",v:dark,fn:()=>{const n=!dark;setDark(n);saveCfg({dark:n});}}].map((s,i,a)=>(
           <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:i<a.length-1?12:0,marginBottom:i<a.length-1?12:0,borderBottom:i<a.length-1?`0.5px solid ${T.bd}`:"none"}}><span style={{fontSize:13,color:T.s}}>{s.l}</span><Tog v={s.v} fn={s.fn} fill={LC.Easy.fill}/></div>
         ))}
+        {/* View Mode Toggle */}
+        <div style={{...K(),marginBottom:12}}>
+          <div style={{fontSize:14,fontWeight:700,color:T.txt,marginBottom:8}}>🖥️ نسخة التطبيق</div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>switchViewMode("mobile")} style={{flex:1,padding:"10px",borderRadius:10,border:`2px solid ${viewMode==="mobile"?"#3B82F6":T.bdS}`,background:viewMode==="mobile"?"rgba(59,130,246,.1)":"transparent",color:viewMode==="mobile"?"#3B82F6":T.m,fontWeight:600,cursor:"pointer",fontSize:13}}>
+              📱 موبايل
+            </button>
+            <button onClick={()=>switchViewMode("desktop")} style={{flex:1,padding:"10px",borderRadius:10,border:`2px solid ${viewMode==="desktop"?"#3B82F6":T.bdS}`,background:viewMode==="desktop"?"rgba(59,130,246,.1)":"transparent",color:viewMode==="desktop"?"#3B82F6":T.m,fontWeight:600,cursor:"pointer",fontSize:13}}>
+              🖥️ ديسكتوب
+            </button>
+          </div>
+        </div>
         <div style={{marginTop:12,paddingTop:12,borderTop:`0.5px solid ${T.bd}`,display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
           {rst?<span style={{fontSize:12,color:T.m}}>Reset? <button onClick={()=>{doReset(false);}} style={{background:"none",border:"none",color:LC.Easy.tx,cursor:"pointer",fontSize:12,fontWeight:700,textDecoration:"underline"}}>General</button> <button onClick={()=>{doReset(true);}} style={{background:"none",border:"none",color:CS_LC.Easy.tx,cursor:"pointer",fontSize:12,fontWeight:700,textDecoration:"underline"}}>CS</button> <button onClick={()=>setRst(false)} style={{background:"none",border:"none",color:T.m,cursor:"pointer",fontSize:12,textDecoration:"underline"}}>Cancel</button></span>
           :<button className="ibtn" style={{color:T.m,fontSize:12}} onClick={()=>setRst(true)}>🗑️ Reset progress</button>}

@@ -52,6 +52,18 @@ async function ensureTables() {
       used BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS user_settings (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+      settings JSONB DEFAULT '{}',
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS performance_history (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+      history JSONB DEFAULT '[]',
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
   `);
   tablesCreated = true;
 }

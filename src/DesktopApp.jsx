@@ -92,6 +92,69 @@ export default function DesktopApp() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
+  const [authToken,setAuthToken]=useState(()=>{try{return localStorage.getItem("e5k_token")||null;}catch{return null;}});
+  const [syncing,setSyncing]=useState(false);
+  const [cloudConnected,setCloudConnected]=useState(!!authToken);
+
+  async function apiCall(url,opts={},token){
+    const t=token||authToken;
+    const headers={"Content-Type":"application/json",...(opts.headers||{})};
+    if(t)headers["Authorization"]=`Bearer ${t}`;
+    const res=await fetch(url,{...opts,headers});
+    if(!res.ok)throw new Error(`API ${res.status}`);
+    return res.json();
+  }
+
+  async function cloudPull(token){
+    const tk=token||authToken;
+    if(!tk)return;
+    setSyncing(true);
+    try{
+      const d=await apiCall("/api/sync/pull",{method:"GET"},tk);
+      if(d.progress?.general){
+        try{localStorage.setItem("e5k_p13",JSON.stringify(d.progress.general));}catch{}
+      }
+      if(d.progress?.cs){
+        try{localStorage.setItem("e5k_cs13",JSON.stringify(d.progress.cs));}catch{}
+      }
+      if(d.profile){
+        try{localStorage.setItem("e5k_u13",JSON.stringify(d.profile));}catch{}
+      }
+      if(d.settings){
+        try{localStorage.setItem("e5k_s13",JSON.stringify({sound:d.settings.sound!==false,dark:!!d.settings.dark}));}catch{}
+      }
+      if(Array.isArray(d.perfHistory)){
+        try{localStorage.setItem("e5k_perf",JSON.stringify(d.perfHistory.slice(-20)));}catch{}
+      }
+      setCloudConnected(true);
+    }catch(e){console.warn("Desktop cloud pull failed:",e.message);}
+    setSyncing(false);
+  }
+
+  async function cloudPush(){
+    if(!authToken)return;
+    try{
+      const prog=JSON.parse(localStorage.getItem("e5k_p13")||"{}");
+      const csProg=JSON.parse(localStorage.getItem("e5k_cs13")||"{}");
+      const cfg=JSON.parse(localStorage.getItem("e5k_s13")||"{}");
+      const perf=JSON.parse(localStorage.getItem("e5k_perf")||"[]");
+      await apiCall("/api/sync/push",{method:"POST",body:JSON.stringify({general:prog,cs:csProg,settings:cfg,perfHistory:perf})});
+    }catch(e){console.warn("Desktop cloud push failed:",e.message);}
+  }
+
+  useEffect(()=>{if(authToken)cloudPull();},[]);
+
+  useEffect(()=>{
+    if(!authToken)return;
+    const interval=setInterval(()=>{cloudPush();},300000);
+    return()=>clearInterval(interval);
+  },[authToken]);
+
+  useEffect(()=>{
+    const handle=()=>{if(document.visibilityState==="visible"&&authToken)cloudPush();};
+    document.addEventListener("visibilitychange",handle);
+    return()=>document.removeEventListener("visibilitychange",handle);
+  },[authToken]);
 
   useEffect(() => {
     (async () => {
@@ -215,6 +278,13 @@ export default function DesktopApp() {
         <button onClick={() => setDarkMode(!darkMode)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(255,255,255,.04)', border: 'none', color: '#8b95a8', fontSize: 14, width: '100%', marginBottom: 8, fontFamily: 'inherit' }}>
           <span>{darkMode ? '☀️' : '🌙'}</span>
           <span>{darkMode ? 'الوضع الفاتح' : 'الوضع الداكن'}</span>
+        </button>
+        <div style={{padding:"8px 16px",borderTop:`1px solid ${darkMode?"rgba(255,255,255,.07)":"rgba(0,0,0,.07)"}`,fontSize:11,color:cloudConnected?"#22C55E":"#9CA3AF",display:"flex",alignItems:"center",gap:6}}>
+          <span style={{width:8,height:8,borderRadius:"50%",background:cloudConnected?"#22C55E":"#9CA3AF",display:"inline-block"}}/>
+          {syncing?"جاري المزامنة...":cloudConnected?"متصل بالسحابة":"محلي فقط"}
+        </div>
+        <button onClick={()=>cloudPull()} style={{width:"calc(100% - 32px)",padding:"6px",margin:"0 16px",borderRadius:6,border:`1px solid ${darkMode?"rgba(255,255,255,.07)":"rgba(0,0,0,.07)"}`,background:"transparent",color:"#3B82F6",fontSize:11,cursor:"pointer",textAlign:"center",marginBottom:8}}>
+          🔄 مزامنة الآن
         </button>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: '#8b95a8', fontSize: 14, transition: 'color .15s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = '#8b95a8'}>
           <span>📱</span>

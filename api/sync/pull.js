@@ -12,12 +12,14 @@ module.exports = async function handler(req, res) {
   if (!user) return;
 
   try {
-    const [result, userResult] = await Promise.all([
+    const [result, userResult, settingsResult, perfResult] = await Promise.all([
       query(
         "SELECT progress_type, day, streak, last_date, total_correct, total_answered, xp, best_streak FROM progress WHERE user_id = $1",
         [user.id]
       ),
-      query("SELECT id, name, email, age, photo FROM users WHERE id = $1", [user.id])
+      query("SELECT id, name, email, age, photo FROM users WHERE id = $1", [user.id]),
+      query("SELECT settings FROM user_settings WHERE user_id = $1", [user.id]),
+      query("SELECT history FROM performance_history WHERE user_id = $1", [user.id])
     ]);
 
     const progress = { general: null, cs: null };
@@ -34,8 +36,10 @@ module.exports = async function handler(req, res) {
     }
 
     const profile = userResult.rows[0] || null;
+    const settings = settingsResult.rows[0]?.settings || { sound: true, dark: false };
+    const perfHistory = perfResult.rows[0]?.history || [];
 
-    return res.status(200).json({ progress, profile });
+    return res.status(200).json({ progress, profile, settings, perfHistory });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

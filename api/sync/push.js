@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
-    const { general, cs } = body;
+    const { general, cs, settings, perfHistory } = body;
 
     if (general) {
       await query(
@@ -48,6 +48,24 @@ module.exports = async function handler(req, res) {
            updated_at = NOW()`,
         [user.id, cs.day || 1, cs.streak || 0, cs.lastDate || null,
          cs.totalCorrect || 0, cs.totalAnswered || 0, cs.xp || 0, cs.bestStreak || 0]
+      );
+    }
+
+    if (settings) {
+      await query(
+        `INSERT INTO user_settings (user_id, settings, updated_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (user_id) DO UPDATE SET settings = EXCLUDED.settings, updated_at = NOW()`,
+        [user.id, JSON.stringify(settings)]
+      );
+    }
+
+    if (perfHistory) {
+      await query(
+        `INSERT INTO performance_history (user_id, history, updated_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (user_id) DO UPDATE SET history = EXCLUDED.history, updated_at = NOW()`,
+        [user.id, JSON.stringify(perfHistory)]
       );
     }
 
