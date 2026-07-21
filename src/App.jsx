@@ -447,9 +447,11 @@ function ProfileView({username,T,K,dark,onBack}){
 }
 
 export default function App(){
-  const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";return"landing";};
+  const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";if(h.startsWith("@"))return"profile";return"landing";};
+  const getRouteProfile=()=>{const h=window.location.hash.replace("#","").replace("/","");return h.startsWith("@")?h.slice(1):null;};
   const [route,setRoute]=useState(getRoute);
-  useEffect(()=>{const h=()=>setRoute(getRoute());window.addEventListener("hashchange",h);return()=>window.removeEventListener("hashchange",h);},[]);
+  const [routeProfile,setRouteProfile]=useState(getRouteProfile);
+  useEffect(()=>{const h=()=>{setRoute(getRoute());setRouteProfile(getRouteProfile());};window.addEventListener("hashchange",h);return()=>window.removeEventListener("hashchange",h);},[]);
 
   const [view,setView]=useState("loading");
   const [prog,setProg]=useState({...DEF});
@@ -513,9 +515,6 @@ export default function App(){
   const [leaderboard,setLeaderboard]=useState([]);
   const [leaderboardRank,setLeaderboardRank]=useState(null);
   const [leaderboardLoading,setLeaderboardLoading]=useState(false);
-  const [profileUser,setProfileUser]=useState(null);
-  const [profileData,setProfileData]=useState(null);
-  const [profileLoading,setProfileLoading]=useState(false);
   const topAd=useRef(Math.floor(Math.random()*4));
   const botAd=useRef((Math.floor(Math.random()*4)+2)%4);
   const inRef=useRef(null);
@@ -704,6 +703,7 @@ export default function App(){
 
   if(route==="landing")return <LandingPage/>;
   if(route==="desktop")return <DesktopApp/>;
+  if(route==="profile")return <div style={{minHeight:"100vh",background:T.bg}}><ProfileView username={routeProfile} T={T} K={K} dark={dark} onBack={()=>window.location.hash=""}/></div>;
 
 
   const startQuiz=async(isPrac=false,csMode=false)=>{
@@ -1232,18 +1232,6 @@ export default function App(){
     </div>
   );
 
-  // ── PUBLIC PROFILE ──────────────────────────────────
-  if(profileUser)return(
-    <div style={W}><style>{CSS}</style>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-        <button className="ibtn" style={{fontSize:20,color:T.m}} onClick={()=>{setProfileUser(null);setProfileData(null);}}>←</button>
-        <span style={{fontSize:22}}>👤</span>
-        <h2 style={{fontSize:18,fontWeight:700,color:T.txt}}>الملف الشخصي</h2>
-      </div>
-      <ProfileView username={profileUser} T={T} K={K} dark={dark} onBack={()=>{setProfileUser(null);setProfileData(null);}}/>
-    </div>
-  );
-
   // ── LEADERBOARD ──────────────────────────────────
   if(view==="leaderboard")return(
     <div style={W}><style>{CSS}</style>
@@ -1282,7 +1270,7 @@ export default function App(){
               {u.photo?<img src={u.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(u.name||"?").charAt(0).toUpperCase()}
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div onClick={()=>{if(u.username&&!isMe)setProfileUser(u.username);}} style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:u.username&&!isMe?"pointer":"default",textDecoration:u.username&&!isMe?"underline":"none",textDecorationColor:"rgba(59,130,246,.4)"}}>{u.name}{isMe?" (أنت)":""}</div>
+              <div onClick={()=>{if(u.username&&!isMe)window.location.hash="#/"+u.username;}} style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:u.username&&!isMe?"pointer":"default",textDecoration:u.username&&!isMe?"underline":"none",textDecorationColor:"rgba(59,130,246,.4)"}}>{u.name}{isMe?" (أنت)":""}</div>
               <div style={{fontSize:11,color:T.m,marginTop:1,display:"flex",gap:8}}>
                 <span>{u.levelIcon} {u.level}</span>
                 <span>🔥 {u.bestStreak}</span>

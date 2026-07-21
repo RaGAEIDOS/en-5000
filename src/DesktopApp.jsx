@@ -525,18 +525,6 @@ export default function DesktopApp() {
   const [authErr, setAuthErr] = useState('');
   const [authMsg, setAuthMsg] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  const [viewProfile, setViewProfile] = useState(null);
-  const [profileData, setProfileData] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-
-  useEffect(() => {
-    if (!viewProfile) { setProfileData(null); return; }
-    setProfileLoading(true); setProfileData(null);
-    fetch(`/api/profile/${viewProfile}`)
-      .then(r => r.json())
-      .then(d => { setProfileData(d.profile || null); setProfileLoading(false); })
-      .catch(() => { setProfileLoading(false); });
-  }, [viewProfile]);
 
   async function apiCall(url, opts = {}, token) {
     const t = token || authToken;
@@ -1532,7 +1520,7 @@ export default function DesktopApp() {
                           {u.photo ? <img src={u.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : (u.name || "?").charAt(0).toUpperCase()}
                         </div>
                         <span
-                          onClick={(e) => { e.stopPropagation(); if (u.username && !isMe) { setViewProfile(u.username); } }}
+                          onClick={(e) => { e.stopPropagation(); if (u.username && !isMe) { window.location.hash="#/"+u.username; } }}
                           style={{ fontWeight: isMe ? 700 : 500, color: isMe ? '#3B82F6' : t.txt, cursor: u.username && !isMe ? 'pointer' : 'default', textDecoration: u.username && !isMe ? 'underline' : 'none', textDecorationColor: 'rgba(59,130,246,.4)' }}
                           onMouseEnter={e => { if (u.username && !isMe) e.currentTarget.style.color = '#60a5fa'; }}
                           onMouseLeave={e => { if (u.username && !isMe) e.currentTarget.style.color = t.txt; }}
@@ -1636,81 +1624,6 @@ export default function DesktopApp() {
       </GlassCard>
     </div>
   );
-
-  const renderPublicProfile = () => {
-    const p = profileData;
-    const pLv = p ? getLv(p.totalXP || 0) : LVLS[0];
-    return (
-      <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
-        <button onClick={() => { setViewProfile(null); setProfileData(null); }} style={{ background: 'none', border: 'none', color: t.m, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, fontFamily: 'inherit' }}>← رجوع</button>
-        {profileLoading ? (
-          <GlassCard dark={darkMode} hover={false} style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ width: 32, height: 32, border: `3px solid ${t.bd}`, borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-            <div style={{ color: t.m, fontSize: 13 }}>جاري تحميل الملف الشخصي...</div>
-          </GlassCard>
-        ) : !p ? (
-          <GlassCard dark={darkMode} hover={false} style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>😕</div>
-            <div style={{ color: t.m, fontSize: 14 }}>المستخدم غير موجود</div>
-          </GlassCard>
-        ) : (
-          <GlassCard dark={darkMode} hover={false}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
-              <div style={{
-                width: 80, height: 80, borderRadius: 20,
-                background: p.photo ? '#000' : `linear-gradient(135deg, ${pLv.c}, ${pLv.c}88)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontWeight: 700, fontSize: 32,
-                boxShadow: `0 4px 20px ${pLv.c}30`, overflow: 'hidden', flexShrink: 0
-              }}>
-                {p.photo ? <img src={p.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : (p.name || '?').charAt(0)}
-              </div>
-              <div>
-                <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: t.txt }}>{p.name}</h2>
-                {p.username && <p style={{ color: t.accent, margin: '4px 0 0', fontSize: 14, fontWeight: 500 }}>@{p.username}</p>}
-                <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, background: `${pLv.c}15`, color: pLv.c, padding: '4px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, border: `1px solid ${pLv.c}18` }}>
-                  {pLv.i} {pLv.n}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
-              <StatCard icon="⭐" label="إجمالي النقاط" value={p.totalXP || 0} color="#F59E0B" dark={darkMode} />
-              <StatCard icon="🔥" label="سلسلة الأيام" value={p.currentStreak || 0} color="#EF4444" dark={darkMode} />
-              <StatCard icon="✅" label="الإجابات الصحيحة" value={p.totalCorrect || 0} color="#22C55E" dark={darkMode} />
-              <StatCard icon="📈" label="نسبة الدقة" value={`${p.accuracy || 0}%`} color="#3B82F6" dark={darkMode} />
-            </div>
-            {p.joinedAt && (
-              <div style={{ fontSize: 13, color: t.m, marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                📅 انضم في {new Date(p.joinedAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </div>
-            )}
-            {(p.general || p.cs) && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 18 }}>
-                {p.general && (
-                  <div style={{ background: t.s1, borderRadius: 12, padding: 14, border: `1px solid ${t.bd}` }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: t.txt, marginBottom: 8 }}>🗣️ اليوم: General</div>
-                    <div style={{ fontSize: 12, color: t.m, lineHeight: 1.8 }}>
-                      <div>XP: <b style={{ color: '#F59E0B' }}>{p.general.xp || 0}</b></div>
-                      <div>صحيح: <b style={{ color: '#22C55E' }}>{p.general.correct || 0}</b> / {p.general.answered || 0}</div>
-                    </div>
-                  </div>
-                )}
-                {p.cs && (
-                  <div style={{ background: t.s1, borderRadius: 12, padding: 14, border: `1px solid ${t.bd}` }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: t.txt, marginBottom: 8 }}>💻 اليوم: CS</div>
-                    <div style={{ fontSize: 12, color: t.m, lineHeight: 1.8 }}>
-                      <div>XP: <b style={{ color: '#F59E0B' }}>{p.cs.xp || 0}</b></div>
-                      <div>صحيح: <b style={{ color: '#22C55E' }}>{p.cs.correct || 0}</b> / {p.cs.answered || 0}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </GlassCard>
-        )}
-      </div>
-    );
-  };
 
   const renderAuth = () => (
     <div style={{
@@ -1883,7 +1796,6 @@ export default function DesktopApp() {
   );
 
   const renderContent = () => {
-    if (viewProfile) return renderPublicProfile();
     switch (section) {
       case 'home': return renderHome();
       case 'quiz':
