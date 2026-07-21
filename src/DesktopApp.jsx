@@ -263,7 +263,7 @@ export default function DesktopApp() {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: t.s1, borderRadius: 10, padding: '6px 14px 6px 6px', border: `1px solid ${t.bd}`, cursor: 'pointer' }} onClick={() => nav('profile')}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: lv.c, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>{userName.charAt(0)}</div>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: user?.photo ? '#000' : lv.c, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, overflow: 'hidden', flexShrink: 0 }}>{user?.photo ? <img src={user.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : userName.charAt(0)}</div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: t.txt }}>{userName}</div>
             <div style={{ fontSize: 11, color: t.m }}>{lv.i} {lv.n}</div>
@@ -604,8 +604,8 @@ export default function DesktopApp() {
       <div style={styles.sectionTitle}>الملف الشخصي 👤</div>
       <div style={styles.card}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
-          <div style={{ width: 80, height: 80, borderRadius: 20, background: `linear-gradient(135deg, ${lv.c}, ${lv.c}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 32, boxShadow: `0 4px 20px ${lv.c}30` }}>
-            {userName.charAt(0)}
+          <div style={{ width: 80, height: 80, borderRadius: 20, background: user?.photo ? '#000' : `linear-gradient(135deg, ${lv.c}, ${lv.c}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 32, boxShadow: `0 4px 20px ${lv.c}30`, overflow: 'hidden', flexShrink: 0 }}>
+            {user?.photo ? <img src={user.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : userName.charAt(0)}
           </div>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{userName}</h2>

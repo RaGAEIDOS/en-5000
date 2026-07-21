@@ -401,9 +401,6 @@ export default function App(){
   const [route,setRoute]=useState(getRoute);
   useEffect(()=>{const h=()=>setRoute(getRoute());window.addEventListener("hashchange",h);return()=>window.removeEventListener("hashchange",h);},[]);
 
-  if(route==="landing")return <LandingPage/>;
-  if(route==="desktop")return <DesktopApp/>;
-
   const [view,setView]=useState("loading");
   const [prog,setProg]=useState({...DEF});
   const [csProg,setCsProg]=useState({...DEF});
@@ -648,6 +645,9 @@ export default function App(){
     };
     window.addEventListener("keydown",fn);return()=>window.removeEventListener("keydown",fn);
   },[view,sel,res,showA,qs,qi,hl,advance,handleMCQ,handleWrite]);
+
+  if(route==="landing")return <LandingPage/>;
+  if(route==="desktop")return <DesktopApp/>;
 
   const startQuizFromStudy=useCallback(()=>{setQi(0);setSel(null);setInp("");setRes(null);setHl(0);setShowA(false);setTries(0);setOk(0);setSXp(0);setHrt(5);setCStreak(0);setShkIdx(null);setWrongQs([]);setQKey(k=>k+1);setView("quiz");},[]);
 
