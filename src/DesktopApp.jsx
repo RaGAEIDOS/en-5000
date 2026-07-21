@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GRAMMAR_TOPICS, GRAMMAR_CATS } from './grammarData';
 
-const PK = 'e5k_p13', SK = 'e5k_s13', UK = 'e5k_u13';
+const PK = 'e5k_p13', CS_PK = 'e5k_cs13', QK = 'e5k_q13_', CS_QK = 'e5k_csq13_', PERF_PK = 'e5k_perf', SK = 'e5k_s13', UK = 'e5k_u13';
 const toStr = () => new Date().toISOString().slice(0, 10);
 const DEF = { day: 1, streak: 0, lastDate: null, totalCorrect: 0, totalAnswered: 0, xp: 0, bestStreak: 0 };
 const CFG_DEF = { sound: true, dark: false };
@@ -35,6 +35,260 @@ const NAV_ITEMS = [
 const DIFF_ORDER = ['Easy', 'Medium', 'Hard'];
 const DIFF_LABELS = { Easy: 'سهل', Medium: 'متوسط', Hard: 'صعب' };
 const DIFF_EMOJI = { Easy: '🌱', Medium: '⚡', Hard: '🔥' };
+const CS_LC = { Easy: { fill: '#06B6D4', bg: 'rgba(6,182,212,.08)', br: 'rgba(6,182,212,.25)', tx: '#0891B2', glow: 'rgba(6,182,212,.15)' }, Medium: { fill: '#8B5CF6', bg: 'rgba(139,92,246,.08)', br: 'rgba(139,92,246,.25)', tx: '#7C3AED', glow: 'rgba(139,92,246,.15)' }, Hard: { fill: '#F97316', bg: 'rgba(249,115,22,.08)', br: 'rgba(249,115,22,.25)', tx: '#EA580C', glow: 'rgba(249,115,22,.15)' } };
+const XP = { mcq: 10, wrt0: 15, wrt1: 8, wrt2: 4, s5: 5, s10: 10, s20: 20 };
+const CS_CATS = { Easy: ["Linux Basics", "Git", "Error Messages", "Developer Phrases", "Code Basics"], Medium: ["C/C++", "Python", "Debugging", "GitHub Workflow", "Professional"], Hard: ["AI/ML", "Algorithms", "Systems", "Architecture", "Security"] };
+const ystStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); };
+
+const FB_EASY = [
+{ ar: "إزيك؟", en: "How are you?", pron: "هاو أر يو؟", opts: ["How are you?", "Where are you?", "Who are you?", "What are you?"], c: 0, cat: "Greetings" },
+{ ar: "أنا بخير، شكراً", en: "I'm fine, thank you.", pron: "آيم فاين، ثانك يو", opts: ["I'm fine, thank you.", "I'm bad, thank you.", "I'm fine, please.", "I'm good, sorry."], c: 0, cat: "Greetings" },
+{ ar: "إسمي أحمد", en: "My name is Ahmed.", pron: "ماي نيم إز أحمد", opts: ["My name is Ahmed.", "My name is Ali.", "I am Ahmed name.", "Ahmed is my name."], c: 0, cat: "Self Introduction" },
+{ ar: "عندك كام سنة؟", en: "How old are you?", pron: "هاو أولد أر يو؟", opts: ["How old are you?", "How are you old?", "Where are you old?", "What old are you?"], c: 0, cat: "Self Introduction" },
+{ ar: "أنا عندي 25 سنة", en: "I am 25 years old.", pron: "آيم تونتي فايف ييرز أولد", opts: ["I am 25 years old.", "I have 25 years old.", "I am 25 year old.", "25 years old I am."], c: 0, cat: "Self Introduction" },
+{ ar: "شكراً ليك", en: "Thank you.", pron: "ثانك يو", opts: ["Thank you.", "Think you.", "Tank you.", "Three you."], c: 0, cat: "Greetings" },
+{ ar: "عفواً", en: "You're welcome.", pron: "يور ويلكوم", opts: ["You're welcome.", "You are welcome.", "Your welcome.", "Yore welcome."], c: 0, cat: "Greetings" },
+{ ar: "مع السلامة", en: "Goodbye.", pron: "جودباي", opts: ["Goodbye.", "Good buy.", "Go bye.", "Good day."], c: 0, cat: "Greetings" },
+{ ar: "تصبح على خير", en: "Good night.", pron: "جود نايت", opts: ["Good night.", "Good knight.", "Good nit.", "Good night."], c: 0, cat: "Greetings" },
+{ ar: "صباح الخير", en: "Good morning.", pron: "جود مورنينج", opts: ["Good morning.", "Good mourning.", "Good morning.", "Good moning."], c: 0, cat: "Greetings" },
+{ ar: "العربية بتاعتي حلوة", en: "My car is nice.", pron: "ماي كار إز نايس", opts: ["My car is nice.", "My cat is nice.", "My cup is nice.", "My can is nice."], c: 0, cat: "Family" },
+{ ar: "أمي جميلة", en: "My mother is beautiful.", pron: "ماي ماذر إز بيوتيفل", opts: ["My mother is beautiful.", "My father is beautiful.", "My mother is big.", "My mother is busy."], c: 0, cat: "Family" },
+{ ar: "أنا بحب أهلي", en: "I love my family.", pron: "آي لاف ماي فاميلي", opts: ["I love my family.", "I love my friend.", "I live my family.", "I left my family."], c: 0, cat: "Family" },
+{ ar: "أنا جعان", en: "I'm hungry.", pron: "آيم هانجري", opts: ["I'm hungry.", "I'm happy.", "I'm hurry.", "I'm heavy."], c: 0, cat: "Food" },
+{ ar: "أنا عطشان", en: "I'm thirsty.", pron: "آيم ثيرستي", opts: ["I'm thirsty.", "I'm thirty.", "I'm thirsty.", "I'm thirdy."], c: 0, cat: "Food" },
+{ ar: "عايز مية", en: "I want water.", pron: "آي وانت ووتر", opts: ["I want water.", "I want waiter.", "I went water.", "I want winter."], c: 0, cat: "Food" },
+{ ar: "القهوة دي حلوة", en: "This coffee is good.", pron: "ذيس كوفي إز جود", opts: ["This coffee is good.", "This coffee is god.", "This copy is good.", "This coffee is go."], c: 0, cat: "Food" },
+{ ar: "أنا رايح الشغل", en: "I'm going to work.", pron: "آيم جوينج تو ورك", opts: ["I'm going to work.", "I'm going to walk.", "I'm going to wake.", "I'm going to world."], c: 0, cat: "Daily Activities" },
+{ ar: "الجو حلو النهارده", en: "The weather is nice today.", pron: "ذه ويذر إز نايس تودي", opts: ["The weather is nice today.", "The weather is nice to day.", "The weather is nine today.", "The weather is new today."], c: 0, cat: "Daily Activities" },
+{ ar: "أنا بحب الإنجليزي", en: "I love English.", pron: "آي لاف إنقليزي", opts: ["I love English.", "I live English.", "I left English.", "I like English."], c: 0, cat: "Daily Activities" },
+{ ar: "القلم بتاعي فين؟", en: "Where is my pen?", pron: "وير إز ماي بين؟", opts: ["Where is my pen?", "When is my pen?", "What is my pen?", "Who is my pen?"], c: 0, cat: "Daily Activities" },
+{ ar: "أنا بدرس كل يوم", en: "I study every day.", pron: "آي ستادي إيفري داي", opts: ["I study every day.", "I study every day.", "I start every day.", "I stay every day."], c: 0, cat: "Daily Activities" },
+{ ar: "إنت محتاج كام؟", en: "How much do you need?", pron: "هاو ماش دو يو نيد؟", opts: ["How much do you need?", "How much do you eat?", "How much do you nest?", "How much do you near?"], c: 0, cat: "Shopping" },
+{ ar: "السعر كام؟", en: "How much is it?", pron: "هاو ماش إز إيت؟", opts: ["How much is it?", "How many is it?", "How much are it?", "How much is at?"], c: 0, cat: "Shopping" },
+{ ar: "أنا عايز أشتري تليفون", en: "I want to buy a phone.", pron: "آي وانت تو باي فون", opts: ["I want to buy a phone.", "I want to buy a home.", "I want to by a phone.", "I want to buy a fun."], c: 0, cat: "Shopping" },
+{ ar: "فيه خصم؟", en: "Is there a discount?", pron: "из ذير ديسكاونت؟", opts: ["Is there a discount?", "Is there a discount?", "Is there a distant?", "Is there a disk?"], c: 0, cat: "Shopping" },
+{ ar: "أنا تعبان", en: "I feel sick.", pron: "آي فيل سك", opts: ["I feel sick.", "I feel sick.", "I fell sick.", "I feel six."], c: 0, cat: "Health" },
+{ ar: "أنا رايح للدكتور", en: "I'm going to the doctor.", pron: "آيم جوينج تو ذه دوكتور", opts: ["I'm going to the doctor.", "I'm going to the daughter.", "I'm going to the sector.", "I'm going to the tractor."], c: 0, cat: "Health" },
+{ ar: "محتاج دوا", en: "I need medicine.", pron: "آي نيد ميديسن", opts: ["I need medicine.", "I need media.", "I need medium.", "I need medal."], c: 0, cat: "Health" },
+{ ar: "أنا مش فاهم", en: "I don't understand.", pron: "آي دونت أندرستاند", opts: ["I don't understand.", "I don't under stand.", "I don't understand.", "I don't under study."], c: 0, cat: "Opinions" },
+{ ar: "أنا موافق", en: "I agree.", pron: "آي أجري", opts: ["I agree.", "I green.", "I greet.", "I great."], c: 0, cat: "Opinions" },
+{ ar: "مش عايز", en: "I don't want it.", pron: "آي دونت وانت إيت", opts: ["I don't want it.", "I don't want eat.", "I don't want is.", "I don't want at."], c: 0, cat: "Opinions" },
+{ ar: "أنا بحب الأكل ده", en: "I like this food.", pron: "آي لايك ذيس فود", opts: ["I like this food.", "I like this foot.", "I like this good.", "I like this wood."], c: 0, cat: "Opinions" },
+{ ar: "الجو حر النهارده", en: "It's hot today.", pron: "إتس هوت تودي", opts: ["It's hot today.", "It's hat today.", "It's hot to day.", "It's hit today."], c: 0, cat: "Weather" },
+{ ar: "الجو برد", en: "It's cold.", pron: "إتس كولد", opts: ["It's cold.", "It's gold.", "It's cool.", "It's could."], c: 0, cat: "Weather" },
+{ ar: "مطر كتير", en: "It rains a lot.", pron: "إتس رينز لوت", opts: ["It rains a lot.", "It rains a lot.", "It ran a lot.", "It raise a lot."], c: 0, cat: "Weather" },
+{ ar: "الشمس طالعة", en: "The sun is rising.", pron: "ذه سان إز رايزينج", opts: ["The sun is rising.", "The sun is rising.", "The son is rising.", "The sun is running."], c: 0, cat: "Weather" },
+{ ar: "أنا عندي كلب", en: "I have a dog.", pron: "آي هاف دوج", opts: ["I have a dog.", "I have a cat.", "I have a big.", "I have a dug."], c: 0, cat: "Family" },
+{ ar: "أخويا أكبر مني", en: "My brother is older than me.", pron: "ماي بذر إز أولدёр ذان مي", opts: ["My brother is older than me.", "My brother is over than me.", "My brother is order than me.", "My brother is older then me."], c: 0, cat: "Family" },
+{ ar: "أنا ماشي", en: "I'm walking.", pron: "آيم ووكينج", opts: ["I'm walking.", "I'm working.", "I'm waking.", "I'm wanting."], c: 0, cat: "Daily Activities" },
+{ ar: "الباب مفتوح", en: "The door is open.", pron: "ذه دور إز أوپن", opts: ["The door is open.", "The door is open.", "The bore is open.", "The door is up."], c: 0, cat: "Daily Activities" },
+{ ar: "أنا بحب القراءة", en: "I love reading.", pron: "آي لاف ريدينج", opts: ["I love reading.", "I love riding.", "I love ready.", "I love reding."], c: 0, cat: "Daily Activities" },
+{ ar: "ممكن تساعدني؟", en: "Can you help me?", pron: "كان يو هيلب مي؟", opts: ["Can you help me?", "Can you held me?", "Can you helm me?", "Can you hell me?"], c: 0, cat: "Greetings" },
+{ ar: "فين الحمام؟", en: "Where is the bathroom?", pron: "وير إز ذه باذروم؟", opts: ["Where is the bathroom?", "Where is the bath room?", "When is the bathroom?", "What is the bathroom?"], c: 0, cat: "Shopping" },
+{ ar: "أنا راجع البيت", en: "I'm coming home.", pron: "آيم كمنج هوم", opts: ["I'm coming home.", "I'm coming hole.", "I'm coming him.", "I'm coming here."], c: 0, cat: "Daily Activities" },
+{ ar: "الوقت كام؟", en: "What time is it?", pron: "وات تايم إز إيت؟", opts: ["What time is it?", "What time is at?", "What times is it?", "What time are it?"], c: 0, cat: "Daily Activities" },
+{ ar: "أنا بحبك", en: "I love you.", pron: "آي لاف يو", opts: ["I love you.", "I live you.", "I left you.", "I like you."], c: 0, cat: "Family" },
+{ ar: "الكلام ده صح", en: "This is right.", pron: "ذيس إز رايت", opts: ["This is right.", "This is write.", "This is light.", "This is night."], c: 0, cat: "Opinions" },
+{ ar: "أنا مش فاضي", en: "I'm not free.", pron: "آيم نوت فري", opts: ["I'm not free.", "I'm not four.", "I'm not from.", "I'm not five."], c: 0, cat: "Opinions" },
+{ ar: "القهوة سخنة", en: "The coffee is hot.", pron: "ذه كوفي إز هوت", opts: ["The coffee is hot.", "The coffee is hat.", "The coffee is hit.", "The coffee is hut."], c: 0, cat: "Food" },
+{ ar: "أنا ما أكلتش", en: "I didn't eat.", pron: "آي ديدنت إيت", opts: ["I didn't eat.", "I didn't it.", "I did eat.", "I don't eat."], c: 0, cat: "Food" },
+{ ar: "هناك حد؟", en: "Is anyone there?", pron: "из إنوني ذير؟", opts: ["Is anyone there?", "Is any one three?", "Is anyone their?", "Is anyone then?"], c: 0, cat: "Greetings" },
+];
+
+const FB_MEDIUM = [
+{ ar: "ممكن تكرر الكلام؟", en: "Can you repeat that?", pron: "كان يو ريبيت ذت؟", opts: ["Can you repeat that?", "Can you repeat this?", "Can you repair that?", "Can you report that?"], c: 0, cat: "Travel" },
+{ ar: "أنا مسافر بكرة", en: "I'm traveling tomorrow.", pron: "آيم ترافلنج تو moro", opts: ["I'm traveling tomorrow.", "I'm traveling today.", "I'm traveling tender.", "I'm traveling to move."], c: 0, cat: "Travel" },
+{ ar: "فين المطار؟", en: "Where is the airport?", pron: "وير إز ذه إيرپورت؟", opts: ["Where is the airport?", "Where is the report?", "Where is the airport?", "When is the airport?"], c: 0, cat: "Travel" },
+{ ar: "أنا عايز أعمل ريزيرفشن", en: "I want to make a reservation.", pron: "آي وانت تو ميك ريزرفشن", opts: ["I want to make a reservation.", "I want to make a restaurant.", "I want to make a resolution.", "I want to make a relation."], c: 0, cat: "Travel" },
+{ ar: "الفندق غالي", en: "The hotel is expensive.", pron: "ذه هوتيل إز إكسبنسيو", opts: ["The hotel is expensive.", "The hotel is experience.", "The hotel is export.", "The hotel is express."], c: 0, cat: "Travel" },
+{ ar: "محتاج أدفع كام؟", en: "How much do I need to pay?", pron: "هاو ماش دو آي نيد تو باي؟", opts: ["How much do I need to pay?", "How much do I need to play?", "How much do I need to pray?", "How much do I need to stay?"], c: 0, cat: "Shopping" },
+{ ar: "الحالة بتاعتي مش كويسة", en: "I'm not feeling well.", pron: "آيم نوت فيلينج ويل", opts: ["I'm not feeling well.", "I'm not feeling will.", "I'm not filling well.", "I'm not feeling while."], c: 0, cat: "Health" },
+{ ar: "البروجكت اﺗأجل", en: "The project is postponed.", pron: "ذه پروجكت إز پوستپوند", opts: ["The project is postponed.", "The project is post point.", "The project is past pond.", "The project is best bond."], c: 0, cat: "Work" },
+{ ar: "محتاج أعمل ريبورت", en: "I need to make a report.", pron: "آي نيد تو ميك ريبورت", opts: ["I need to make a report.", "I need to make a resort.", "I need to make a record.", "I need to make a result."], c: 0, cat: "Work" },
+{ ar: "meeting بكرة الساعة 3", en: "Meeting tomorrow at 3.", pron: "ميتنج تو moro آت ثري", opts: ["Meeting tomorrow at 3.", "Meeting today at 3.", "Meeting tender at 3.", "Meeting to move at 3."], c: 0, cat: "Work" },
+{ ar: "الطقس حلو أوي النهارده", en: "The weather is very nice today.", pron: "ذه ويذر إز فيري نايس تودي", opts: ["The weather is very nice today.", "The weather is very nine today.", "The weather is very new today.", "The weather is vary nice today."], c: 0, cat: "Weather" },
+{ ar: "هتمطر بكرة", en: "It will rain tomorrow.", pron: "إت ويل رين تو moro", opts: ["It will rain tomorrow.", "It will run tomorrow.", "It will right tomorrow.", "It will write tomorrow."], c: 0, cat: "Weather" },
+{ ar: "أنا عندي رأي تاني", en: "I have another opinion.", pron: "آي هاف أذر أوبينيون", opts: ["I have another opinion.", "I have an other opinion.", "I have another openion.", "I have another opening."], c: 0, cat: "Opinions" },
+{ ar: "الشغل ده صعب", en: "This work is hard.", pron: "ذيس ورك إز هارد", opts: ["This work is hard.", "This work is heart.", "This work is heard.", "This work is harm."], c: 0, cat: "Work" },
+{ ar: "ممكن نأجل الموضوع؟", en: "Can we postpone the matter?", pron: "كان وي پوستپون ذه ماتر؟", opts: ["Can we postpone the matter?", "Can we post point the matter?", "Can we post bone the matter?", "Can we post pond the matter?"], c: 0, cat: "Work" },
+{ ar: "أنا بحب أسافر", en: "I love traveling.", pron: "آي لاف ترافلنج", opts: ["I love traveling.", "I love training.", "I love trying.", "I love trading."], c: 0, cat: "Travel" },
+{ ar: "ممكن تدلني على المطعم؟", en: "Can you direct me to the restaurant?", pron: "كان يو ديركت مي تو ذه ريستورانت؟", opts: ["Can you direct me to the restaurant?", "Can you detect me to the restaurant?", "Can you direct me to the resort?", "Can you direct me to the resident?"], c: 0, cat: "Travel" },
+{ ar: "عايز أغير الفلوس", en: "I want to exchange money.", pron: "آي وانت تو إكستشينج موني", opts: ["I want to exchange money.", "I want to exit money.", "I want to excuse money.", "I want to expand money."], c: 0, cat: "Travel" },
+{ ar: "البطاقة بتاعتي اﺗسرقت", en: "My card was stolen.", pron: "ماي كارد واز ستولن", opts: ["My card was stolen.", "My card was stone.", "My card was stop.", "My card was story."], c: 0, cat: "Travel" },
+{ ar: "محتاج فاتورة", en: "I need a receipt.", pron: "آي نيد ريسيت", opts: ["I need a receipt.", "I need a recent.", "I need a recite.", "I need a record."], c: 0, cat: "Shopping" },
+{ ar: "أنا مش لاقي الشارع ده", en: "I can't find this street.", pron: "آي كاونت فايند ذيس ستريت", opts: ["I can't find this street.", "I can't find this strict.", "I can't find this stress.", "I can't find this straight."], c: 0, cat: "Travel" },
+{ ar: "الخدمة هنا مش كويسة", en: "The service here is not good.", pron: "ذه سيرفيس هير إز نوت جود", opts: ["The service here is not good.", "The service here is not gold.", "The service here is not gone.", "The service here is not god."], c: 0, cat: "Opinions" },
+{ ar: "أنا محتاج أعمل update", en: "I need to do an update.", pron: "آي نيد تو دو أن أبديت", opts: ["I need to do an update.", "I need to do an upload.", "I need to do an upgrade.", "I need to do an upset."], c: 0, cat: "Work" },
+{ ar: "ممكن تديني فرصة؟", en: "Can you give me a chance?", pron: "كان يو جيف مي تشارنس؟", opts: ["Can you give me a chance?", "Can you give me a change?", "Can you give me a charge?", "Can you give me a chart?"], c: 0, cat: "Work" },
+{ ar: "الحاجة دي مش شغالة", en: "This thing is not working.", pron: "ذيس ثينج إز نوت وركينج", opts: ["This thing is not working.", "This thing is not waking.", "This thing is not walking.", "This thing is not wanting."], c: 0, cat: "Work" },
+{ ar: "أنا بفكر أغير الشغل", en: "I'm thinking of changing jobs.", pron: "آيم ثينكينج أوف تشينجينج جوبز", opts: ["I'm thinking of changing jobs.", "I'm thinking of charging jobs.", "I'm thinking of chasing jobs.", "I'm thinking of checking jobs."], c: 0, cat: "Work" },
+{ ar: "ممكن نتكلم شوية؟", en: "Can we talk a little?", pron: "كان وي توك ليتل؟", opts: ["Can we talk a little?", "Can we take a little?", "Can we walk a little?", "Can we work a little?"], c: 0, cat: "Opinions" },
+{ ar: "أنا مش فاهم النقطة دي", en: "I don't understand this point.", pron: "آي دونت أندرستاند ذيس پوينت", opts: ["I don't understand this point.", "I don't understand this print.", "I don't understand this paint.", "I don't understand this plant."], c: 0, cat: "Opinions" },
+{ ar: "الجو مش مستقر", en: "The weather is unstable.", pron: "ذه ويذر إز أنستيبل", opts: ["The weather is unstable.", "The weather is unable.", "The weather is unable.", "The weather is enjoyble."], c: 0, cat: "Weather" },
+{ ar: "الشمس مش ظاهرة", en: "The sun is not showing.", pron: "ذه سان إز نوت شوينج", opts: ["The sun is not showing.", "The sun is not sewing.", "The sun is not shoring.", "The sun is not knowing."], c: 0, cat: "Weather" },
+{ ar: "أنا رايح اتصور", en: "I'm going to take a photo.", pron: "آيم جوينج تو تيك فوتو", opts: ["I'm going to take a photo.", "I'm going to take a photo.", "I'm going to take a fate.", "I'm going to take a fun."], c: 0, cat: "Daily Activities" },
+{ ar: "النت بتاعي بطيء", en: "My internet is slow.", pron: "ماي إنترنت إز سلو", opts: ["My internet is slow.", "My internet is snow.", "My internet is show.", "My internet is sole."], c: 0, cat: "Daily Activities" },
+{ ar: "أنا لسه ماخلصتش", en: "I haven't finished yet.", pron: "آي هيفنت فينيشت يت", opts: ["I haven't finished yet.", "I haven't finish yet.", "I haven't fined yet.", "I haven't found yet."], c: 0, cat: "Daily Activities" },
+{ ar: "ممكن تعمليللي كوباية شاي؟", en: "Can you make me a cup of tea?", pron: "كان يو ميك مي كب أف تي؟", opts: ["Can you make me a cup of tea?", "Can you make me a cap of tea?", "Can you make me a cup of tie?", "Can you make me a cut of tea?"], c: 0, cat: "Food" },
+{ ar: "الأكل عايز تتبيل", en: "The food needs seasoning.", pron: "ذه فود نيدز سونينج", opts: ["The food needs seasoning.", "The food needs sewing.", "The food needs seeing.", "The food needs singing."], c: 0, cat: "Food" },
+{ ar: "أنا مش بشرب سجاير", en: "I don't smoke.", pron: "آي دونت سموك", opts: ["I don't smoke.", "I don't small.", "I don't smart.", "I don't smell."], c: 0, cat: "Health" },
+{ ar: "أنا بتمرن كل يوم", en: "I exercise every day.", pron: "آي إك萨 size إيفري داي", opts: ["I exercise every day.", "I exit every day.", "I expect every day.", "I export every day."], c: 0, cat: "Health" },
+{ ar: "الدكتور قاللي أستريح", en: "The doctor told me to rest.", pron: "ذه دوكتور تولد مي تو رست", opts: ["The doctor told me to rest.", "The doctor told me to rust.", "The doctor told me to rush.", "The doctor told me to race."], c: 0, cat: "Health" },
+{ ar: "أنا محتاج أغير حياتي", en: "I need to change my life.", pron: "آي نيد تو تشينج ماي لايف", opts: ["I need to change my life.", "I need to charge my life.", "I need to chase my life.", "I need to check my life."], c: 0, cat: "Health" },
+];
+
+const FB_HARD = [
+{ ar: "الأفعال دي شاذة", en: "These verbs are irregular.", pron: "ذيز فربز أر إريجولر", opts: ["These verbs are irregular.", "These verbs are regular.", "These verbs are popular.", "These verbs are similar."], c: 0, cat: "Grammar" },
+{ ar: "لما بتتكلم في الشغل لازم تكون رسمي", en: "When you speak at work, you must be formal.", pron: "ون يو سپيك آت ورك، يو ماست بي فورمل", opts: ["When you speak at work, you must be formal.", "When you speak at work, you must be normal.", "When you speak at work, you must be final.", "When you speak at work, you must be funny."], c: 0, cat: "Formal English" },
+{ ar: "الشركة بتحقق أرباح كبيرة", en: "The company is making huge profits.", pron: "ذه كمپاني إز ميكينج هوج پروفتس", opts: ["The company is making huge profits.", "The company is making huge prophets.", "The company is making huge products.", "The company is making huge projects."], c: 0, cat: "Business" },
+{ ar: "لازم تعمل بحث شامل", en: "You must conduct comprehensive research.", pron: "يو ماست كنداكت كمپريهنسيو ريسيرتش", opts: ["You must conduct comprehensive research.", "You must conduct comprehensive research.", "You must conduct competitive research.", "You must conduct complete research."], c: 0, cat: "Academic" },
+{ ar: "الاقتصاد بيميل للاختصار", en: "The economy is leaning toward recession.", pron: "ذه أيكونومي إز لينينج تو وارد ريسيشن", opts: ["The economy is leaning toward recession.", "The economy is leaning toward recreation.", "The economy is leaning toward reaction.", "The economy is leaning toward rotation."], c: 0, cat: "Business" },
+{ ar: "المatter ده معقد أوي", en: "This matter is very complicated.", pron: "ذيس ماتر إز فيري كمپليكيتيد", opts: ["This matter is very complicated.", "This matter is very calculated.", "This matter is very cultivated.", "This matter is very concentrated."], c: 0, cat: "Formal English" },
+{ ar: "لازم تاخد بيرميشن قبل ما تدخل", en: "You must get permission before entering.", pron: "يو ماست جت پرمشن بيفور إنترنج", opts: ["You must get permission before entering.", "You must get position before entering.", "You must get participation before entering.", "You must get production before entering."], c: 0, cat: "Formal English" },
+{ ar: "لازم تعمل evaluation للبرنامج", en: "You must evaluate the program.", pron: "يو ماست إفالوبيت ذه پروجروم", opts: ["You must evaluate the program.", "You must evolve the program.", "You must evaluate the progress.", "You must evaluate the project."], c: 0, cat: "Business" },
+{ ar: "لازم نعمل brainstorming لل idea ده", en: "We need to brainstorm this idea.", pron: "وي نيد تو برين ستورم ذيس آيديا", opts: ["We need to brainstorm this idea.", "We need to brain storm this idea.", "We need to break storm this idea.", "We need to brain stream this idea."], c: 0, cat: "Business" },
+{ ar: "الـ deadline اقترب", en: "The deadline is approaching.", pron: "ذه ديدلاين إز أپروتشينج", opts: ["The deadline is approaching.", "The deadline is approving.", "The deadline is attaching.", "The deadline is attacking."], c: 0, cat: "Business" },
+{ ar: "لازم ناخد الـ feedback بجدية", en: "We must take the feedback seriously.", pron: "وي ماست تيك ذه فيدبك سيريسلي", opts: ["We must take the feedback seriously.", "We must take the feedback seriously.", "We must take the feedback separately.", "We must take the feedback spiritually."], c: 0, cat: "Business" },
+{ ar: "الاقتصاد العالمي فيه ركود", en: "The global economy is in recession.", pron: "ذه جلوبال أيكونومي إز إن ريسيشن", opts: ["The global economy is in recession.", "The global economy is in recreation.", "The global economy is in rotation.", "The global economy is in reaction."], c: 0, cat: "Business" },
+{ ar: "لازم تعرف تتعامل مع الضغط", en: "You must know how to handle pressure.", pron: "يو ماست نو هاو تو هندل پريشر", opts: ["You must know how to handle pressure.", "You must know how to handle pleasure.", "You must know how to handle practice.", "You must know how to handle promise."], c: 0, cat: "Formal English" },
+{ ar: "لازم نحسّن الـ workflow بتاعتنا", en: "We must improve our workflow.", pron: "وي ماست إمپروو أور ورك فلو", opts: ["We must improve our workflow.", "We must improve our word flow.", "We must improve our work floor.", "We must improve our worth flow."], c: 0, cat: "Business" },
+{ ar: "العميل مش راضي عن الخدمة", en: "The client is not satisfied with the service.", pron: "ذه كلاينت إز نوت ساتيسفايد ويز ذه سيرفيس", opts: ["The client is not satisfied with the service.", "The client is not satisfied with the surface.", "The client is not satisfied with the survey.", "The client is not satisfied with the surplus."], c: 0, cat: "Business" },
+{ ar: "لازم نعمل delegation للشغل", en: "We need to delegate the work.", pron: "وي نيد تو ديليقيت ذه ورك", opts: ["We need to delegate the work.", "We need to delete the work.", "We need to delight the work.", "We need to deliver the work."], c: 0, cat: "Business" },
+{ ar: "الـ candidate ده مؤهل أوي", en: "This candidate is highly qualified.", pron: "ذيس كنديديت إز هايلي كواليفاييد", opts: ["This candidate is highly qualified.", "This candidate is highly quantified.", "This candidate is highly quality fire.", "This candidate is highly quiet."], c: 0, cat: "Business" },
+{ ar: "لازم نعمل presentation للإدارة", en: "We must present to the management.", pron: "وي ماست پريزنت تو ذه مانيجمنت", opts: ["We must present to the management.", "We must present to the measurement.", "We must present to the movement.", "We must present to the monument."], c: 0, cat: "Business" },
+{ ar: "لازم تاخد الـ initiative في الشغل", en: "You must take the initiative at work.", pron: "يو ماست تيك ذه إنيشياتيف آت ورك", opts: ["You must take the initiative at work.", "You must take the innovation at work.", "You must take the limitation at work.", "You must take the imagination at work."], c: 0, cat: "Formal English" },
+{ ar: "فيه discrepancy في الأرقام", en: "There is a discrepancy in the numbers.", pron: "ذر إز ديسكريبنسي إن ذه نمبرز", opts: ["There is a discrepancy in the numbers.", "There is a discovery in the numbers.", "There is a distraction in the numbers.", "There is a discrimination in the numbers."], c: 0, cat: "Academic" },
+{ ar: "لازم تعمل mitigation للمخاطر", en: "You must mitigate the risks.", pron: "يو ماست ميتيقيت ذه ريسكس", opts: ["You must mitigate the risks.", "You must motivate the risks.", "You must mediate the risks.", "You must moderate the risks."], c: 0, cat: "Business" },
+{ ar: "لازم تعمل Due diligence قبل الصفقة", en: "You must do due diligence before the deal.", pron: "يو ماست دو ديو ديليجنس بيفور ذه ديل", opts: ["You must do due diligence before the deal.", "You must do due reference before the deal.", "You must do due difficulty before the deal.", "You must do due difference before the deal."], c: 0, cat: "Business" },
+];
+
+const FB_CS_EASY = [
+{ ar: "الكود شغال!", en: "It works!", pron: "إت وركس!", opts: ["It works!", "It walks!", "It waits!", "It wakes!"], c: 0, cat: "Developer Phrases" },
+{ ar: "فيه bug في البرنامج", en: "There is a bug in the program.", pron: "ذر إز بق إن ذه پروجرام", opts: ["There is a bug in the program.", "There is a bag in the program.", "There is a big in the program.", "There is a bed in the program."], c: 0, cat: "Error Messages" },
+{ ar: "احفظ الملف", en: "Save the file.", pron: "سيف ذه فايل", opts: ["Save the file.", "Save the pile.", "Save the fail.", "Save the fill."], c: 0, cat: "Developer Phrases" },
+{ ar: "افتح الترمينال", en: "Open the terminal.", pron: "أوپن ذه تيرمينل", opts: ["Open the terminal.", "Open the terrible.", "Open the terminal.", "Open the turtle."], c: 0, cat: "Linux Basics" },
+{ ar: "روّح على الـ directory", en: "Go to the directory.", pron: "جيو تو ذه ديركتوري", opts: ["Go to the directory.", "Go to the dictionary.", "Go to the dirty.", "Go to the doctor."], c: 0, cat: "Linux Basics" },
+{ ar: "اعمل list للملفات", en: "List the files.", pron: "ليست ذه فايلز", opts: ["List the files.", "List the piles.", "List the fills.", "List the fails."], c: 0, cat: "Linux Basics" },
+{ ar: "عمل commit للchanges", en: "Commit the changes.", pron: "كوميت ذه تشينجز", opts: ["Commit the changes.", "Comment the changes.", "Commit the challenges.", "Commit the chapters."], c: 0, cat: "Git" },
+{ ar: "ارفع الكود على الـ remote", en: "Push the code to remote.", pron: "بوش ذه كود تو ريموت", opts: ["Push the code to remote.", "Push the code to remove.", "Push the code to report.", "Push the code to resort."], c: 0, cat: "Git" },
+{ ar: "فيه syntax error", en: "There is a syntax error.", pron: "ذر إز سينتاكس إيرور", opts: ["There is a syntax error.", "There is a system error.", "There is a synth error.", "There is a single error."], c: 0, cat: "Error Messages" },
+{ ar: "البرنامج وقع", en: "The program crashed.", pron: "ذه پروجرام كراشت", opts: ["The program crashed.", "The program crushed.", "The program crossed.", "The program closed."], c: 0, cat: "Error Messages" },
+{ ar: "اعمل run للـ code", en: "Run the code.", pron: "ران ذه كود", opts: ["Run the code.", "Run the card.", "Run the cold.", "Run the cord."], c: 0, cat: "Developer Phrases" },
+{ ar: "اعمل debug للبرنامج", en: "Debug the program.", pron: "ديبج ذه پروجرام", opts: ["Debug the program.", "Delay the program.", "Delete the program.", "Deploy the program."], c: 0, cat: "Developer Phrases" },
+{ ar: "الملف موجود فين؟", en: "Where is the file?", pron: "وير إز ذه فايل؟", opts: ["Where is the file?", "Where is the pile?", "Where is the fire?", "Where is the mile?"], c: 0, cat: "Linux Basics" },
+{ ar: "اعمل mkdir لفولدر جديد", en: "Create a new directory with mkdir.", pron: "كريت نيو ديركتوري ويز mkdir", opts: ["Create a new directory with mkdir.", "Create a new dictionary with mkdir.", "Create a new dirty with mkdir.", "Create a new doctor with mkdir."], c: 0, cat: "Linux Basics" },
+{ ar: "permission denied", en: "Permission denied.", pron: "بيرميشن دينايد", opts: ["Permission denied.", "Position denied.", "Permission defined.", "Permission decided."], c: 0, cat: "Error Messages" },
+{ ar: "الكود مش شغال عليا", en: "The code is not working for me.", pron: "ذه كود إز نوت وركنج فور مي", opts: ["The code is not working for me.", "The code is not walking for me.", "The code is not waking for me.", "The code is not waiting for me."], c: 0, cat: "Developer Phrases" },
+{ ar: "اعمل copy للـ code", en: "Copy the code.", pron: "كوباي ذه كود", opts: ["Copy the code.", "Copy the card.", "Copy the cold.", "Copy the cord."], c: 0, cat: "Developer Phrases" },
+{ ar: "الـ variable دي فاضية", en: "The variable is empty.", pron: "ذه فيريبل إز إمپتي", opts: ["The variable is empty.", "The variable is happy.", "The variable is heavy.", "The variable is hurry."], c: 0, cat: "Code Basics" },
+{ ar: "اعمل reset للمتغيرات", en: "Reset the variables.", pron: "ريسيت ذه فيريبلز", opts: ["Reset the variables.", "Reset the variables.", "Reset the valuable.", "Reset the variety."], c: 0, cat: "Code Basics" },
+{ ar: "الـ output غلط", en: "The output is wrong.", pron: "ذه أوتبوت إز رونج", opts: ["The output is wrong.", "The output is long.", "The output is right.", "The output is run."], c: 0, cat: "Error Messages" },
+];
+
+const FB_CS_MEDIUM = [
+{ ar: "الكود محتاج compile", en: "The code needs to be compiled.", pron: "ذه كود نيدز تو بي كومبايلد", opts: ["The code needs to be compiled.", "The code needs to be completed.", "The code needs to be collected.", "The code needs to be corrected."], c: 0, cat: "C/C++" },
+{ ar: "فيه memory leak في الـ program", en: "There is a memory leak in the program.", pron: "ذر إز ميموري ليك إن ذه پروجرام", opts: ["There is a memory leak in the program.", "There is a memory lake in the program.", "There is a memory link in the program.", "There is a memory late in the program."], c: 0, cat: "C/C++" },
+{ ar: "الـ pointer مششير على حاجة فاضية", en: "The pointer is pointing to null.", pron: "ذه پوينتر إز پوينتينج تو نل", opts: ["The pointer is pointing to null.", "The pointer is printing to null.", "The pointer is pulling to null.", "The pointer is pausing to null."], c: 0, cat: "C/C++" },
+{ ar: "اعمل pull request", en: "Make a pull request.", pron: "ميك پل ريكويست", opts: ["Make a pull request.", "Make a full request.", "Make a poll request.", "Make a push request."], c: 0, cat: "GitHub Workflow" },
+{ ar: "الـ code review خلص", en: "The code review is done.", pron: "ذه كود ريفيو إز دان", opts: ["The code review is done.", "The code reveal is done.", "The code revenge is done.", "The code resort is done."], c: 0, cat: "GitHub Workflow" },
+{ ar: "فيه exception في الـ code", en: "There is an exception in the code.", pron: "ذر إز إكسيبشن إن ذه كود", opts: ["There is an exception in the code.", "There is an execution in the code.", "There is an exercise in the code.", "There is an example in the code."], c: 0, cat: "Python" },
+{ ar: "الـ function بترجع null", en: "The function returns null.", pron: "ذه فنكشن ريتورنز نل", opts: ["The function returns null.", "The function returns new.", "The function returns net.", "The function returns now."], c: 0, cat: "C/C++" },
+{ ar: "اعمل merge للـ branch", en: "Merge the branch.", pron: "مرج ذه برانش", opts: ["Merge the branch.", "March the branch.", "Match the branch.", "Watch the branch."], c: 0, cat: "GitHub Workflow" },
+{ ar: "الـ debugger مش شغال", en: "The debugger is not working.", pron: "ذه ديبيغر إز نوت وركنج", opts: ["The debugger is not working.", "The debugger is not waking.", "The debugger is not walking.", "The debugger is not waiting."], c: 0, cat: "Debugging" },
+{ ar: "فيه infinite loop", en: "There is an infinite loop.", pron: "ذر إز إنفينيت لوب", opts: ["There is an infinite loop.", "There is an infinite loot.", "There is an infinite lost.", "There is an infinite love."], c: 0, cat: "Debugging" },
+{ ar: "الـ deploy على الـ production خلص", en: "Deployment to production is complete.", pron: "دبلويمنت تو پروداكشن إز كمپليت", opts: ["Deployment to production is complete.", "Deployment to production is competitive.", "Deployment to production is connected.", "Deployment to production is computed."], c: 0, cat: "GitHub Workflow" },
+{ ar: "الـ build فشل", en: "The build failed.", pron: "ذه بيلد فيلد", opts: ["The build failed.", "The build filed.", "The build filled.", "The build found."], c: 0, cat: "Debugging" },
+{ ar: "اعمل commit message واضح", en: "Write a clear commit message.", pron: "رايت كليير كوميت ميسج", opts: ["Write a clear commit message.", "Write a close commit message.", "Write a clever commit message.", "Write a clean commit message."], c: 0, cat: "GitHub Workflow" },
+{ ar: "الـ variable دي private", en: "This variable is private.", pron: "ذيس فيريبل إز پرايفت", opts: ["This variable is private.", "This variable is perfect.", "This variable is pretty.", "This variable is protected."], c: 0, cat: "Python" },
+{ ar: "الكود محتاج refactor", en: "The code needs refactoring.", pron: "ذه كود نيدز ريفاكتورنج", opts: ["The code needs refactoring.", "The code needs rewriting.", "The code needs reloading.", "The code needs refreshing."], c: 0, cat: "Debugging" },
+{ ar: "فيه مشكلة في الـ database", en: "There is a problem with the database.", pron: "ذر إز پروبلم ويز ذه ديتابيز", opts: ["There is a problem with the database.", "There is a problem with the date base.", "There is a problem with the desk base.", "There is a problem with the device."], c: 0, cat: "Debugging" },
+{ ar: "اعمل test case للـ function", en: "Write a test case for the function.", pron: "رايت تيست كيس فور ذه فنكشن", opts: ["Write a test case for the function.", "Write a text case for the function.", "Write a taste case for the function.", "Write a task case for the function."], c: 0, cat: "Debugging" },
+{ ar: "الـ API بترجع error", en: "The API is returning an error.", pron: "ذه إيه بي آي إز ريتورنينج أن إيرور", opts: ["The API is returning an error.", "The API is retiring an error.", "The API is reviewing an error.", "The API is returning an era."], c: 0, cat: "Debugging" },
+{ ar: "الـ terminal مقفول", en: "The terminal is closed.", pron: "ذه تيرمينل إز كلوзд", opts: ["The terminal is closed.", "The terminal is clean.", "The terminal is clear.", "The terminal is clever."], c: 0, cat: "Linux Basics" },
+{ ar: "اعمل chmod للملف", en: "Change permissions with chmod.", pron: "تشينج پرمشنز ويز chmod", opts: ["Change permissions with chmod.", "Change positions with chmod.", "Change parents with chmod.", "Change patterns with chmod."], c: 0, cat: "Linux Basics" },
+];
+
+const FB_CS_HARD = [
+{ ar: "الـ gradient descent بيتناقص ببطء", en: "Gradient descent is decreasing slowly.", pron: "جراديينت ديسينت إز ديسريسينج سلولي", opts: ["Gradient descent is decreasing slowly.", "Gradient descent is describing slowly.", "Gradient descent is displaying slowly.", "Gradient descent is discovering slowly."], c: 0, cat: "AI/ML" },
+{ ar: "الـ model overfitted على الـ training data", en: "The model is overfitted on training data.", pron: "ذه مودل إز أوفرفيتد أون تريننج ديتا", opts: ["The model is overfitted on training data.", "The model is overrated on training data.", "The model is overfilled on training data.", "The model is overpassed on training data."], c: 0, cat: "AI/ML" },
+{ ar: "الـ mutex بيثبط الـ race conditions", en: "Mutex prevents race conditions.", pron: "ميوتكس بريفينتس ريس كونديشنز", opts: ["Mutex prevents race conditions.", "Mutex prevents rich conditions.", "Mutex prevents right conditions.", "Mutex prevents rate conditions."], c: 0, cat: "Systems" },
+{ ar: "فيه deadlock في الـ threads", en: "There is a deadlock in the threads.", pron: "ذر إز ديدلوك إن ذه ثريدز", opts: ["There is a deadlock in the threads.", "There is a deadlock in the threats.", "There is a dead lock in the threads.", "There is a dead lock in the throws."], c: 0, cat: "Systems" },
+{ ar: "الـ stack overflow بسبب recursion عميق", en: "Stack overflow caused by deep recursion.", pron: "stack أوفرلو كوزد باي ديب ريكرجن", opts: ["Stack overflow caused by deep recursion.", "Stack overflow caused by deep reaction.", "Stack overflow caused by deep reduction.", "Stack overflow caused by deep recognition."], c: 0, cat: "Systems" },
+{ ar: "الـ Docker image محتاج أصغر حجم", en: "The Docker image needs to be smaller.", pron: "ذه دوكر إميج نيدز تو بي سمولر", opts: ["The Docker image needs to be smaller.", "The Docker image needs to be smarter.", "The Docker image needs to be smoother.", "The Docker image needs to be stronger."], c: 0, cat: "Architecture" },
+{ ar: "الـ CI/CD pipeline بيعمل auto deploy", en: "The CI/CD pipeline auto-deploys.", pron: "ذه CI/CD بايبلاين أوتو دبليوز", opts: ["The CI/CD pipeline auto-deploys.", "The CI/CD pipeline auto-displays.", "The CI/CD pipeline auto-describes.", "The CI/CD pipeline auto-decides."], c: 0, cat: "Architecture" },
+{ ar: "الـ SOLID principles مهمة جداً", en: "SOLID principles are very important.", pron: "سوليد پرينسپلز أر فيري إمپورنت", opts: ["SOLID principles are very important.", "SOLID principles are very imported.", "SOLID principles are very improved.", "SOLID principles are very impressed."], c: 0, cat: "Architecture" },
+{ ar: "الـ thread safety مش مضمون في الكود ده", en: "Thread safety is not guaranteed in this code.", pron: "ثريد سيفتي إز نوت غيرنتيد إن ذيس كود", opts: ["Thread safety is not guaranteed in this code.", "Thread safety is not granted in this code.", "Thread safety is not guarded in this code.", "Thread safety is not guessed in this code."], c: 0, cat: "Systems" },
+{ ar: "الـ binary search أسرع من الـ linear search", en: "Binary search is faster than linear search.", pron: "باينري سيرتش إز فاستر ذان لينيئر سيرتش", opts: ["Binary search is faster than linear search.", "Binary search is faster than linear research.", "Binary search is further than linear search.", "Binary search is faster than linear reach."], c: 0, cat: "Algorithms" },
+{ ar: "الـ dynamic programming بيحل المشاكل بذكاء", en: "Dynamic programming solves problems smartly.", pron: "ديناميك پروجرامينج سولفز پروبلمز سمارتلي", opts: ["Dynamic programming solves problems smartly.", "Dynamic programming solves problems slowly.", "Dynamic programming solves problems simply.", "Dynamic programming solves problems sadly."], c: 0, cat: "Algorithms" },
+{ ar: "الـ neural network محتاج أكتر data", en: "The neural network needs more data.", pron: "ذه نيرال نيتورك نيدز مور ديتا", opts: ["The neural network needs more data.", "The neural network needs more dates.", "The neural network needs more date.", "The neural network needs more dead."], c: 0, cat: "AI/ML" },
+{ ar: "الـ microservices architecture أفضل للـ scaling", en: "Microservices architecture is better for scaling.", pron: "مايكروسيرفيسيز أركيتكشر إز بتر فور سكيلينج", opts: ["Microservices architecture is better for scaling.", "Microservices architecture is better for schooling.", "Microservices architecture is better for scanning.", "Microservices architecture is better for scoring."], c: 0, cat: "Architecture" },
+{ ar: "الـ divide and conquer strategy بتقسم المشكلة", en: "Divide and conquer strategy splits the problem.", pron: "ديفايد أند كنكوي ستراتيجي سپلتس ذه پروبلم", opts: ["Divide and conquer strategy splits the problem.", "Divide and conquer strategy splits the project.", "Divide and conquer strategy splits the promise.", "Divide and conquer strategy splits the process."], c: 0, cat: "Algorithms" },
+{ ar: "الـ kernel بيمد الـ memory management", en: "The kernel handles memory management.", pron: "ذه كيرنل هندلز ميموري مانيجمنت", opts: ["The kernel handles memory management.", "The kernel handles memory manager.", "The kernel handles memory market.", "The kernel handles memory manner."], c: 0, cat: "Systems" },
+{ ar: "الـ Kubernetes بي orchestrat الـ containers", en: "Kubernetes orchestrates containers.", pron: "كوبرنيتيس أركستريتس كونتينرز", opts: ["Kubernetes orchestrates containers.", "Kubernetes orchestrates contrasts.", "Kubernetes orchestrates contractors.", "Kubernetes orchestrates contributions."], c: 0, cat: "Architecture" },
+{ ar: "فيه race condition في الـ shared state", en: "There is a race condition in the shared state.", pron: "ذر إز ريس كونديشن إن ذه شيرد ستيت", opts: ["There is a race condition in the shared state.", "There is a rich condition in the shared state.", "There is a raw condition in the shared state.", "There is a rare condition in the shared state."], c: 0, cat: "Systems" },
+{ ar: "الـ garbage collector بيقفل الـ memory", en: "The garbage collector frees memory.", pron: "ذه جاربيج كلكتور فريز ميموري", opts: ["The garbage collector frees memory.", "The garbage collector fills memory.", "The garbage collector fears memory.", "The garbage collector fights memory."], c: 0, cat: "Systems" },
+{ ar: "لازم تعرف الفرق بين concurrency و parallelism", en: "You must know the difference between concurrency and parallelism.", pron: "يو ماست نو ذه دفرنس بيتويذ كيرينسي أند پاراليزم", opts: ["You must know the difference between concurrency and parallelism.", "You must know the difference between community and parallelism.", "You must know the difference between curiosity and parallelism.", "You must know the difference between conspiracy and parallelism."], c: 0, cat: "Systems" },
+{ ar: "الـ idempotency مهمة في الـ API design", en: "Idempotency is important in API design.", pron: "أيدمپوتينسي إز إمپورنت إن API ديزاين", opts: ["Idempotency is important in API design.", "Identity is important in API design.", "Impurity is important in API design.", "Imprecision is important in API design."], c: 0, cat: "Architecture" },
+];
+
+function shuffleQOpts(q) {
+  const opts = [...q.opts]; const correct = opts[q.c];
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  const newC = opts.indexOf(correct);
+  return { ...q, opts, c: newC };
+}
+
+function genLocalQs(isCS, difficulty) {
+  const bank = isCS ? (difficulty === "Easy" ? FB_CS_EASY : difficulty === "Medium" ? FB_CS_MEDIUM : FB_CS_HARD) : (difficulty === "Easy" ? FB_EASY : difficulty === "Medium" ? FB_MEDIUM : FB_HARD);
+  const shuffled = [...bank].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 50).map((q, i) => {
+    const sq = shuffleQOpts(q);
+    const qt = i % 7 >= 5 ? "p" : i % 7 >= 2 ? "w" : "m";
+    return { ...sq, qt };
+  });
+}
+
+async function genQs(day, ln, isCS = false) {
+  try {
+    const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "gemini-2.0-flash", max_tokens: 9000, messages: [{ role: "user", content: `Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS ? "CS/Programming" : "General"} mode.\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.` }] }) });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const d = await res.json(); if (d.error) throw new Error(d.error);
+    const content = d.content; const txt = Array.isArray(content) ? content.map(b => b.text || "").join("") : "";
+    if (!txt) throw new Error("AI returned empty response");
+    const s = txt.indexOf("["), e = txt.lastIndexOf("]");
+    if (s < 0 || e < 0) throw new Error("No JSON found in response");
+    let raw; try { raw = JSON.parse(txt.slice(s, e + 1)); } catch { throw new Error("Failed to parse JSON"); }
+    if (!Array.isArray(raw) || raw.length < 5) throw new Error("Too few questions");
+    return raw.slice(0, 50).map((q, i) => {
+      const c = typeof q.c === "number" && q.c >= 0 && q.c <= 3 ? q.c : 0;
+      const opts = Array.isArray(q.opts) && q.opts.length === 4 ? q.opts.map(String) : ["A", "B", "C", "D"];
+      if (q.en && opts[c] !== String(q.en)) opts[c] = String(q.en);
+      const sq = shuffleQOpts({ ar: String(q.ar || "?"), en: String(q.en || "?"), pron: String(q.pron || ""), opts, c, cat: String(q.cat || "General") });
+      const qt = i % 7 >= 5 ? "p" : i % 7 >= 2 ? "w" : "m";
+      return { ...sq, qt };
+    });
+  } catch (e) {
+    console.warn("AI failed, using local question bank:", e.message);
+    return genLocalQs(isCS, ln);
+  }
+}
+
+async function lQ(d, prefix = QK) { try { const v = localStorage.getItem(prefix + d); if (v) { const x = JSON.parse(v); if (x.date === toStr() && Array.isArray(x.qs) && x.qs.length >= 5) return x.qs; } return null; } catch { return null; } }
+async function sQ(d, qs, prefix = QK) { try { localStorage.setItem(prefix + d, JSON.stringify({ date: toStr(), qs })); } catch {} }
+function getPerfHistory() { try { return JSON.parse(localStorage.getItem(PERF_PK)) || []; } catch { return []; } }
+function savePerfHistory(h) { localStorage.setItem(PERF_PK, JSON.stringify(h.slice(-20))); }
+function recordPerf(acc) { const h = getPerfHistory(); h.push({ acc, ts: Date.now() }); savePerfHistory(h); }
+function getAdaptDiff(dayDiff) {
+  const h = getPerfHistory(); if (h.length < 2) return dayDiff;
+  const last5 = h.slice(-5); const avg = last5.reduce((s, x) => s + x.acc, 0) / last5.length;
+  const idx = DIFF_ORDER.indexOf(dayDiff);
+  if (avg >= 80 && idx < 2) return DIFF_ORDER[idx + 1];
+  if (avg < 45 && idx > 0) return DIFF_ORDER[idx - 1];
+  return dayDiff;
+}
+const editDist = (a, b) => { const m = a.length, n = b.length, dp = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => i || j)); for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]); return dp[m][n]; };
+const checkAns = (inp, ans) => { const a = ans.trim().toLowerCase(), t = inp.trim().toLowerCase(); if (t === a) return "ok"; if (editDist(t, a) <= Math.max(1, Math.floor(a.length * .15))) return "close"; return "no"; };
+const mkHint = (ans, lv) => { const ws = ans.split(" "); if (lv === 1) return ws.map(w => w[0] + "_".repeat(Math.max(0, w.length - 1))).join(" "); return ws.map(w => w.slice(0, Math.max(1, Math.ceil(w.length * .4))) + "_".repeat(Math.max(0, w.length - Math.max(1, Math.ceil(w.length * .4))))).join(" "); };
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
@@ -195,14 +449,38 @@ export default function DesktopApp() {
   const [leaderboardRank, setLeaderboardRank] = useState(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [quizDifficulty, setQuizDifficulty] = useState(null);
-  const [quizActive, setQuizActive] = useState(false);
-  const [quizQuestions, setQuizQuestions] = useState([]);
-  const [quizIndex, setQuizIndex] = useState(0);
-  const [quizSelected, setQuizSelected] = useState(null);
-  const [quizAnswered, setQuizAnswered] = useState(false);
-  const [quizScore, setQuizScore] = useState(0);
-  const [quizComplete, setQuizComplete] = useState(false);
+  const [quizPhase, setQuizPhase] = useState(null);
   const [quizType, setQuizType] = useState('general');
+  const [qs, setQs] = useState([]);
+  const [qi, setQi] = useState(0);
+  const [sel, setSel] = useState(null);
+  const [inp, setInp] = useState('');
+  const [res, setRes] = useState(null);
+  const [hl, setHl] = useState(0);
+  const [showA, setShowA] = useState(false);
+  const [tries, setTries] = useState(0);
+  const [ok, setOk] = useState(0);
+  const [sXp, setSXp] = useState(0);
+  const [hrt, setHrt] = useState(5);
+  const [cStreak, setCStreak] = useState(0);
+  const [wrongQs, setWrongQs] = useState([]);
+  const [showWrong, setShowWrong] = useState(false);
+  const [exitConfirm, setExitConfirm] = useState(false);
+  const [studyIdx, setStudyIdx] = useState(0);
+  const [studyFlipped, setStudyFlipped] = useState(false);
+  const [ptcl, setPtcl] = useState(false);
+  const [shkIdx, setShkIdx] = useState(null);
+  const [xpPop, setXpPop] = useState(null);
+  const [stkPop, setStkPop] = useState(null);
+  const [puzzleChips, setPuzzleChips] = useState([]);
+  const [puzzleAnswer, setPuzzleAnswer] = useState([]);
+  const [puzzleDone, setPuzzleDone] = useState(false);
+  const [puzzleOk, setPuzzleOk] = useState(false);
+  const [qKey, setQKey] = useState(0);
+  const [practice, setPractice] = useState(false);
+  const [isCS, setIsCS] = useState(false);
+  const [genTick, setGenTick] = useState(0);
+  const [genMsgIdx, setGenMsgIdx] = useState(0);
   const [authView, setAuthView] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPass, setAuthPass] = useState('');
@@ -357,85 +635,123 @@ export default function DesktopApp() {
 
   const nav = (s) => {
     setSection(s);
-    setQuizActive(false);
-    setQuizComplete(false);
+    setQuizPhase(null);
+    setExitConfirm(false);
+    if (s === 'cs-quiz') { setQuizType('cs'); setIsCS(true); }
+    else if (s === 'quiz') { setQuizType('general'); setIsCS(false); }
     if (s !== 'grammar' && s !== 'grammar-lesson') {
       setGramTopic(null);
       setGramSection(0);
     }
   };
 
-  const startQuiz = (diff, type = 'general') => {
-    setQuizDifficulty(diff);
-    setQuizType(type);
-    const FB = type === 'cs' ? [
-      { ar: "It works!", en: "It works!", pron: "إت وركس!", opts: ["It works!", "It work!", "Its works!", "It working!"], c: 0, cat: "Developer Phrases" },
-      { ar: "File not found", en: "File not found", pron: "فايل نوت فاوند", opts: ["File not found", "File not found.", "Find not found", "File no found"], c: 0, cat: "Error Messages" },
-      { ar: "Run the code", en: "Run the code", pron: "ران ذا كود", opts: ["Run the code", "Run the codes", "Ran the code", "Running the code"], c: 0, cat: "Developer Phrases" },
-      { ar: "Permission denied", en: "Permission denied", pron: "بيرميشن دينايد", opts: ["Permission denied", "Permission defined", "Permission decided", "Permission delayed"], c: 0, cat: "Error Messages" },
-      { ar: "git commit", en: "git commit", pron: "جيت كوميت", opts: ["git commit", "get commit", "git committee", "got commit"], c: 0, cat: "Git" },
-      { ar: "git push", en: "git push", pron: "جيت پوش", opts: ["git push", "get push", "git pool", "git pull"], c: 0, cat: "Git" },
-      { ar: "Segmentation fault", en: "Segmentation fault", pron: "سيجمنتيشن فولت", opts: ["Segmentation fault", "Segmentation fault", "Segmention fault", "Segmentation fast"], c: 0, cat: "Error Messages" },
-      { ar: "ls -la", en: "List all files", pron: "ليست أول فايلز", opts: ["List all files", "Last all files", "Lose all files", "List all field"], c: 0, cat: "Linux Basics" },
-      { ar: "Compile the code", en: "Compile the code", pron: "كومبايل ذا كود", opts: ["Compile the code", "Complete the code", "Compute the code", "Compare the code"], c: 0, cat: "Developer Phrases" },
-      { ar: "Debug the program", en: "Debug the program", pron: "ديباج ذا پروجراوم", opts: ["Debug the program", "Design the program", "Develop the program", "Deposit the program"], c: 0, cat: "Developer Phrases" },
-      { ar: "Save the file", en: "Save the file", pron: "سييف ذا فايل", opts: ["Save the file", "Safe the file", "Saw the file", "Sale the file"], c: 0, cat: "Developer Phrases" },
-      { ar: "What's the bug?", en: "What's the bug?", pron: "واتس ذا بج؟", opts: ["What's the bug?", "What's the bag?", "What's the big?", "What's the bed?"], c: 0, cat: "Debugging" },
-      { ar: "Problem solved", en: "Problem solved", pron: "پروبليم سافد", opts: ["Problem solved", "Problem solved", "Problem solved", "Problems solved"], c: 0, cat: "Debugging" },
-      { ar: "Code review", en: "Code review", pron: "كود ريفيو", opts: ["Code review", "Code revise", "Code reveal", "Code resort"], c: 0, cat: "Developer Phrases" },
-      { ar: "Pull request", en: "Pull request", pron: "بول ريكويست", opts: ["Pull request", "Pool request", "Pull require", "Full request"], c: 0, cat: "GitHub Workflow" },
-    ] : [
-      { ar: "إزيك؟", en: "How are you?", pron: "هاو أر يو؟", opts: ["How are you?", "Where are you?", "Who are you?", "What are you?"], c: 0, cat: "Greetings" },
-      { ar: "أنا بخير، شكراً", en: "I'm fine, thank you.", pron: "آيم فاين، ثانك يو", opts: ["I'm fine, thank you.", "I'm bad, thank you.", "I'm fine, please.", "I'm good, sorry."], c: 0, cat: "Greetings" },
-      { ar: "إسمي أحمد", en: "My name is Ahmed.", pron: "ماي نيم إز أحمد", opts: ["My name is Ahmed.", "My name is Ali.", "I am Ahmed name.", "Ahmed is my name."], c: 0, cat: "Self Introduction" },
-      { ar: "عندك كام سنة؟", en: "How old are you?", pron: "هاو أولد أر يو؟", opts: ["How old are you?", "How are you old?", "Where are you old?", "What old are you?"], c: 0, cat: "Self Introduction" },
-      { ar: "أنا عندي 25 سنة", en: "I am 25 years old.", pron: "آيم تونتي فايف ييرز أولد", opts: ["I am 25 years old.", "I have 25 years old.", "I am 25 year old.", "25 years old I am."], c: 0, cat: "Self Introduction" },
-      { ar: "شكراً ليك", en: "Thank you.", pron: "ثانك يو", opts: ["Thank you.", "Think you.", "Tank you.", "Three you."], c: 0, cat: "Greetings" },
-      { ar: "مع السلامة", en: "Goodbye.", pron: "جودباي", opts: ["Goodbye.", "Good buy.", "Go bye.", "Good day."], c: 0, cat: "Greetings" },
-      { ar: "صباح الخير", en: "Good morning.", pron: "جود مورنينج", opts: ["Good morning.", "Good mourning.", "Good morning.", "Good moning."], c: 0, cat: "Greetings" },
-      { ar: "أنا جعان", en: "I'm hungry.", pron: "آيم هانجري", opts: ["I'm hungry.", "I'm happy.", "I'm hurry.", "I'm heavy."], c: 0, cat: "Food" },
-      { ar: "أنا رايح الشغل", en: "I'm going to work.", pron: "آيم جوينج تو ورك", opts: ["I'm going to work.", "I'm going to walk.", "I'm going to wake.", "I'm going to world."], c: 0, cat: "Daily Activities" },
-      { ar: "الجو حلو النهارده", en: "The weather is nice today.", pron: "ذه ويذر إز نايس تودي", opts: ["The weather is nice today.", "The weather is nice to day.", "The weather is nine today.", "The weather is new today."], c: 0, cat: "Daily Activities" },
-      { ar: "أنا بحب الإنجليزي", en: "I love English.", pron: "آي لاف إنقليزي", opts: ["I love English.", "I live English.", "I left English.", "I like English."], c: 0, cat: "Daily Activities" },
-      { ar: "القلم بتاعي فين؟", en: "Where is my pen?", pron: "وير إز ماي بين؟", opts: ["Where is my pen?", "When is my pen?", "What is my pen?", "Who is my pen?"], c: 0, cat: "Daily Activities" },
-      { ar: "ممكن تساعدني؟", en: "Can you help me?", pron: "كان يو هيلب مي؟", opts: ["Can you help me?", "Can you held me?", "Can you helm me?", "Can you hell me?"], c: 0, cat: "Greetings" },
-      { ar: "الوقت كام؟", en: "What time is it?", pron: "وات تايم إز إيت؟", opts: ["What time is it?", "What time is at?", "What times is it?", "What time are it?"], c: 0, cat: "Daily Activities" },
-    ];
-    const shuffled = [...FB].sort(() => Math.random() - 0.5).slice(0, 10).map(q => {
-      const correctAnswer = q.opts[q.c];
-      const newOpts = [...q.opts].sort(() => Math.random() - 0.5);
-      return { ...q, opts: newOpts, c: newOpts.indexOf(correctAnswer) };
-    });
-    setQuizQuestions(shuffled);
-    setQuizIndex(0);
-    setQuizSelected(null);
-    setQuizAnswered(false);
-    setQuizScore(0);
-    setQuizComplete(false);
-    setQuizActive(true);
-    setSection(type === 'cs' ? 'cs-quiz' : 'quiz');
+  const resetQ = useCallback(() => { setSel(null); setInp(""); setRes(null); setHl(0); setShowA(false); setTries(0); setShkIdx(null); setPuzzleDone(false); setPuzzleOk(false); }, []);
+
+  const awardXp = useCallback((amt) => { if (!amt) return; setSXp(s => s + amt); setXpPop("+" + amt + " XP"); setTimeout(() => setXpPop(null), 1100); }, []);
+
+  const advance = useCallback((xpAmt) => {
+    const isOk = xpAmt > 0; const curQ = qs[qi];
+    if (!isOk && curQ) setWrongQs(w => [...w, { ...curQ }]);
+    const nOk = ok + (isOk ? 1 : 0); const nStr = isOk ? cStreak + 1 : 0; setCStreak(nStr);
+    let bonus = 0; if (nStr > 0 && (nStr === 5 || nStr === 10 || nStr === 20)) { bonus = nStr === 5 ? XP.s5 : nStr === 10 ? XP.s10 : XP.s20; setStkPop("+" + bonus + "🔥"); setTimeout(() => setStkPop(null), 1400); }
+    awardXp(xpAmt + bonus);
+    if (qi + 1 >= qs.length) {
+      const total = sXp + xpAmt + bonus;
+      const ns = progress.lastDate === ystStr() ? progress.streak + 1 : 1;
+      const np = { ...progress, totalCorrect: progress.totalCorrect + nOk, totalAnswered: progress.totalAnswered + qs.length, xp: (progress.xp || 0) + total };
+      if (!practice) Object.assign(np, { day: progress.day + 1, streak: ns, lastDate: toStr(), bestStreak: Math.max(progress.bestStreak || 0, ns) });
+      if (isCS) { setProgress(np); sP(np, CS_PK); } else { setProgress(np); sP(np); }
+      setOk(nOk); setSXp(total); setQuizPhase('results');
+      if (!practice) recordPerf(Math.round(nOk / qs.length * 100));
+    } else { setOk(nOk); setQi(q => q + 1); resetQ(); setQKey(k => k + 1); }
+  }, [ok, cStreak, qi, qs, sXp, progress, practice, isCS, awardXp, resetQ]);
+
+  const handleMCQ = useCallback((i) => {
+    if (sel !== null) return; setSel(i);
+    if (i === qs[qi]?.c) { setPtcl(true); setTimeout(() => setPtcl(false), 700); }
+    else { setShkIdx(i); setTimeout(() => setShkIdx(null), 500); setHrt(h => Math.max(0, h - 1)); setWrongQs(w => [...w, { ...qs[qi], userAns: qs[qi].opts[i] }]); }
+  }, [sel, qs, qi]);
+
+  const handleWrite = useCallback(() => {
+    if (!inp.trim() || showA) return;
+    const r = checkAns(inp, qs[qi]?.en || ""); setRes(r); setTries(t => t + 1);
+    if (r === "ok" || r === "close") { setPtcl(true); setTimeout(() => setPtcl(false), 700); }
+    else { setShkIdx(-1); setTimeout(() => setShkIdx(null), 500); }
+  }, [inp, showA, qs, qi]);
+
+  const handleHint = useCallback(() => { setHl(h => Math.min(h + 1, 2)); setRes(null); setInp(""); }, []);
+  const handleShowA = useCallback(() => { setShowA(true); setHrt(h => Math.max(0, h - 1)); }, []);
+
+  const startQuizFromStudy = useCallback(() => {
+    setQi(0); setSel(null); setInp(""); setRes(null); setHl(0); setShowA(false);
+    setTries(0); setOk(0); setSXp(0); setHrt(5); setCStreak(0); setShkIdx(null);
+    setWrongQs([]); setQKey(k => k + 1); setQuizPhase('quiz');
+  }, []);
+
+  const startQuiz = async (diff, type = 'general') => {
+    setQuizDifficulty(diff); setQuizType(type); setIsCS(type === 'cs'); setQuizPhase('gen');
+    setGenTick(0); setGenMsgIdx(0);
+    setHrt(5); setOk(0); setSXp(0); setCStreak(0); setWrongQs([]); setShowWrong(false);
+    const effDiff = type === 'cs' ? diff : getAdaptDiff(diff);
+    try {
+      const cached = await lQ(diff, type === 'cs' ? CS_QK : QK);
+      let questions = cached;
+      if (!questions) { questions = await genQs(progress.day, effDiff, type === 'cs'); await sQ(diff, questions, type === 'cs' ? CS_QK : QK); }
+      setQs(questions); setQi(0); resetQ(); setQKey(k => k + 1);
+      setStudyIdx(0); setStudyFlipped(false); setQuizPhase('study');
+    } catch (e) { setQuizPhase(null); }
   };
 
-  const handleQuizAnswer = (idx) => {
-    if (quizAnswered) return;
-    setQuizSelected(idx);
-    setQuizAnswered(true);
-    const correct = quizQuestions[quizIndex].c === idx;
-    if (correct) setQuizScore(s => s + 1);
-  };
+  useEffect(() => {
+    if (quizPhase !== 'gen') return;
+    const t = setInterval(() => setGenTick(x => x + 1), 80);
+    return () => clearInterval(t);
+  }, [quizPhase]);
 
-  const nextQuizQuestion = () => {
-    if (quizIndex >= quizQuestions.length - 1) {
-      setQuizComplete(true);
-      const newProg = { ...progress, totalAnswered: progress.totalAnswered + quizQuestions.length, totalCorrect: progress.totalCorrect + quizScore };
-      setProgress(newProg);
-      sP(newProg);
-      return;
-    }
-    setQuizIndex(i => i + 1);
-    setQuizSelected(null);
-    setQuizAnswered(false);
-  };
+  useEffect(() => {
+    if (quizPhase !== 'gen') return;
+    const msgs = isCS ? ["بنحمّل مصطلحات البرمجة...", "Loading CS phrases...", "Generating programming English...", "هنبدأ بعد شوية! 💻"] : ["Please be patient, we are loading...", "Almost there! AI is thinking...", "Crafting your Egyptian Arabic phrases...", "هنبدأ بعد شوية! 🚀"];
+    const t = setInterval(() => setGenMsgIdx(x => (x + 1) % msgs.length), 2200);
+    return () => clearInterval(t);
+  }, [quizPhase, isCS]);
+
+  useEffect(() => {
+    if (quizPhase !== 'study') return;
+    const fn = (e) => {
+      if (e.key === "ArrowRight" || e.key === "d") { if (studyIdx + 1 < qs.length) { setStudyIdx(i => i + 1); setStudyFlipped(false); } else startQuizFromStudy(); }
+      else if (e.key === "ArrowLeft" || e.key === "a") { if (studyIdx > 0) { setStudyIdx(i => i - 1); setStudyFlipped(false); } }
+      else if (e.key === " " || e.key === "Enter") { e.preventDefault(); setStudyFlipped(f => !f); }
+    };
+    window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
+  }, [quizPhase, studyIdx, qs.length, startQuizFromStudy]);
+
+  useEffect(() => {
+    if (quizPhase !== 'quiz') return;
+    const q = qs[qi]; if (!q || q.qt !== "p") return;
+    const words = q.en.split(/\s+/);
+    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    setPuzzleChips(shuffled.map((w, i) => ({ id: i + Math.random(), word: w, used: false })));
+    setPuzzleAnswer([]); setPuzzleDone(false); setPuzzleOk(false);
+  }, [quizPhase, qKey, qs, qi]);
+
+  useEffect(() => {
+    if (quizPhase !== 'quiz') return;
+    const fn = (e) => {
+      const k = e.key.toLowerCase(); const q = qs[qi]; if (!q) return;
+      if (q.qt === "m") {
+        if (sel !== null) { if (k === "enter" || k === " ") { e.preventDefault(); advance(sel === q.c ? XP.mcq : 0); } }
+        else { const i = ["w", "a", "s", "d"].indexOf(k); if (i !== -1) { e.preventDefault(); handleMCQ(i); } }
+      } else if (q.qt === "p") {
+        if (puzzleDone && (k === "enter" || k === " ")) { e.preventDefault(); advance(puzzleOk ? XP.wrt0 : 0); }
+      } else {
+        const done = res !== null || showA;
+        if (done) { if (k === "enter") { e.preventDefault(); const wXp = showA ? 0 : res === "ok" || res === "close" ? (hl === 0 ? XP.wrt0 : hl === 1 ? XP.wrt1 : XP.wrt2) : 0; advance(wXp); } }
+        else if (k === "enter") { e.preventDefault(); handleWrite(); }
+      }
+    };
+    window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
+  }, [quizPhase, sel, res, showA, qs, qi, hl, advance, handleMCQ, handleWrite, puzzleDone, puzzleOk]);
+
 
   const styles = {
     root: { display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: "'Cairo', 'Inter', system-ui, sans-serif", background: t.root, color: t.txt, direction: 'rtl', transition: 'background .3s ease' },
@@ -605,7 +921,7 @@ export default function DesktopApp() {
             <button onClick={() => cloudPull()} style={{ width: "100%", padding: "6px", borderRadius: 8, border: `1px solid rgba(59,130,246,.2)`, background: "rgba(59,130,246,.06)", color: "#3B82F6", fontSize: 11, cursor: "pointer", textAlign: "center", marginBottom: 8, fontFamily: 'inherit', transition: 'all .2s' }}>
               🔄 مزامنة الآن
             </button>
-            <a href="/#/" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: '#6b7a90', fontSize: 13, transition: 'color .15s' }}
+            <a href="/#/app" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: '#6b7a90', fontSize: 13, transition: 'color .15s' }}
               onMouseEnter={e => e.currentTarget.style.color = '#c8d0de'}
               onMouseLeave={e => e.currentTarget.style.color = '#6b7a90'}
             >
@@ -618,117 +934,234 @@ export default function DesktopApp() {
   );
 
   const renderQuizSection = () => {
-    if (quizActive && quizQuestions.length > 0 && !quizComplete) {
-      const q = quizQuestions[quizIndex];
-      const progressPct = ((quizIndex + 1) / quizQuestions.length * 100).toFixed(1);
-      const isCorrect = quizSelected !== null && quizSelected === q.c;
+    const isCS = quizType === 'cs';
+    const qLv = isCS ? CS_LC : LC;
+
+    if (quizPhase === 'gen') {
+      const msgs = isCS ? ["بنحمّل مصطلحات البرمجة...", "Loading CS phrases...", "Generating programming English...", "هنبدأ بعد شوية! 💻"] : ["Please be patient, we are loading...", "Almost there! AI is thinking...", "Crafting your Egyptian Arabic phrases...", "هنبدأ بعد شوية! 🚀"];
+      const chars = isCS ? ["C", "++", "{}", "[]", "AI", "py", "js", "//", ">_", "ls", "git", "λ"] : ["A", "أ", "B", "ب", "C", "ت", "D", "ث", "E", "ج", "F", "ح"];
+      const N = 12, R = 88;
+      const lc = qLv[quizDifficulty] || qLv.Easy;
       return (
-        <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <button onClick={() => { setQuizActive(false); setQuizComplete(false); }} style={{ background: 'transparent', border: `1px solid ${t.bd}`, borderRadius: 10, padding: '8px 16px', color: t.m, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = t.bdS; e.currentTarget.style.color = t.txt; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = t.bd; e.currentTarget.style.color = t.m; }}
-            >✕ خروج</button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, color: t.m }}>{quizIndex + 1} / {quizQuestions.length}</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#22C55E' }}>✓ {quizScore}</span>
-            </div>
+        <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, textAlign: 'center' }}>
+          <div style={{ position: 'relative', width: 210, height: 210, marginBottom: 28 }}>
+            {Array.from({ length: N }, (_, i) => { const angle = (i / N) * 360 + (genTick * 2.8), rad = angle * Math.PI / 180, x = 105 + R * Math.cos(rad) - 16, y = 105 + R * Math.sin(rad) - 14; const p2 = (i / N + genTick * .012) % 1, sc = 0.7 + p2 * 0.6, al = 0.25 + p2 * 0.75, ch = chars[i % chars.length]; return (<div key={i} style={{ position: 'absolute', left: x, top: y, minWidth: 28, height: 28, borderRadius: 7, background: lc.fill, opacity: al, transform: `scale(${sc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', fontFamily: 'monospace', boxShadow: `0 0 8px ${lc.fill}66`, padding: '0 4px' }}>{ch}</div>); })}
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 88, height: 88, borderRadius: '50%', background: lc.bg, border: `3px solid ${lc.br}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 3 }}><div style={{ fontSize: 22 }}>{isCS ? "💻" : "🎓"}</div><div style={{ fontSize: 9, fontWeight: 700, color: lc.tx }}>{isCS ? "CS" : "DAY"} {quizDifficulty}</div></div>
           </div>
-          <div style={{ height: 4, background: t.s1, borderRadius: 2, overflow: 'hidden', marginBottom: 24 }}>
-            <div style={{ height: '100%', width: `${progressPct}%`, background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)', borderRadius: 2, transition: 'width .4s cubic-bezier(.4,0,.2,1)' }} />
+          <div style={{ height: 28, marginBottom: 10, overflow: 'hidden', position: 'relative', width: '100%', maxWidth: 340 }}>
+            <p key={genMsgIdx} style={{ fontSize: 14, fontWeight: 600, color: t.txt, margin: 0, animation: 'fadeIn .3s ease', position: 'absolute', width: '100%', left: 0, fontFamily: "'Cairo', sans-serif" }}>{msgs[genMsgIdx]}</p>
           </div>
-          <GlassCard dark={darkMode} hover={false} style={{ marginBottom: 20, textAlign: 'center', padding: '32px 24px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#3B82F6', background: 'rgba(59,130,246,.08)', padding: '3px 12px', borderRadius: 20, display: 'inline-block', marginBottom: 16 }}>{q.cat}</div>
-            <div style={{ direction: 'rtl', fontSize: 26, fontWeight: 700, color: t.txt, lineHeight: 1.7, fontFamily: "'Cairo', sans-serif" }}>{q.ar}</div>
-            <div style={{ fontSize: 12, color: t.m, marginTop: 8 }}>اختار الترجمة الصحيحة</div>
-          </GlassCard>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-            {q.opts.map((opt, i) => {
-              let bg = t.s1, bd = t.bd, color = t.txt;
-              if (quizAnswered) {
-                if (i === q.c) { bg = 'rgba(34,197,94,.12)'; bd = 'rgba(34,197,94,.3)'; color = '#16A34A'; }
-                else if (i === quizSelected) { bg = 'rgba(239,68,68,.12)'; bd = 'rgba(239,68,68,.3)'; color = '#DC2626'; }
-                else { bg = t.s1; bd = t.bd; color = t.m; opacity: 0.5; }
-              }
-              return (
-                <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} style={{
-                  padding: '14px 16px', borderRadius: 12, border: `1px solid ${bd}`, background: bg,
-                  color, fontSize: 14, fontWeight: 500, cursor: quizAnswered ? 'default' : 'pointer',
-                  transition: 'all .2s', fontFamily: 'inherit', textAlign: 'left'
-                }}
-                  onMouseEnter={e => { if (!quizAnswered) { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-                  onMouseLeave={e => { if (!quizAnswered) { e.currentTarget.style.borderColor = bd; e.currentTarget.style.transform = 'none'; } }}
-                >
-                  <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.5, fontFamily: 'monospace', marginRight: 8 }}>{String.fromCharCode(65 + i)}</span>
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-          {quizAnswered && (
-            <div style={{ animation: 'fadeIn .2s ease' }}>
-              <GlassCard dark={darkMode} hover={false} style={{
-                marginBottom: 16, padding: '16px 20px',
-                background: isCorrect ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
-                border: `1px solid ${isCorrect ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`
-              }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: isCorrect ? '#16A34A' : '#DC2626' }}>
-                  {isCorrect ? '✓ أحسنت! إجابة صحيحة 🎉' : `✗ خطأ! الإجابة الصحيحة: "${q.en}"`}
-                </div>
-                {q.pron && <div style={{ fontSize: 12, color: t.m, marginTop: 6 }}>🔊 {q.pron}</div>}
-              </GlassCard>
-              <button onClick={nextQuizQuestion} style={{
-                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
-                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
-                color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(59,130,246,.25)',
-                transition: 'all .2s'
-              }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-              >{quizIndex >= quizQuestions.length - 1 ? 'عرض النتائج ←' : 'السؤال التالي ←'}</button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 22 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: lc.fill, opacity: .7, animation: `pulse 1.4s ease ${i * .22}s infinite` }} />)}</div>
+          <div style={{ background: t.s1, border: `1px solid ${t.bd}`, borderRadius: 12, padding: '12px 18px', maxWidth: 300 }}><p style={{ fontSize: 11, color: t.m, margin: 0, lineHeight: 1.6 }}>{isCS ? "💡 كل سؤال فيه النطق الإنجليزي بالعربي" : "💡 كل سؤال فيه كيفية نطق الإنجليزي بالعربي — زي \"هاو أر يو؟\""}</p></div>
         </div>
       );
     }
 
-    if (quizComplete) {
-      const pct = Math.round((quizScore / quizQuestions.length) * 100);
+    if (quizPhase === 'study' && qs.length > 0) {
+      const q = qs[studyIdx];
+      const doneAll = studyIdx >= qs.length - 1;
+      const lc = qLv[quizDifficulty] || qLv.Easy;
       return (
-        <div style={{ maxWidth: 500, animation: 'scaleIn .3s ease' }}>
-          <GlassCard dark={darkMode} hover={false} style={{ textAlign: 'center', padding: '48px 32px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>{pct >= 80 ? '🏆' : pct >= 50 ? '👍' : '💪'}</div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: t.txt, marginBottom: 8 }}>أحسنت! أكملت الاختبار</h2>
-            <div style={{ fontSize: 48, fontWeight: 800, color: pct >= 80 ? '#22C55E' : pct >= 50 ? '#F59E0B' : '#EF4444', fontFamily: "'Inter', monospace", margin: '16px 0' }}>{pct}%</div>
-            <div style={{ fontSize: 14, color: t.m, marginBottom: 24 }}>{quizScore} / {quizQuestions.length} إجابة صحيحة</div>
-            <button onClick={() => { setQuizActive(false); setQuizComplete(false); }} style={{
-              padding: '12px 32px', borderRadius: 12, border: 'none',
-              background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
-              color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-              fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(59,130,246,.25)'
-            }}>العودة للرئيسية ←</button>
-          </GlassCard>
+        <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <button onClick={() => { setQuizPhase(null); }} style={{ background: 'transparent', border: `1px solid ${t.bd}`, borderRadius: 10, padding: '8px 16px', color: t.m, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = t.bdS; e.currentTarget.style.color = t.txt; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = t.bd; e.currentTarget.style.color = t.m; }}
+            >← خروج</button>
+            <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: t.txt }}>{isCS ? "💻" : "🗣️"} مراجعة</div><div style={{ fontSize: 11, color: t.m }}>{studyIdx + 1} / {qs.length}</div></div>
+            <button onClick={startQuizFromStudy} style={{ background: lc.fill, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>ابدأ الاختبار ←</button>
+          </div>
+          <div style={{ height: 4, background: t.s1, borderRadius: 2, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ height: '100%', width: `${((studyIdx + 1) / qs.length * 100).toFixed(1)}%`, background: lc.fill, borderRadius: 2, transition: 'width .3s' }} />
+          </div>
+          <div onClick={() => setStudyFlipped(f => !f)} style={{ background: studyFlipped ? lc.bg : t.s2, border: `1px solid ${studyFlipped ? lc.br : t.glassBd}`, borderRadius: 16, padding: 24, cursor: 'pointer', textAlign: 'center', minHeight: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center', transition: 'all .2s', userSelect: 'none', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,.2)' : '0 2px 12px rgba(0,0,0,.04)' }}>
+            {!studyFlipped ? (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 600, color: lc.tx, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 12 }}>{q.cat}</div>
+                <div style={{ direction: 'rtl', fontSize: 24, fontWeight: 700, fontFamily: "'Cairo', sans-serif", color: t.txt, lineHeight: 1.7 }}>{q.ar}</div>
+                <p style={{ fontSize: 12, color: t.m, marginTop: 12 }}>👆 اضغط لتشوف الإجابة والنطق</p>
+                <p style={{ fontSize: 11, color: t.m, marginTop: 4, opacity: .6 }}>Space / Enter to flip</p>
+              </>
+            ) : (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: lc.tx, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 10 }}>{q.cat} ✓</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: t.txt, fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>{q.en}</div>
+                {q.pron && <div style={{ marginTop: 12, padding: '8px 16px', borderRadius: 8, background: lc.bg, border: `1px solid ${lc.br}` }}><div style={{ fontSize: 10, fontWeight: 600, color: lc.tx, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>النطق بالعربي</div><div style={{ direction: 'rtl', fontSize: 18, fontWeight: 600, color: t.txt, fontFamily: "'Cairo', sans-serif", lineHeight: 1.6 }}>{q.pron}</div></div>}
+                <p style={{ fontSize: 11, color: t.m, marginTop: 12, opacity: .7 }}>👆 اضغط للرجوع</p>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button disabled={studyIdx === 0} onClick={() => { setStudyIdx(i => i - 1); setStudyFlipped(false); }} style={{ flex: 1, padding: '12px', borderRadius: 12, border: `1px solid ${studyIdx === 0 ? t.bd : lc.fill}`, background: studyIdx === 0 ? 'transparent' : lc.bg, color: studyIdx === 0 ? t.m : lc.tx, fontSize: 13, fontWeight: 600, cursor: studyIdx === 0 ? 'not-allowed' : 'pointer', opacity: studyIdx === 0 ? .4 : 1, fontFamily: 'inherit', transition: 'all .2s' }}>← السابق</button>
+            <button onClick={() => { if (!doneAll) { setStudyIdx(i => i + 1); setStudyFlipped(false); } else startQuizFromStudy(); }} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: doneAll ? lc.fill : t.s1, color: doneAll ? '#fff' : t.txt, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>{doneAll ? "🚀 ابدأ الاختبار ←" : "التالي →"}</button>
+          </div>
+          <div style={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap', marginTop: 16 }}>
+            {Array.from({ length: Math.min(qs.length, 25) }, (_, i) => { const dotIdx = Math.floor(i / 25 * qs.length); return (<div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i <= Math.floor(studyIdx / qs.length * 25) ? lc.fill : 'rgba(128,128,128,.22)', transition: 'background .2s' }} />); })}
+          </div>
+          <button onClick={startQuizFromStudy} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: lc.fill, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${lc.fill}40`, marginTop: 16, transition: 'all .2s' }}>🚀 أنا مستعد! ابدأ الاختبار ({qs.length} سؤال)</button>
+          <p style={{ textAlign: 'center', fontSize: 11, color: t.m, marginTop: 8 }}>← → arrow keys · Space to flip</p>
+        </div>
+      );
+    }
+
+    if (quizPhase === 'quiz' && qs[qi]) {
+      const q = qs[qi]; const isMCQ = q.qt === "m"; const isPuzzle = q.qt === "p";
+      const lc = qLv[quizDifficulty] || qLv.Easy;
+      const pp = (qi / qs.length * 100).toFixed(1);
+      const mcqDone = isMCQ && sel !== null, mcqOk = isMCQ && sel === q.c;
+      const wDone = (!isMCQ && !isPuzzle) && (res !== null || showA), wOk = (!isMCQ && !isPuzzle) && (res === "ok" || res === "close");
+      const done = mcqDone || wDone || puzzleDone, corr = mcqOk || wOk || puzzleOk;
+      const gSt = (i) => sel === null ? "idle" : i === q.c ? "ok" : i === sel ? "bad" : "dim";
+      const wXp = showA ? 0 : (res === "ok" || res === "close") ? (hl === 0 ? XP.wrt0 : hl === 1 ? XP.wrt1 : XP.wrt2) : 0;
+      return (
+        <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
+          {exitConfirm && <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+            <GlassCard dark={darkMode} hover={false} style={{ maxWidth: 340, width: '88%', textAlign: 'center' }}>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>🚪</div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: t.txt, marginBottom: 8 }}>Exit quiz?</h3>
+              <p style={{ fontSize: 13, color: t.m, marginBottom: 20 }}>هتعوز تخرج من الكويز؟</p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setExitConfirm(false)} style={{ flex: 1, padding: '12px', borderRadius: 10, border: `1px solid ${t.bdS}`, background: t.s1, color: t.txt, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>↩ متابعة</button>
+                <button onClick={() => { setExitConfirm(false); setQuizPhase(null); }} style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: '#EF4444', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>خروج ✕</button>
+              </div>
+            </GlassCard>
+          </div>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={() => setExitConfirm(true)} style={{ background: 'rgba(239,68,68,.07)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 7, padding: '4px 10px', color: '#EF4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>✕ خروج</button>
+              <span style={{ fontSize: 11, fontWeight: 700, color: lc.tx, background: lc.bg, border: `1px solid ${lc.br}`, padding: '2px 8px', borderRadius: 20 }}>{isCS ? "💻" : "🗣️"} {quizDifficulty}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {Array.from({ length: 5 }, (_, i) => <span key={i} style={{ fontSize: 17, opacity: i < hrt ? 1 : .18, transition: 'opacity .3s' }}>❤️</span>)}
+            </div>
+          </div>
+          <div style={{ height: 5, background: t.s1, borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}><div style={{ height: '100%', width: `${pp}%`, background: lc.fill, borderRadius: 3, transition: 'width .35s' }} /></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 11, color: t.m }}>Q {qi + 1}/{qs.length}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {stkPop && <span style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', animation: 'fadeIn .3s ease' }}>{stkPop}</span>}
+              {xpPop && <span style={{ fontSize: 12, fontWeight: 700, color: lc.tx, animation: 'fadeIn .3s ease' }}>{xpPop}</span>}
+              <span style={{ fontSize: 13, fontWeight: 700, color: lc.tx }}>✓ {ok}</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: isMCQ ? '#3B82F6' : isPuzzle ? '#F59E0B' : '#8B5CF6', background: isMCQ ? 'rgba(59,130,246,.1)' : isPuzzle ? 'rgba(245,158,11,.1)' : 'rgba(139,92,246,.1)', border: `1px solid ${isMCQ ? 'rgba(59,130,246,.25)' : isPuzzle ? 'rgba(245,158,11,.25)' : 'rgba(139,92,246,.25)'}`, padding: '2px 8px', borderRadius: 20 }}>{isMCQ ? "⊙ MCQ" : isPuzzle ? "🧩 PUZZLE" : "✍️ TYPE"}</span>
+            <span style={{ fontSize: 10, color: t.m }}>{q.cat}</span>
+          </div>
+          <div key={qKey} style={{ background: lc.bg, border: `1px solid ${lc.br}`, borderRadius: 16, padding: '20px 24px', marginBottom: 16, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ direction: 'rtl', fontSize: 24, fontWeight: 700, lineHeight: 1.7, color: t.txt, fontFamily: "'Cairo', sans-serif" }}>{q.ar}</div>
+            <p style={{ fontSize: 12, color: t.m, marginTop: 4 }}>{isMCQ ? "اختار الترجمة الصح" : isPuzzle ? "رتّب الكلمات عشان تكوّن الجملة" : "اكتب الترجمة الصح بالإنجليزي"}</p>
+            {ptcl && [0, 1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} style={{ position: 'absolute', top: '50%', left: `${4 + i * 12}%`, width: 10, height: 10, borderRadius: '50%', background: ['#22C55E', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#EC4899'][i], opacity: 0, animation: 'fadeIn .3s ease', pointerEvents: 'none' }} />)}
+          </div>
+          {isMCQ && <div style={{ animation: 'fadeIn .3s ease' }}>
+            {q.opts.map((opt, i) => { const st = gSt(i); const sh = shkIdx === i; return (<button key={i} onClick={() => handleMCQ(i)} disabled={mcqDone} style={{ width: '100%', textAlign: 'left', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 9, display: 'flex', alignItems: 'flex-start', gap: 10, cursor: mcqDone ? 'default' : 'pointer', border: `1px solid ${st === "ok" ? '#22C55E' : st === "bad" ? '#EF4444' : t.bd}`, background: st === "ok" ? 'rgba(34,197,94,.12)' : st === "bad" ? 'rgba(239,68,68,.12)' : t.s1, color: st === "ok" ? '#16A34A' : st === "bad" ? '#DC2626' : t.txt, opacity: st === "dim" ? .28 : 1, animation: sh ? 'shkIdx .5s ease' : undefined, fontFamily: 'inherit', transition: 'all .15s' }}><span style={{ width: 26, height: 26, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'monospace', background: st === "ok" ? '#22C55E' : st === "bad" ? '#EF4444' : t.s2, color: st === "ok" || st === "bad" ? '#fff' : t.m, border: `1px solid ${st === "ok" ? '#22C55E' : st === "bad" ? '#EF4444' : t.bd}` }}>{String.fromCharCode(65 + i)}</span><span style={{ flex: 1 }}>{opt}</span>{st === "ok" && <span>✓</span>}{st === "bad" && <span>✗</span>}</button>); })}
+            {!mcqDone && <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 4, opacity: .35 }}>{["W", "A", "S", "D"].map((k, i) => <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: t.m }}><span style={{ background: t.s2, border: `1px solid ${t.bd}`, borderRadius: 3, padding: '0 5px', fontFamily: 'monospace', fontSize: 10 }}>{k}</span>→{["A", "B", "C", "D"][i]}</span>)}</div>}
+            {mcqDone && <div style={{ animation: 'fadeIn .3s ease' }}>
+              {q.pron && <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, background: lc.bg, border: `1px solid ${lc.br}`, display: 'inline-block', marginBottom: 10 }}><div style={{ fontSize: 10, fontWeight: 600, color: lc.tx, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>النطق بالعربي</div><div style={{ direction: 'rtl', fontSize: 16, fontWeight: 600, color: t.txt, fontFamily: "'Cairo', sans-serif" }}>{q.pron}</div></div>}
+              <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 12, background: mcqOk ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${mcqOk ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)'}`, color: mcqOk ? '#16A34A' : '#DC2626', fontSize: 14, fontWeight: 600, lineHeight: 1.5 }}>{mcqOk ? `✓ Correct! ممتاز! (+${XP.mcq} XP) 🎉` : `✗ Wrong! The answer is: "${q.en}"`}</div>
+              <button onClick={() => advance(mcqOk ? XP.mcq : 0)} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: lc.fill, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${lc.fill}30` }}>{qi + 1 >= qs.length ? "عرض النتائج →" : "التالي →"} <span style={{ fontSize: 12, opacity: .7 }}>(Enter)</span></button>
+            </div>}
+          </div>}
+          {!isMCQ && !isPuzzle && <div style={{ animation: 'fadeIn .3s ease' }}>
+            {hl > 0 && !wDone && <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 10, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)', color: '#D97706', fontSize: 14, letterSpacing: 1.5, fontFamily: 'monospace' }}>💡 {mkHint(q.en, hl)}</div>}
+            {!wDone && <>
+              <input value={inp} onChange={e => setInp(e.target.value)} onKeyDown={e => e.key === "Enter" && handleWrite()} placeholder="Type the English translation here..." dir="ltr" style={{ width: '100%', padding: '14px 16px', borderRadius: 10, border: `1.5px solid ${t.bd}`, background: t.s1, color: t.txt, fontSize: 16, boxSizing: 'border-box', outline: 'none', fontFamily: 'system-ui', marginBottom: 10, transition: 'border-color .2s' }} />
+              <button onClick={handleWrite} disabled={!inp.trim()} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: inp.trim() ? lc.fill : t.s1, color: inp.trim() ? '#fff' : t.m, fontSize: 14, fontWeight: 600, cursor: inp.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'all .2s' }}>Check ✓ <span style={{ fontSize: 12, opacity: .7 }}>(Enter)</span></button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
+                {hl < 2 && <button onClick={handleHint} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(245,158,11,.25)', background: 'rgba(245,158,11,.08)', color: '#D97706', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>💡 Hint {hl + 1}/2</button>}
+                {(tries >= 2 || hl >= 2) && !showA && <button onClick={handleShowA} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid rgba(239,68,68,.25)', background: 'rgba(239,68,68,.08)', color: '#DC2626', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>👁 Show answer</button>}
+              </div>
+            </>}
+            {wDone && <div style={{ animation: 'fadeIn .3s ease' }}>
+              {q.pron && <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, background: lc.bg, border: `1px solid ${lc.br}`, display: 'inline-block', marginBottom: 10 }}><div style={{ fontSize: 10, fontWeight: 600, color: lc.tx, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>النطق بالعربي</div><div style={{ direction: 'rtl', fontSize: 16, fontWeight: 600, color: t.txt, fontFamily: "'Cairo', sans-serif" }}>{q.pron}</div></div>}
+              <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 12, background: wOk ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${wOk ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)'}`, color: wOk ? '#16A34A' : '#DC2626', fontSize: 14, fontWeight: 600, lineHeight: 1.5 }}>{showA ? `👁 Answer: "${q.en}"` : res === "ok" ? `✓ Perfect! (+${wXp} XP) 🎉` : res === "close" ? `✓ Close! Answer: "${q.en}" (+${wXp} XP) 👍` : `✗ Wrong! Answer: "${q.en}"`}</div>
+              {!wOk && !showA && tries <= 3 && <button onClick={() => { setRes(null); setInp(""); }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1px solid rgba(59,130,246,.25)', background: 'rgba(59,130,246,.08)', color: '#2563EB', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10 }}>🔄 Try again</button>}
+              <button onClick={() => advance(wOk ? wXp : 0)} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: lc.fill, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${lc.fill}30` }}>{qi + 1 >= qs.length ? "عرض النتائج →" : "التالي →"} <span style={{ fontSize: 12, opacity: .7 }}>(Enter)</span></button>
+            </div>}
+          </div>}
+          {isPuzzle && !puzzleDone && <div style={{ animation: 'fadeIn .3s ease', marginBottom: 12 }}>
+            <div style={{ background: t.s1, border: `2px dashed ${t.bdS}`, borderRadius: 14, padding: puzzleAnswer.length ? '12px' : '20px', marginBottom: 12, minHeight: 50, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'center', transition: 'all .2s' }}>
+              {puzzleAnswer.length === 0 && <span style={{ fontSize: 13, color: t.m, fontFamily: "'Cairo', sans-serif" }}>اضبط الكلمات هنا 👇</span>}
+              {puzzleAnswer.map((chip, i) => (
+                <span key={chip.id} onClick={() => { setPuzzleAnswer(a => a.filter((_, j) => j !== i)); setPuzzleChips(ch => ch.map(c => c.id === chip.id ? { ...c, used: false } : c)); }}
+                  style={{ padding: '7px 14px', borderRadius: 10, background: lc.fill, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', boxShadow: `0 2px 6px ${lc.fill}40`, userSelect: 'none', transition: 'transform .1s' }}
+                  onMouseDown={e => e.currentTarget.style.transform = "scale(.92)"}
+                  onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}>{chip.word}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 12 }}>
+              {puzzleChips.map(chip => (
+                <span key={chip.id} onClick={() => { if (!chip.used) { setPuzzleAnswer(a => [...a, chip]); setPuzzleChips(ch => ch.map(c => c.id === chip.id ? { ...c, used: true } : c)); } }}
+                  style={{ padding: '7px 14px', borderRadius: 10, background: chip.used ? 'rgba(128,128,128,.08)' : t.s2, color: chip.used ? 'rgba(128,128,128,.3)' : t.txt, fontSize: 14, fontWeight: 600, cursor: chip.used ? 'default' : 'pointer', border: `1.5px solid ${chip.used ? 'transparent' : t.bd}`, opacity: chip.used ? .35 : 1, transition: 'all .15s', userSelect: 'none', transform: chip.used ? 'scale(.9)' : 'none' }}>{chip.word}</span>
+              ))}
+            </div>
+            <button onClick={() => { const userStr = puzzleAnswer.map(c => c.word).join(" "); const ok = userStr.toLowerCase().trim() === q.en.toLowerCase().trim(); setPuzzleOk(ok); setPuzzleDone(true); if (!ok) setHrt(h => Math.max(0, h - 1)); if (!ok) setWrongQs(w => [...w, { ...q }]); }} disabled={puzzleAnswer.length === 0} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: puzzleAnswer.length ? lc.fill : t.s1, color: puzzleAnswer.length ? '#fff' : t.m, fontSize: 14, fontWeight: 600, cursor: puzzleAnswer.length ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'all .2s' }}>Check ✓</button>
+          </div>}
+          {isPuzzle && puzzleDone && <div style={{ animation: 'fadeIn .3s ease', marginBottom: 12 }}>
+            {q.pron && <div style={{ marginTop: 10, padding: '8px 16px', borderRadius: 8, background: lc.bg, border: `1px solid ${lc.br}`, display: 'inline-block', marginBottom: 10 }}><div style={{ fontSize: 10, fontWeight: 600, color: lc.tx, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>النطق بالعربي</div><div style={{ direction: 'rtl', fontSize: 16, fontWeight: 600, color: t.txt, fontFamily: "'Cairo', sans-serif" }}>{q.pron}</div></div>}
+            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 12, background: puzzleOk ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${puzzleOk ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.25)'}`, color: puzzleOk ? '#16A34A' : '#DC2626', fontSize: 14, fontWeight: 600, lineHeight: 1.5 }}>{puzzleOk ? `✓ Perfect! 🎉 (+${XP.wrt0} XP)` : `✗ Wrong! The correct sentence is:\n"${q.en}"`}</div>
+            <button onClick={() => advance(puzzleOk ? XP.wrt0 : 0)} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: lc.fill, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${lc.fill}30` }}>{qi + 1 >= qs.length ? "عرض النتائج →" : "التالي →"} <span style={{ fontSize: 12, opacity: .7 }}>(Enter)</span></button>
+          </div>}
+        </div>
+      );
+    }
+
+    if (quizPhase === 'results') {
+      const pd = Math.round(ok / Math.max(qs.length, 1) * 100);
+      const g = pd >= 90 ? { e: "🏆", ar: "ممتاز يا بطل! 🎉" } : pd >= 75 ? { e: "⭐", ar: "عظيم! استمر!" } : pd >= 60 ? { e: "👍", ar: "كويس! ركز أكتر" } : { e: "💪", ar: "لا تستسلم! التكرار مفتاح" };
+      const lc = qLv[quizDifficulty] || qLv.Easy;
+      const uniqueWrong = [...new Map(wrongQs.map(q => [q.ar, q])).values()];
+      return (
+        <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
+          <div style={{ background: lc.bg, border: `1px solid ${lc.br}`, borderRadius: 16, padding: 24, textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 44, marginBottom: 6 }}>{g.e}</div>
+            <h2 style={{ fontSize: 19, fontWeight: 700, color: t.txt, marginBottom: 4 }}>{isCS ? "💻 CS " : ""}{quizDifficulty} Complete!</h2>
+            <div style={{ direction: 'rtl', fontSize: 17, fontWeight: 700, color: lc.tx, fontFamily: "'Cairo', sans-serif", lineHeight: 1.6 }}>{g.ar}</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+            {[{ v: `${ok}/${qs.length}`, l: "score", c: lc.tx }, { v: `+${sXp}`, l: "XP earned", c: "#F59E0B" }, { v: `${pd}%`, l: "accuracy" }].map((s, i) => (
+              <GlassCard key={i} dark={darkMode} hover={false} style={{ textAlign: 'center', padding: '16px 12px' }}><div style={{ fontSize: 17, fontWeight: 700, color: s.c || t.txt }}>{s.v}</div><div style={{ fontSize: 11, color: t.m, marginTop: 2 }}>{s.l}</div></GlassCard>
+            ))}
+          </div>
+          {uniqueWrong.length > 0 && <GlassCard dark={darkMode} hover={false} style={{ border: '1px solid rgba(239,68,68,.2)', background: 'rgba(239,68,68,.04)', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showWrong ? 12 : 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span style={{ fontSize: 16 }}>❌</span>
+                <div><div style={{ fontSize: 13, fontWeight: 700, color: '#DC2626' }}>{uniqueWrong.length} Wrong Answer{uniqueWrong.length > 1 ? "s" : ""}</div><div style={{ fontSize: 11, color: t.m }}>المراجعة قبل ما تعيد</div></div>
+              </div>
+              <button onClick={() => setShowWrong(w => !w)} style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', color: '#DC2626', borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{showWrong ? "Hide ▲" : "Review ▼"}</button>
+            </div>
+            {showWrong && <div>
+              {uniqueWrong.map((q, i) => (
+                <div key={i} style={{ background: t.s1, borderRadius: 10, padding: '12px 16px', marginBottom: 8, border: `1px solid ${t.bd}` }}>
+                  <div style={{ direction: 'rtl', fontSize: 16, fontWeight: 600, fontFamily: "'Cairo', sans-serif", color: t.txt, marginBottom: 6 }}>{q.ar}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: q.pron ? 6 : 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#22C55E', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', padding: '2px 8px', borderRadius: 20 }}>✓</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: t.txt }}>{q.en}</span>
+                  </div>
+                  {q.pron && <div style={{ direction: 'rtl', fontSize: 14, fontWeight: 600, fontFamily: "'Cairo', sans-serif", color: lc.tx, background: lc.bg, border: `1px solid ${lc.br}`, borderRadius: 7, padding: '4px 12px', display: 'inline-flex', alignItems: 'center', gap: 6 }}><span>🔊</span><span>{q.pron}</span></div>}
+                  {q.userAns && <div style={{ fontSize: 11, color: '#DC2626', marginTop: 5, fontStyle: 'italic' }}>You answered: "{q.userAns}"</div>}
+                </div>
+              ))}
+              <button onClick={() => { setPractice(true); setQs(uniqueWrong); setStudyIdx(0); setStudyFlipped(false); setQi(0); setSel(null); setInp(""); setRes(null); setHl(0); setShowA(false); setTries(0); setOk(0); setSXp(0); setHrt(5); setCStreak(0); setShkIdx(null); setWrongQs([]); setShowWrong(false); setQKey(k => k + 1); setQuizPhase('study'); }} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: lc.fill, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>📚 Study these {uniqueWrong.length} again</button>
+            </div>}
+          </GlassCard>}
+          <button onClick={() => { setQuizPhase(null); setPractice(false); }} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: lc.fill, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${lc.fill}30` }}>← العودة للرئيسية</button>
         </div>
       );
     }
 
     return (
-      <div style={{ maxWidth: 700 }}>
-        <h2 style={styles.sectionTitle}>{quizType === 'cs' ? 'اختبار البرمجة 💻' : 'اختبار الإنجليزي 📝'}</h2>
+      <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
+        <h2 style={styles.sectionTitle}>{isCS ? 'اختبار البرمجة 💻' : 'اختبار الإنجليزي 📝'}</h2>
         <GlassCard dark={darkMode} hover={false}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: t.txt, marginBottom: 8 }}>{quizType === 'cs' ? 'تعلم مصطلحات البرمجة بالإنجليزي' : 'اختبر مستواك في الإنجليزي'}</h3>
-          <p style={{ color: t.m, margin: '0 0 24px', fontSize: 14 }}>اختار مستوى الصعوبة وابدأ الاختبار — 10 أسئلة</p>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: t.txt, marginBottom: 8 }}>{isCS ? 'تعلم مصطلحات البرمجة بالإنجليزي' : 'اختبر مستواك في الإنجليزي'}</h3>
+          <p style={{ color: t.m, margin: '0 0 24px', fontSize: 14 }}>اختار مستوى الصعوبة وابدأ الاختبار — MCQ + كتابة + ألغاز</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {DIFF_ORDER.map(d => {
-              const csColors = { Easy: { fill: '#06B6D4', bg: 'rgba(6,182,212,.06)', br: 'rgba(6,182,212,.2)', tx: '#0891B2' }, Medium: { fill: '#8B5CF6', bg: 'rgba(139,92,246,.06)', br: 'rgba(139,92,246,.2)', tx: '#7C3AED' }, Hard: { fill: '#F97316', bg: 'rgba(249,115,22,.06)', br: 'rgba(249,115,22,.2)', tx: '#EA580C' } };
-              const lc = quizType === 'cs' ? csColors[d] : LC[d];
+              const lc = isCS ? CS_LC[d] : LC[d];
               return (
-                <div key={d} onClick={() => startQuiz(d, quizType)} style={{
-                  display: 'flex', alignItems: 'center', gap: 16,
-                  padding: '16px 20px', background: lc.bg, border: `1px solid ${lc.br}`,
-                  borderRadius: 12, cursor: 'pointer', transition: 'all .2s'
-                }}
+                <div key={d} onClick={() => startQuiz(d, quizType)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', background: lc.bg, border: `1px solid ${lc.br}`, borderRadius: 12, cursor: 'pointer', transition: 'all .2s' }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = `0 4px 16px ${lc.fill}15`; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
@@ -736,10 +1169,7 @@ export default function DesktopApp() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, color: lc.tx, fontSize: 15 }}>{DIFF_LABELS[d]}</div>
                     <div style={{ fontSize: 12, color: t.m, marginTop: 2 }}>
-                      {quizType === 'cs'
-                        ? (d === 'Easy' ? 'Linux Basics, Git, Developer Phrases' : d === 'Medium' ? 'C/C++, Python, Debugging' : 'AI/ML, Algorithms, Architecture')
-                        : (d === 'Easy' ? 'أسئلة يومية بسيطة — تحيات، أرقام' : d === 'Medium' ? 'سفر، شغل، صحة' : 'تعبيرات، عمل رسمي')
-                      }
+                      {isCS ? (d === 'Easy' ? 'Linux Basics, Git, Developer Phrases' : d === 'Medium' ? 'C/C++, Python, Debugging' : 'AI/ML, Algorithms, Architecture') : (d === 'Easy' ? 'أسئلة يومية بسيطة — تحيات، أرقام' : d === 'Medium' ? 'سفر، شغل، صحة' : 'تعبيرات، عمل رسمي')}
                     </div>
                   </div>
                   <span style={{ color: lc.tx, fontSize: 18 }}>←</span>
