@@ -276,7 +276,7 @@ export default function DesktopApp() {
   const renderSidebar = () => (
     <div style={styles.sidebar}>
       <div style={styles.sidebarLogo}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🎓</div>
+        <img src="/logo.png" alt="EN-5000" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover' }} />
         <div>
           <div style={{ color: '#fff', fontWeight: 700, fontSize: 17 }}>EN-5000</div>
           <div style={{ color: '#6b7280', fontSize: 11 }}>تعلم الإنجليزي</div>

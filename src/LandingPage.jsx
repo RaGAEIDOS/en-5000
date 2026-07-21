@@ -714,6 +714,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showArticle, setShowArticle] = useState(false);
 
   const c = dark ? DARK : LIGHT;
 
@@ -767,7 +768,8 @@ export default function LandingPage() {
         {/* NAVBAR */}
         <nav style={{ ...S.nav(c), boxShadow: scrolled ? '0 4px 30px rgba(0,0,0,0.15)' : 'none' }}>
           <div style={S.navLogo} onClick={goApp}>
-            <span style={{ animation: 'float 3s ease-in-out infinite' }}>{'\u{1F680}'}</span> EN-5000
+            <img src="/logo.png" alt="EN-5000" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }} />
+            <span>EN-5000</span>
           </div>
           <ul className="nav-links-desktop" style={S.navLinks}>
             {[
@@ -1104,12 +1106,194 @@ export default function LandingPage() {
           </button>
         </section>
 
+        {/* ARTICLE */}
+        <section style={{ padding: '4rem 2rem', maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ background: c.card, backdropFilter: 'blur(12px)', border: `1px solid ${c.cardBorder}`, borderRadius: '24px', overflow: 'hidden', transition: 'all 0.3s' }}>
+            {/* Article Header */}
+            <div style={{ padding: '2.5rem 2.5rem 1.5rem', borderBottom: `1px solid ${c.cardBorder}` }}>
+              <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 900, color: c.text, lineHeight: 1.4, marginBottom: '0.8rem' }}>
+                حراس الضاد: لماذا يعد الحفاظ على الهوية العربية ضرورة وجودية في عصر العولمة؟
+              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.85rem', color: c.textSec, fontWeight: 600 }}>{'\u{1F4DD}'} مقال تحليلي</span>
+                <span style={{ fontSize: '0.85rem', color: c.textSec }}>{'\u2022'}</span>
+                <span style={{ fontSize: '0.85rem', color: c.textSec, fontWeight: 600 }}>{'\u{1F4D6}'} الهوية العربية والعولمة</span>
+              </div>
+            </div>
+
+            {/* Collapsible Content */}
+            {showArticle && (
+              <div style={{ padding: '2rem 2.5rem 2.5rem' }}>
+                {/* Intro */}
+                <p style={{ fontSize: '1.1rem', lineHeight: 2.1, color: c.text, marginBottom: '2rem', fontWeight: 500 }}>
+                  تعيش الأمة العربية اليوم في خضم تحولات رقمية وفكرية متسارعة، جعلت من العالم قرية إلكترونية صغيرة تذوب فيها الحدود الجغرافية. وفي ظل هذا التدفق الثقافي الهائل، برزت تساؤلات جوهرية حول مفهوم الهوية العربية ومدى قدرتها الصمود؛ إذ لم يعد التمسك بها مجرد شكل من أشكال التغني بالماضي، بل تحول إلى صمام أمان وجودي لحماية الأمن القومي، والتماسك الاجتماعي، والسيادة المعرفية للشعوب من المحيط إلى الخليج.
+                </p>
+
+                {/* Section 1 */}
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#3B82F6', marginTop: '2.5rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid rgba(59,130,246,0.2)' }}>
+                  مفهوم الهوية العربية وأبعادها الحضارية
+                </h2>
+                <p style={{ fontSize: '1.05rem', lineHeight: 2.1, color: c.text, marginBottom: '1.2rem' }}>
+                  الهوية العربية ليست قالباً جامداً أو مجرد عرق، بل هي منظومة حيوية تتشكل من ثلاثة أركان رئيسية:
+                </p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '1rem 1.2rem', background: c.flagItemBg, borderRadius: '14px', border: `1px solid ${c.cardBorder}` }}>
+                    <span style={{ fontSize: '1.5rem', flexShrink: 0, marginTop: '0.2rem' }}>{'\u{1F4D6}'}</span>
+                    <div>
+                      <strong style={{ color: c.text, fontSize: '1.05rem' }}>اللغة العربية (الضاد):</strong>
+                      <span style={{ color: c.textSec, fontSize: '1rem' }}> الوعاء المعرفي والفكري الذي يربط العربي بجذوره</span>
+                    </div>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '1rem 1.2rem', background: c.flagItemBg, borderRadius: '14px', border: `1px solid ${c.cardBorder}` }}>
+                    <span style={{ fontSize: '1.5rem', flexShrink: 0, marginTop: '0.2rem' }}>{'\u{1F3DB}\uFE0F'}</span>
+                    <div>
+                      <strong style={{ color: c.text, fontSize: '1.05rem' }}>التراث المادي واللامادي:</strong>
+                      <span style={{ color: c.textSec, fontSize: '1rem' }}> الآداب، الفنون، العادات، والتقاليد</span>
+                    </div>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '1rem 1.2rem', background: c.flagItemBg, borderRadius: '14px', border: `1px solid ${c.cardBorder}` }}>
+                    <span style={{ fontSize: '1.5rem', flexShrink: 0, marginTop: '0.2rem' }}>{'\u2728'}</span>
+                    <div>
+                      <strong style={{ color: c.text, fontSize: '1.05rem' }}>القيم والأخلاق:</strong>
+                      <span style={{ color: c.textSec, fontSize: '1rem' }}> المنظومة القيمة المستمدة من الدين والتقاليد الأصيلة</span>
+                    </div>
+                  </li>
+                </ul>
+
+                {/* Section 2 */}
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#3B82F6', marginTop: '2.5rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid rgba(59,130,246,0.2)' }}>
+                  أهمية الحفاظ على الهوية العربية
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {[
+                    { label: 'أ.', text: 'حماية الأمن الفكري ومقاومة الاستلاب الثقافي', color: '#22C55E' },
+                    { label: 'ب.', text: 'صون الروابط الدينية والروحية', color: '#3B82F6' },
+                    { label: 'ج.', text: 'تعزيز التماسك الاجتماعي والاستقرار الإقليمي', color: '#8B5CF6' },
+                    { label: 'د.', text: 'تحقيق التوازن بين الأصالة والمعاصرة', color: '#F59E0B' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1rem 1.2rem', borderRadius: '14px', border: `1px solid ${c.cardBorder}`, background: c.flagItemBg }}>
+                      <span style={{ fontWeight: 800, color: item.color, fontSize: '1.1rem', minWidth: '24px' }}>{item.label}</span>
+                      <span style={{ color: c.text, fontSize: '1rem', lineHeight: 1.9 }}>{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Section 3 */}
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#3B82F6', marginTop: '2.5rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid rgba(59,130,246,0.2)' }}>
+                  أبرز التحديات التي تواجه الهوية في العصر الرقمي
+                </h2>
+                <p style={{ fontSize: '1.05rem', lineHeight: 2.1, color: c.text, marginBottom: '1rem' }}>
+                  في ظل التحولات السريعة، تواجه الهوية العربية تحديات جسيمة تتطلب وعياً عميقاً واستجابة فعّالة:
+                </p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '1rem 1.2rem', background: c.flagItemBg, borderRadius: '14px', border: `1px solid ${c.cardBorder}` }}>
+                    <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{'\u{1F4CA}'}</span>
+                    <div>
+                      <strong style={{ color: c.text }}>تراجع المحتوى الرقمي العربي</strong>
+                      <p style={{ color: c.textSec, fontSize: '0.95rem', lineHeight: 1.9, margin: '0.3rem 0 0' }}>ergo، يمثل المحتوى العربي على الإنترنت نسبة محدودة مقارنة بلغات أخرى، مما يضع العربي في موقع متواضع من المشهد الرقمي العالمي.</p>
+                    </div>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '1rem 1.2rem', background: c.flagItemBg, borderRadius: '14px', border: `1px solid ${c.cardBorder}` }}>
+                    <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{'\u{1F50D}'}</span>
+                    <div>
+                      <strong style={{ color: c.text }}>تزييف التاريخ والوعي</strong>
+                      <p style={{ color: c.textSec, fontSize: '0.95rem', lineHeight: 1.9, margin: '0.3rem 0 0' }}>ergo، انتشار المغالطات والمعلومات المضللة حول التاريخ العربي والحضاري يهدد الوعي الذاتي لدى الأجيال الجديدة.</p>
+                    </div>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '1rem 1.2rem', background: c.flagItemBg, borderRadius: '14px', border: `1px solid ${c.cardBorder}` }}>
+                    <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{'\u{1F468}\u200D\u{1F469}\u200D\u{1F467}'}</span>
+                    <div>
+                      <strong style={{ color: c.text }}>الفجوة الجيلية واللغات الهجينة</strong>
+                      <p style={{ color: c.textSec, fontSize: '0.95rem', lineHeight: 1.9, margin: '0.3rem 0 0' }}>ergo، تزايد الخلط بين العربية واللهجات الدارجة أو اللغات الأجنبية في المحتوى الرقمي يضعف من قوة اللغة العربية الم标准ية.</p>
+                    </div>
+                  </li>
+                </ul>
+
+                {/* Section 4 */}
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#3B82F6', marginTop: '2.5rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid rgba(59,130,246,0.2)' }}>
+                  آليات عملية لحماية هويتنا الثقافية
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                  {[
+                    { icon: '\u{1F3EB}', num: '1', title: 'تطوير المناهج التعليمية', desc: 'إدراج مفاهيم الهوية والثقافة العربية في المناهج بشكل متكامل وتفاعلي.' },
+                    { icon: '\u{1F4BB}', num: '2', title: 'إثراء المحتوى الرقمي', desc: 'إنشاء محتوى عربي أصيل عالي الجودة يليق بثقافة الأمة ويعكس قيمها.' },
+                    { icon: '\u{1F468}\u200D\u{1F469}\u200D\u{1F466}', num: '3', title: 'التوعية الأسرية والإعلامية', desc: 'تعزيز الدور الأسرة والإعلام في غرس الوعي culturalي لدى الأجيال الصاعدة.' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ padding: '1.5rem', background: c.flagItemBg, borderRadius: '16px', border: `1px solid ${c.cardBorder}`, textAlign: 'center' }}>
+                      <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>{item.icon}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#3B82F6', background: 'rgba(59,130,246,0.1)', padding: '0.2rem 0.6rem', borderRadius: '6px', display: 'inline-block', marginBottom: '0.5rem' }}>{item.num}</span>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: c.text, marginBottom: '0.5rem' }}>{item.title}</h3>
+                      <p style={{ fontSize: '0.9rem', color: c.textSec, lineHeight: 1.8, margin: 0 }}>{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Conclusion */}
+                <div style={{ marginTop: '2rem', padding: '1.5rem 1.8rem', background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08))', borderRadius: '16px', border: `1px solid rgba(59,130,246,0.15)` }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#3B82F6', marginBottom: '0.6rem' }}>{'\u{1F4A1}'} الخاتمة</h3>
+                  <p style={{ fontSize: '1.05rem', lineHeight: 2.1, color: c.text, fontWeight: 500 }}>
+                    إن الهوية العربية ليست عبئاً من الماضي نتركه خلفنا لندخل بوابة المستقبل، بل هي البوصلة التي ترشدنا وتضمن تميزنا الإنساني.
+                  </p>
+                </div>
+
+                {/* Sources */}
+                <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: `1px solid ${c.cardBorder}` }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: c.textSec, marginBottom: '0.6rem' }}>{'\u{1F4DA}'} مراجع ومصادر</h3>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    {[
+                      'UNESCO — Cultural Diversity and Identity in the Digital Age (2023)',
+                      'Arab League Educational, Cultural and Scientific Organization (ALECSO)',
+                      'Oxford Research Encyclopedia — Arabic Language and Globalization',
+                      'المنظمة العربية للتربية والثقافة والعلوم (ألكسو) — تقرير الهوية الثقافية العربية 2022',
+                    ].map((src, i) => (
+                      <li key={i} style={{ fontSize: '0.85rem', color: c.textSec, lineHeight: 1.6 }}>
+                        {i + 1}. {src}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Read More / Collapse Button */}
+            <div style={{ padding: '0 2.5rem 2rem', textAlign: 'center' }}>
+              <button
+                onClick={() => setShowArticle(!showArticle)}
+                style={{
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '14px',
+                  padding: '0.9rem 2.5rem',
+                  fontSize: '1.05rem',
+                  fontWeight: 700,
+                  fontFamily: "'Cairo', sans-serif",
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 4px 20px rgba(59,130,246,0.25)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(59,130,246,0.35)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(59,130,246,0.25)';
+                }}
+              >
+                {showArticle ? '\u{1F448} إخفاء المقال' : '\u{1F4D6} اقرأ المقال كاملاً'}
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* FOOTER */}
         <footer style={S.footer(c)}>
           <div style={S.footerInner}>
             <div style={S.footerCol}>
-              <div style={S.footerLogo}>
-                {'\u{1F680}'} EN-5000
+              <div style={{ ...S.footerLogo, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <img src="/logo.png" alt="EN-5000" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
+                <span>EN-5000</span>
               </div>
               <p style={S.footerText(c)}>
                 تطبيق ذكي مجاني لتعلم الإنجليزي. مصمم للمصريين والعرب مع AI coaching.
