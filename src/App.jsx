@@ -396,6 +396,56 @@ function GenScreen({prog,lv,T,gs,isCS}){
     <div style={{background:T.s2,border:`0.5px solid ${T.bd}`,borderRadius:12,padding:"12px 18px",maxWidth:300,animation:"fUp .4s ease .2s both"}}><p style={{fontSize:11,color:T.m,margin:0,lineHeight:1.6}}>{isCS?"💡 كل سؤال فيه النطق الإنجليزي بالعربي — زي \"جيت كوميت\" لـ git commit":"💡 كل سؤال فيه كيفية نطق الإنجليزي بالعربي — زي \"هاو أر يو؟\""}</p></div>
   </div>);}
 
+function ProfileView({username,T,K,dark,onBack}){
+  const [data,setData]=useState(null);
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{
+    if(!username)return;
+    setLoading(true);setData(null);
+    fetch(`/api/profile/${username}`)
+      .then(r=>r.json()).then(d=>{setData(d.profile||null);setLoading(false);})
+      .catch(()=>{setLoading(false);});
+  },[username]);
+  if(loading)return(<div style={{textAlign:"center",padding:40}}><div style={{width:32,height:32,border:`3px solid ${T.bd}`,borderTopColor:"#3B82F6",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 12px"}}/><p style={{color:T.m,fontSize:13}}>جاري تحميل الملف الشخصي...</p></div>);
+  if(!data)return(<div style={{...K(),textAlign:"center",padding:40}}><div style={{fontSize:48,marginBottom:12}}>😕</div><p style={{color:T.m}}>المستخدم غير موجود</p></div>);
+  const pLv=getLv(data.totalXP||0);
+  const acc=data.totalAnswered>0?Math.round(data.totalCorrect/data.totalAnswered*100):0;
+  return(
+    <div style={{animation:"fUp .3s ease"}}>
+      <div style={{...K(),textAlign:"center",marginBottom:14}}>
+        <div style={{width:80,height:80,borderRadius:"50%",background:data.photo?"#000":`linear-gradient(135deg,${pLv.c},${pLv.c}88)`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:32,fontWeight:700,color:"#fff",overflow:"hidden",boxShadow:`0 4px 20px ${pLv.c}30`}}>
+          {data.photo?<img src={data.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(data.name||"?").charAt(0)}
+        </div>
+        <div style={{fontSize:20,fontWeight:700,color:T.txt}}>{data.name}</div>
+        {data.username&&<div style={{fontSize:14,color:LC.Easy.tx,marginTop:3}}>@{data.username}</div>}
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:pLv.bg,border:`1px solid ${pLv.br}`,color:pLv.tx,padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:700,marginTop:8}}>{pLv.i} {pLv.n}</div>
+        {data.joinedAt&&<div style={{fontSize:11,color:T.m,marginTop:8}}>📅 انضم في {new Date(data.joinedAt).toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"})}</div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {[{v:`${(data.totalXP||0).toLocaleString()}`,l:"Total XP",c:"#F59E0B"},{v:`🔥 ${data.currentStreak||0}`,l:"Streak"},{v:`${acc}%`,l:"Accuracy"},{v:data.bestStreak||0,l:"Best streak"}].map((s,i)=>(
+          <div key={i} style={{...K(),textAlign:"center",marginBottom:0}}><div style={{fontSize:17,fontWeight:700,color:s.c||T.txt}}>{s.v}</div><div style={{fontSize:11,color:T.m,marginTop:2}}>{s.l}</div></div>
+        ))}
+      </div>
+      {(data.general||data.cs)&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:10}}>
+        {data.general&&<div style={{...K(),marginBottom:0}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.txt,marginBottom:6}}>🗣️ General</div>
+          <div style={{fontSize:11,color:T.m,lineHeight:1.8}}>
+            XP: <b style={{color:"#F59E0B"}}>{data.general.xp||0}</b><br/>
+            ✓ {data.general.correct||0} / {data.general.answered||0}
+          </div>
+        </div>}
+        {data.cs&&<div style={{...K(),marginBottom:0}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.txt,marginBottom:6}}>💻 CS</div>
+          <div style={{fontSize:11,color:T.m,lineHeight:1.8}}>
+            XP: <b style={{color:"#F59E0B"}}>{data.cs.xp||0}</b><br/>
+            ✓ {data.cs.correct||0} / {data.cs.answered||0}
+          </div>
+        </div>}
+      </div>}
+    </div>
+  );
+}
+
 export default function App(){
   const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";return"landing";};
   const [route,setRoute]=useState(getRoute);
@@ -447,6 +497,7 @@ export default function App(){
   const [authEmail,setAuthEmail]=useState("");
   const [authPass,setAuthPass]=useState("");
   const [authName,setAuthName]=useState("");
+  const [authUsername,setAuthUsername]=useState("");
   const [authAge,setAuthAge]=useState("");
   const [authErr,setAuthErr]=useState("");
   const [authMsg,setAuthMsg]=useState("");
@@ -462,6 +513,9 @@ export default function App(){
   const [leaderboard,setLeaderboard]=useState([]);
   const [leaderboardRank,setLeaderboardRank]=useState(null);
   const [leaderboardLoading,setLeaderboardLoading]=useState(false);
+  const [profileUser,setProfileUser]=useState(null);
+  const [profileData,setProfileData]=useState(null);
+  const [profileLoading,setProfileLoading]=useState(false);
   const topAd=useRef(Math.floor(Math.random()*4));
   const botAd=useRef((Math.floor(Math.random()*4)+2)%4);
   const inRef=useRef(null);
@@ -487,7 +541,7 @@ export default function App(){
         if(d.progress.cs){setCsProg(d.progress.cs);sP(d.progress.cs,CS_PK);}
       }
       if(d.profile){
-        const u={name:d.profile.name,email:d.profile.email,age:d.profile.age,photo:d.profile.photo,color:avC(d.profile.name||"?")};
+        const u={name:d.profile.name,username:d.profile.username,email:d.profile.email,age:d.profile.age,photo:d.profile.photo,color:avC(d.profile.name||"?")};
         setUser(u);sU(u);
       }
       if(d.settings){
@@ -527,11 +581,11 @@ export default function App(){
   const doSignUp=useCallback(async()=>{
     setAuthErr("");setAuthMsg("");setAuthLoading(true);
     try{
-      const d=await apiCall("/api/auth/signup",{method:"POST",body:JSON.stringify({name:authName,email:authEmail,password:authPass,age:authAge})});
+      const d=await apiCall("/api/auth/signup",{method:"POST",body:JSON.stringify({name:authName,username:authUsername,email:authEmail,password:authPass,age:authAge})});
       localStorage.setItem("e5k_token",d.token);setAuthToken(d.token);setUser(d.user);sU(d.user);
       await cloudPull(d.token);setView("setup");
     }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
-  },[authName,authEmail,authPass,authAge,apiCall,cloudPull]);
+  },[authName,authUsername,authEmail,authPass,authAge,apiCall,cloudPull]);
 
   const doSignIn=useCallback(async()=>{
     setAuthErr("");setAuthMsg("");setAuthLoading(true);
@@ -713,10 +767,14 @@ export default function App(){
         {authMsg&&<div style={{padding:".6rem 1rem",borderRadius:8,background:"rgba(34,197,94,.08)",border:"0.5px solid rgba(34,197,94,.3)",color:"#16A34A",fontSize:13,marginBottom:12}}>{authMsg}</div>}
         {authView==="signup"&&<>
           <input value={authName} onChange={e=>setAuthName(e.target.value)} placeholder="Your name" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
+          <div style={{position:"relative",marginBottom:10}}>
+            <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:T.m,fontSize:15}}>@</span>
+            <input value={authUsername} onChange={e=>setAuthUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g,""))} placeholder="username (letters, numbers, _)" className="inp" style={{width:"100%",padding:".75rem 1rem .75rem 2rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,boxSizing:"border-box",fontFamily:"monospace"}}/>
+          </div>
           <input value={authAge} onChange={e=>setAuthAge(e.target.value)} type="number" placeholder="Age (optional)" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
           <input value={authEmail} onChange={e=>setAuthEmail(e.target.value)} type="email" placeholder="Email" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:10,boxSizing:"border-box"}}/>
           <input value={authPass} onChange={e=>setAuthPass(e.target.value)} type="password" placeholder="Password (min 6 chars)" className="inp" style={{width:"100%",padding:".75rem 1rem",borderRadius:10,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:15,marginBottom:14,boxSizing:"border-box"}}/>
-          <button style={Btn(LC.Easy.fill)} className="qbtn" onClick={doSignUp} disabled={authLoading||!authName.trim()||!authEmail.trim()||authPass.length<6}>{authLoading?"Creating account...":"Sign Up ✨"}</button>
+          <button style={Btn(LC.Easy.fill)} className="qbtn" onClick={doSignUp} disabled={authLoading||!authName.trim()||!authUsername.trim()||!authEmail.trim()||authPass.length<6||authUsername.length<3}>{authLoading?"Creating account...":"Sign Up ✨"}</button>
           <p style={{fontSize:13,color:T.m,textAlign:"center",marginTop:14}}>Already have an account? <button onClick={()=>{setAuthErr("");setAuthMsg("");setAuthView("signin");}} style={{background:"none",border:"none",color:LC.Easy.tx,cursor:"pointer",fontWeight:600,textDecoration:"underline",fontSize:13}}>Sign In</button></p>
         </>}
         {authView==="signin"&&<>
@@ -773,13 +831,18 @@ export default function App(){
           <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
         </div>
         <div style={{fontSize:11,color:T.m,marginBottom:12}}>Tap photo to change • {authToken?"☁️ Synced to cloud":"📱 Local only"}</div>
+        {user?.username&&<div style={{fontSize:13,color:LC.Easy.tx,fontWeight:500,marginBottom:10}}>@{user.username}</div>}
         <div style={{display:"flex",flexDirection:"column",gap:10,textAlign:"left"}}>
-          {[{l:"Name",v:user?.name||"",ph:"Your name",k:"name"},{l:"Age",v:user?.age||"",ph:"Your age",k:"age",t:"number"},{l:"Email",v:user?.email||"",ph:"Your email",k:"email",t:"email"}].map((f,i)=>(
+          {[{l:"Name",v:user?.name||"",ph:"Your name",k:"name"},{l:"Username",v:user?.username||"",ph:"username",k:"username",mono:true}, {l:"Age",v:user?.age||"",ph:"Your age",k:"age",t:"number"},{l:"Email",v:user?.email||"",ph:"Your email",k:"email",t:"email"}].map((f,i)=>(
             <div key={i}><label style={{fontSize:11,fontWeight:600,color:T.m,display:"block",marginBottom:4}}>{f.l}</label>
-            <input type={f.t||"text"} defaultValue={f.v} placeholder={f.ph} id={`prof_${f.k}`} className="inp" style={{width:"100%",padding:".6rem .8rem",borderRadius:8,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:14,boxSizing:"border-box"}}/></div>
+            <div style={{position:"relative"}}>
+              {f.k==="username"&&<span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:T.m,fontSize:15}}>@</span>}
+              <input type={f.t||"text"} defaultValue={f.v} placeholder={f.ph} id={`prof_${f.k}`} className="inp" style={{width:"100%",padding:f.k==="username"?".6rem .8rem .6rem 1.8rem":".6rem .8rem",borderRadius:8,border:`1.5px solid ${T.bdS}`,background:T.s1,color:T.txt,fontSize:14,boxSizing:"border-box",fontFamily:f.mono?"monospace":"inherit"}}/>
+            </div>
+            </div>
           ))}
         </div>
-        <button style={{...Btn(LC.Easy.fill),marginTop:14,fontSize:14}} className="qbtn" onClick={()=>saveProfile({name:document.getElementById("prof_name").value,age:document.getElementById("prof_age").value,email:document.getElementById("prof_email").value})}>Save Profile ✓</button>
+        <button style={{...Btn(LC.Easy.fill),marginTop:14,fontSize:14}} className="qbtn" onClick={()=>saveProfile({name:document.getElementById("prof_name").value,username:document.getElementById("prof_username").value,age:document.getElementById("prof_age").value,email:document.getElementById("prof_email").value})}>Save Profile ✓</button>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
         {[{v:prog.xp||0,l:"Total XP",c:"#F59E0B"},{v:`🔥 ${prog.streak}`,l:"Day streak"},{v:prog.bestStreak||0,l:"Best streak"},{v:`${prog.totalAnswered>0?Math.round(prog.totalCorrect/prog.totalAnswered*100):0}%`,l:"General acc."},{v:prog.totalAnswered,l:"General phrases",c:LC.Easy.tx},{v:csProg.totalAnswered,l:"CS phrases",c:CS_LC.Easy.tx}].map((s,i)=>(
@@ -1169,6 +1232,18 @@ export default function App(){
     </div>
   );
 
+  // ── PUBLIC PROFILE ──────────────────────────────────
+  if(profileUser)return(
+    <div style={W}><style>{CSS}</style>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+        <button className="ibtn" style={{fontSize:20,color:T.m}} onClick={()=>{setProfileUser(null);setProfileData(null);}}>←</button>
+        <span style={{fontSize:22}}>👤</span>
+        <h2 style={{fontSize:18,fontWeight:700,color:T.txt}}>الملف الشخصي</h2>
+      </div>
+      <ProfileView username={profileUser} T={T} K={K} dark={dark} onBack={()=>{setProfileUser(null);setProfileData(null);}}/>
+    </div>
+  );
+
   // ── LEADERBOARD ──────────────────────────────────
   if(view==="leaderboard")return(
     <div style={W}><style>{CSS}</style>
@@ -1207,7 +1282,7 @@ export default function App(){
               {u.photo?<img src={u.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(u.name||"?").charAt(0).toUpperCase()}
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}{isMe?" (أنت)":""}</div>
+              <div onClick={()=>{if(u.username&&!isMe)setProfileUser(u.username);}} style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:u.username&&!isMe?"pointer":"default",textDecoration:u.username&&!isMe?"underline":"none",textDecorationColor:"rgba(59,130,246,.4)"}}>{u.name}{isMe?" (أنت)":""}</div>
               <div style={{fontSize:11,color:T.m,marginTop:1,display:"flex",gap:8}}>
                 <span>{u.levelIcon} {u.level}</span>
                 <span>🔥 {u.bestStreak}</span>

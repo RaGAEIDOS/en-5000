@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     const { email, password } = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
     if (!email?.trim() || !password) return res.status(400).json({ error: "Email and password are required" });
 
-    const result = await query("SELECT id, name, email, age, photo, password_hash FROM users WHERE email = $1", [email.trim().toLowerCase()]);
+    const result = await query("SELECT id, name, username, email, age, photo, password_hash FROM users WHERE email = $1", [email.trim().toLowerCase()]);
     if (result.rows.length === 0) return res.status(401).json({ error: "Invalid email or password" });
 
     const user = result.rows[0];
@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
     if (!valid) return res.status(401).json({ error: "Invalid email or password" });
 
     const token = signToken({ id: user.id, email: user.email });
-    return res.status(200).json({ token, user: { id: user.id, name: user.name, email: user.email, age: user.age, photo: user.photo } });
+    return res.status(200).json({ token, user: { id: user.id, name: user.name, username: user.username, email: user.email, age: user.age, photo: user.photo } });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

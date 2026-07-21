@@ -13,6 +13,7 @@ module.exports = async function handler(req, res) {
       SELECT
         u.id,
         u.name,
+        u.username,
         u.photo,
         COALESCE(SUM(p.xp), 0) AS total_xp,
         COALESCE(SUM(p.total_correct), 0) AS total_correct,
@@ -58,6 +59,7 @@ module.exports = async function handler(req, res) {
         rank: idx + 1,
         id: row.id,
         name: row.name,
+        username: row.username,
         photo: row.photo,
         xp,
         bestStreak,

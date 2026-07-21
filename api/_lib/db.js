@@ -24,12 +24,15 @@ async function ensureTables() {
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
+      username VARCHAR(50) UNIQUE,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
       age INTEGER,
       photo TEXT,
       created_at TIMESTAMP DEFAULT NOW()
     );
+    DO $$ BEGIN ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+    DO $$ BEGIN ALTER TABLE users ADD COLUMN IF NOT EXISTS photo TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
     CREATE TABLE IF NOT EXISTS progress (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

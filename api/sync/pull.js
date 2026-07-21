@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
         "SELECT progress_type, day, streak, last_date, total_correct, total_answered, xp, best_streak FROM progress WHERE user_id = $1",
         [user.id]
       ),
-      query("SELECT id, name, email, age, photo FROM users WHERE id = $1", [user.id]),
+      query("SELECT id, name, username, email, age, photo FROM users WHERE id = $1", [user.id]),
       query("SELECT settings FROM user_settings WHERE user_id = $1", [user.id]),
       query("SELECT history FROM performance_history WHERE user_id = $1", [user.id])
     ]);

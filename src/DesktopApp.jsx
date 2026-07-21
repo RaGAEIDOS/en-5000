@@ -520,10 +520,23 @@ export default function DesktopApp() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPass, setAuthPass] = useState('');
   const [authName, setAuthName] = useState('');
+  const [authUsername, setAuthUsername] = useState('');
   const [authAge, setAuthAge] = useState('');
   const [authErr, setAuthErr] = useState('');
   const [authMsg, setAuthMsg] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [viewProfile, setViewProfile] = useState(null);
+  const [profileData, setProfileData] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  useEffect(() => {
+    if (!viewProfile) { setProfileData(null); return; }
+    setProfileLoading(true); setProfileData(null);
+    fetch(`/api/profile/${viewProfile}`)
+      .then(r => r.json())
+      .then(d => { setProfileData(d.profile || null); setProfileLoading(false); })
+      .catch(() => { setProfileLoading(false); });
+  }, [viewProfile]);
 
   async function apiCall(url, opts = {}, token) {
     const t = token || authToken;
@@ -537,7 +550,7 @@ export default function DesktopApp() {
   const doSignUp = async () => {
     setAuthErr(""); setAuthMsg(""); setAuthLoading(true);
     try {
-      const d = await apiCall("/api/auth/signup", { method: "POST", body: JSON.stringify({ name: authName, email: authEmail, password: authPass, age: authAge }) });
+      const d = await apiCall("/api/auth/signup", { method: "POST", body: JSON.stringify({ name: authName, username: authUsername, email: authEmail, password: authPass, age: authAge }) });
       localStorage.setItem("e5k_token", d.token); setAuthToken(d.token); setUser(d.user);
       try { localStorage.setItem("e5k_u13", JSON.stringify(d.user)); } catch {}
       await cloudPull(d.token);
@@ -1518,7 +1531,12 @@ export default function DesktopApp() {
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: u.photo ? '#000' : avC(u.name || "?"), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 2px 8px ${avC(u.name || "?")}30` }}>
                           {u.photo ? <img src={u.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : (u.name || "?").charAt(0).toUpperCase()}
                         </div>
-                        <span style={{ fontWeight: isMe ? 700 : 500, color: isMe ? '#3B82F6' : t.txt }}>{u.name}{isMe ? " (أنت)" : ""}</span>
+                        <span
+                          onClick={(e) => { e.stopPropagation(); if (u.username && !isMe) { setViewProfile(u.username); } }}
+                          style={{ fontWeight: isMe ? 700 : 500, color: isMe ? '#3B82F6' : t.txt, cursor: u.username && !isMe ? 'pointer' : 'default', textDecoration: u.username && !isMe ? 'underline' : 'none', textDecorationColor: 'rgba(59,130,246,.4)' }}
+                          onMouseEnter={e => { if (u.username && !isMe) e.currentTarget.style.color = '#60a5fa'; }}
+                          onMouseLeave={e => { if (u.username && !isMe) e.currentTarget.style.color = t.txt; }}
+                        >{u.name}{isMe ? " (أنت)" : ""}</span>
                       </div>
                       <div style={{ width: 90, textAlign: 'center', fontSize: 12, color: u.levelColor }}>{u.levelIcon} {u.level}</div>
                       <div style={{ width: 70, textAlign: 'center', fontWeight: 600, color: t.txt }}>{u.bestStreak}</div>
@@ -1552,6 +1570,7 @@ export default function DesktopApp() {
           </div>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: t.txt }}>{userName}</h2>
+            {user?.username && <p style={{ color: t.accent, margin: '4px 0 0', fontSize: 14, fontWeight: 500 }}>@{user.username}</p>}
             <p style={{ color: t.m, margin: '4px 0 0', fontSize: 14 }}>{userEmail}</p>
             <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, background: `${lv.c}15`, color: lv.c, padding: '4px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, border: `1px solid ${lv.c}18` }}>
               {lv.i} {lv.n}
@@ -1563,6 +1582,30 @@ export default function DesktopApp() {
           <StatCard icon="🔥" label="سلسلة الأيام" value={progress.streak} color="#EF4444" dark={darkMode} />
           <StatCard icon="✅" label="الإجابات الصحيحة" value={progress.totalCorrect} color="#22C55E" dark={darkMode} />
           <StatCard icon="📈" label="نسبة الدقة" value={accuracy} color="#3B82F6" dark={darkMode} />
+        </div>
+        <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 14px', color: t.txt }}>معلومات الحساب</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: t.m, display: 'block', marginBottom: 4 }}>الاسم</label>
+            <input id="prof_name_desktop" defaultValue={user?.name || ''} placeholder="اسمك" style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`, background: darkMode ? '#111827' : '#f8fafc', color: darkMode ? '#e2e8f0' : '#0f172a', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: t.m, display: 'block', marginBottom: 4 }}>اسم المستخدم</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: t.m, fontSize: 14 }}>@</span>
+              <input id="prof_username_desktop" defaultValue={user?.username || ''} placeholder="username" style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: 10, border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`, background: darkMode ? '#111827' : '#f8fafc', color: darkMode ? '#e2e8f0' : '#0f172a', fontSize: 14, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+          <button onClick={async () => {
+            const name = document.getElementById('prof_name_desktop')?.value || '';
+            const username = document.getElementById('prof_username_desktop')?.value || '';
+            if (!name.trim()) return;
+            try {
+              const d = await apiCall('/api/auth/update-profile', { method: 'POST', body: JSON.stringify({ name, username }) });
+              setUser(d.user);
+              try { localStorage.setItem('e5k_u13', JSON.stringify(d.user)); } catch {}
+            } catch (e) { console.warn('Profile update failed:', e.message); }
+          }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>💾 حفظ التعديلات</button>
         </div>
         <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 14px', color: t.txt }}>الإعدادات</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1593,6 +1636,81 @@ export default function DesktopApp() {
       </GlassCard>
     </div>
   );
+
+  const renderPublicProfile = () => {
+    const p = profileData;
+    const pLv = p ? getLv(p.totalXP || 0) : LVLS[0];
+    return (
+      <div style={{ maxWidth: 700, animation: 'fadeIn .3s ease' }}>
+        <button onClick={() => { setViewProfile(null); setProfileData(null); }} style={{ background: 'none', border: 'none', color: t.m, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, fontFamily: 'inherit' }}>← رجوع</button>
+        {profileLoading ? (
+          <GlassCard dark={darkMode} hover={false} style={{ textAlign: 'center', padding: 40 }}>
+            <div style={{ width: 32, height: 32, border: `3px solid ${t.bd}`, borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+            <div style={{ color: t.m, fontSize: 13 }}>جاري تحميل الملف الشخصي...</div>
+          </GlassCard>
+        ) : !p ? (
+          <GlassCard dark={darkMode} hover={false} style={{ textAlign: 'center', padding: 40 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>😕</div>
+            <div style={{ color: t.m, fontSize: 14 }}>المستخدم غير موجود</div>
+          </GlassCard>
+        ) : (
+          <GlassCard dark={darkMode} hover={false}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+              <div style={{
+                width: 80, height: 80, borderRadius: 20,
+                background: p.photo ? '#000' : `linear-gradient(135deg, ${pLv.c}, ${pLv.c}88)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontWeight: 700, fontSize: 32,
+                boxShadow: `0 4px 20px ${pLv.c}30`, overflow: 'hidden', flexShrink: 0
+              }}>
+                {p.photo ? <img src={p.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : (p.name || '?').charAt(0)}
+              </div>
+              <div>
+                <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: t.txt }}>{p.name}</h2>
+                {p.username && <p style={{ color: t.accent, margin: '4px 0 0', fontSize: 14, fontWeight: 500 }}>@{p.username}</p>}
+                <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, background: `${pLv.c}15`, color: pLv.c, padding: '4px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, border: `1px solid ${pLv.c}18` }}>
+                  {pLv.i} {pLv.n}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+              <StatCard icon="⭐" label="إجمالي النقاط" value={p.totalXP || 0} color="#F59E0B" dark={darkMode} />
+              <StatCard icon="🔥" label="سلسلة الأيام" value={p.currentStreak || 0} color="#EF4444" dark={darkMode} />
+              <StatCard icon="✅" label="الإجابات الصحيحة" value={p.totalCorrect || 0} color="#22C55E" dark={darkMode} />
+              <StatCard icon="📈" label="نسبة الدقة" value={`${p.accuracy || 0}%`} color="#3B82F6" dark={darkMode} />
+            </div>
+            {p.joinedAt && (
+              <div style={{ fontSize: 13, color: t.m, marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                📅 انضم في {new Date(p.joinedAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+            )}
+            {(p.general || p.cs) && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 18 }}>
+                {p.general && (
+                  <div style={{ background: t.s1, borderRadius: 12, padding: 14, border: `1px solid ${t.bd}` }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: t.txt, marginBottom: 8 }}>🗣️ اليوم: General</div>
+                    <div style={{ fontSize: 12, color: t.m, lineHeight: 1.8 }}>
+                      <div>XP: <b style={{ color: '#F59E0B' }}>{p.general.xp || 0}</b></div>
+                      <div>صحيح: <b style={{ color: '#22C55E' }}>{p.general.correct || 0}</b> / {p.general.answered || 0}</div>
+                    </div>
+                  </div>
+                )}
+                {p.cs && (
+                  <div style={{ background: t.s1, borderRadius: 12, padding: 14, border: `1px solid ${t.bd}` }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: t.txt, marginBottom: 8 }}>💻 اليوم: CS</div>
+                    <div style={{ fontSize: 12, color: t.m, lineHeight: 1.8 }}>
+                      <div>XP: <b style={{ color: '#F59E0B' }}>{p.cs.xp || 0}</b></div>
+                      <div>صحيح: <b style={{ color: '#22C55E' }}>{p.cs.correct || 0}</b> / {p.cs.answered || 0}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </GlassCard>
+        )}
+      </div>
+    );
+  };
 
   const renderAuth = () => (
     <div style={{
@@ -1650,6 +1768,7 @@ export default function DesktopApp() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { ph: 'الاسم', v: authName, fn: e => setAuthName(e.target.value), t: 'text' },
+                { ph: '@ اسم المستخدم (حروف، أرقام، _)', v: authUsername, fn: e => setAuthUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')), t: 'text', mono: true },
                 { ph: 'السن (اختياري)', v: authAge, fn: e => setAuthAge(e.target.value), t: 'number' },
                 { ph: 'الإيميل', v: authEmail, fn: e => setAuthEmail(e.target.value), t: 'email' },
                 { ph: 'كلمة المرور (٦ أحرف على الأقل)', v: authPass, fn: e => setAuthPass(e.target.value), t: 'password' },
@@ -1659,17 +1778,17 @@ export default function DesktopApp() {
                   border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
                   background: darkMode ? '#111827' : '#f8fafc',
                   color: darkMode ? '#e2e8f0' : '#0f172a',
-                  fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                  fontSize: 14, outline: 'none', fontFamily: f.mono ? 'monospace' : 'inherit', boxSizing: 'border-box',
                   transition: 'border-color .2s'
                 }} onFocus={e => e.target.style.borderColor = '#3B82F6'}
                   onBlur={e => e.target.style.borderColor = darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}
                 />
               ))}
-              <button onClick={doSignUp} disabled={authLoading || !authName.trim() || !authEmail.trim() || authPass.length < 6} style={{
+              <button onClick={doSignUp} disabled={authLoading || !authName.trim() || !authUsername.trim() || authUsername.length < 3 || !authEmail.trim() || authPass.length < 6} style={{
                 width: '100%', padding: '12px', borderRadius: 12, border: 'none',
                 background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
                 color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit', opacity: authLoading || !authName.trim() || !authEmail.trim() || authPass.length < 6 ? .5 : 1,
+                fontFamily: 'inherit', opacity: authLoading || !authName.trim() || !authUsername.trim() || authUsername.length < 3 || !authEmail.trim() || authPass.length < 6 ? .5 : 1,
                 boxShadow: '0 4px 16px rgba(59,130,246,.25)'
               }}>{authLoading ? 'جاري الإنشاء...' : 'إنشاء حساب ✨'}</button>
               <p style={{ fontSize: 13, color: darkMode ? '#94a3b8' : '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
@@ -1764,6 +1883,7 @@ export default function DesktopApp() {
   );
 
   const renderContent = () => {
+    if (viewProfile) return renderPublicProfile();
     switch (section) {
       case 'home': return renderHome();
       case 'quiz':

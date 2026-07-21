@@ -13,13 +13,22 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
-    const { name, age, photo, email } = body;
+    const { name, username, age, photo, email } = body;
 
     const fields = [];
     const values = [];
     let idx = 1;
 
     if (name !== undefined) { fields.push(`name = $${idx++}`); values.push(name.trim()); }
+    if (username !== undefined && username.trim()) {
+      const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      if (cleanUsername.length < 3) return res.status(400).json({ error: "Username must be at least 3 characters" });
+      if (cleanUsername.length > 30) return res.status(400).json({ error: "Username must be 30 characters or less" });
+      if (/^[0-9]/.test(cleanUsername)) return res.status(400).json({ error: "Username cannot start with a number" });
+      const exists = await query("SELECT id FROM users WHERE username = $1 AND id != $2", [cleanUsername, user.id]);
+      if (exists.rows.length > 0) return res.status(409).json({ error: "This username is already taken" });
+      fields.push(`username = $${idx++}`); values.push(cleanUsername);
+    }
     if (age !== undefined) { fields.push(`age = $${idx++}`); values.push(age || null); }
     if (photo !== undefined) { fields.push(`photo = $${idx++}`); values.push(photo || null); }
     if (email !== undefined && email.trim() && email.trim() !== user.email) {
@@ -32,7 +41,7 @@ module.exports = async function handler(req, res) {
 
     values.push(user.id);
     const result = await query(
-      `UPDATE users SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, email, age, photo`,
+      `UPDATE users SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, username, email, age, photo`,
       values
     );
 
