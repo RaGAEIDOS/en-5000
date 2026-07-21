@@ -401,11 +401,10 @@ export default function DesktopApp() {
       { ar: "ممكن تساعدني؟", en: "Can you help me?", pron: "كان يو هيلب مي؟", opts: ["Can you help me?", "Can you held me?", "Can you helm me?", "Can you hell me?"], c: 0, cat: "Greetings" },
       { ar: "الوقت كام؟", en: "What time is it?", pron: "وات تايم إز إيت؟", opts: ["What time is it?", "What time is at?", "What times is it?", "What time are it?"], c: 0, cat: "Daily Activities" },
     ];
-    const shuffled = [...FB].sort(() => Math.random() - 0.5).slice(0, 10);
-    shuffled.forEach(q => {
+    const shuffled = [...FB].sort(() => Math.random() - 0.5).slice(0, 10).map(q => {
       const correctAnswer = q.opts[q.c];
-      q.opts = [...q.opts].sort(() => Math.random() - 0.5);
-      q.c = q.opts.indexOf(correctAnswer);
+      const newOpts = [...q.opts].sort(() => Math.random() - 0.5);
+      return { ...q, opts: newOpts, c: newOpts.indexOf(correctAnswer) };
     });
     setQuizQuestions(shuffled);
     setQuizIndex(0);
