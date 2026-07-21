@@ -23,11 +23,9 @@ module.exports = async function handler(req, res) {
           THEN ROUND(SUM(p.total_correct)::numeric / SUM(p.total_answered) * 100, 1)
           ELSE 0 END AS accuracy
       FROM users u
-      JOIN progress p ON p.user_id = u.id
+      LEFT JOIN progress p ON p.user_id = u.id
       GROUP BY u.id, u.name, u.photo
-      HAVING COALESCE(SUM(p.xp), 0) > 0
       ORDER BY total_xp DESC, best_streak DESC
-      LIMIT 50
     `);
 
     const leaderboard = result.rows.map((row, idx) => {

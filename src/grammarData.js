@@ -1,8 +1,8 @@
 export const GRAMMAR_TOPICS=
 [
   {
-    id:"tenses",cat:"基础",icon:"⏰",title:"الأزمنة الإنجليزية",
-    intro:"اللغة الإنجليزية فيها 12 زمن أساسي. كل زمن بيبيّن وقت الحدث و是不是 لسه مستمر أو خلص. هنفهم كل زمن بالعربي وبأمثلة واضحة.",
+    id:"tenses",cat:"BASIC",icon:"⏰",title:"الأزمنة الإنجليزية",
+    intro:"اللغة الإنجليزية فيها 12 زمن أساسي. كل زمن بيبيّن وقت الحدث وولا لا لسه مستمر أو خلص. هنفهم كل زمن بالعربي وبأمثلة واضحة.",
     sections:[
     {title:"Present Simple (المضارع البسيط)",content:`<b>الاستخدام:</b> بيتقال عن عادات، حقائق، أحداث متكررة.<br><br>
 <b>القاعدة:</b><br>
@@ -95,10 +95,10 @@ subject + had been + verb-ing<br><br>
     ]
   },
   {
-    id:"articles",cat:"基础",icon:"📝",title:"المقالات (A, An, The)",
+    id:"articles",cat:"BASIC",icon:"📝",title:"المقالات (A, An, The)",
     intro:"المقالات في الإنجليزي (a, an, the) بتحدد لو الاسم محدد أو مش محدد. ده من أهم القواعد اللي لازم تفهمها عشان تتكلم صح.",
     sections:[
-    {title:"A / An (不定冠词)",content:`<b>بيتستخدموا:</b> لما بتتكلم عن حاجة عامة أو مش محددة.<br><br>
+    {title:"A / An",content:`<b>بيتستخدموا:</b> لما بتتكلم عن حاجة عامة أو مش محددة.<br><br>
 <b>A</b> — قبل الأصوات الساكنة: a book, a cat, a university<br>
 <b>An</b> — قبل الأصوات العادية: an apple, an egg, an hour<br><br>
 <b>مثال:</b><br>
@@ -106,7 +106,7 @@ subject + had been + verb-ing<br><br>
 ✅ She ate <b>an</b> apple. — هي أكلت تفاحة (أي تفاحة).<br>
 ✅ He is <b>a</b> doctor. — هو دكتور (دكتور من ضمن الدكاترة).<br><br>
 <b>⚠️ غلطة شائعة:</b> "a university" صح (الصوت الأول u = "يو" صوت عادي) مش "an university".`},
-    {title:"The (定冠词)",content:`<b>بيتستخدم:</b> لما بتتكلم عن حاجة محددة، الأطراف عارفينها.<br><br>
+    {title:"The",content:`<b>بيتستخدم:</b> لما بتتكلم عن حاجة محددة، الأطراف عارفينها.<br><br>
 <b>مثال:</b><br>
 ✅ I want <b>the</b> book on the table. — أنا عايز الكتاب اللي على الترابيزة (كتاب معين).<br>
 ✅ <b>The</b> sun is bright today. — الشمس ساطعة النهارده (في شمس واحدة).<br>
@@ -128,8 +128,8 @@ subject + had been + verb-ing<br><br>
     ]
   },
   {
-    id:"pronouns",cat:"基础",icon:"👤",title:"الضمائر (Pronouns)",
-    intro:"الضمائر بت代替 الأسماء عشان ما نكررش. في أنواع كتير: subject pronouns, object pronouns, possessive, reflexive.",
+    id:"pronouns",cat:"BASIC",icon:"👤",title:"الضمائر (Pronouns)",
+    intro:"الضمائر (التي بدلها) الأسماء عشان ما نكررش. في أنواع كتير: subject pronouns, object pronouns, possessive, reflexive.",
     sections:[
     {title:"Subject Pronouns (ضمائر الفاعل)",content:`<b>بتتستخدم كفاعل في الجملة:</b><br><br>
 <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -172,7 +172,7 @@ my<b>self</b>, your<b>self</b>, him<b>self</b>, her<b>self</b>, it<b>self</b>, o
     ]
   },
   {
-    id:"jectives",cat:"基础",icon:"🎨",title:"الصفات والأسماء (Adjectives & Adverbs)",
+    id:"jectives",cat:"BASIC",icon:"🎨",title:"الصفات والأسماء (Adjectives & Adverbs)",
     intro:"الصفات بتصف الأسماء، والظروف بتصف الأفعال. في قواعد مهمة زي الترتيب والComparatives والSuperlatives.",
     sections:[
     {title:"ترتيب الصفات (Order of Adjectives)",content:`<b>في ترتيب معين للصفات في الإنجليزي:</b><br><br>
@@ -216,8 +216,8 @@ good → <b>the best</b> | bad → <b>the worst</b> | many → <b>the most</b> |
     ]
   },
   {
-    id:"modals",cat:"核心",icon:"🔧",title:"أفعال المساعدة (Modal Verbs)",
-    intro:"أفعال المساعدة (can, could, may, might, must, shall, should, will, would, need, ought to) بت表达 القدرة، الإمكانية، الواجب، النصيحة، والأمر.",
+    id:"modals",cat:"CORE",icon:"🔧",title:"أفعال المساعدة (Modal Verbs)",
+    intro:"أفعال المساعدة (can, could, may, might, must, shall, should, will, would, need, ought to) بتعبر عن القدرة، الإمكانية، الواجب، النصيحة، والأمر.",
     sections:[
     {title:"Can / Could (القدرة والإمكانية)",content:`<b>Can:</b> قدرة في الوقت الحالي / إمكانية<br>
 <b>Could:</b> قدرة في الماضي / احتمال / أسلوب مهذب<br><br>
@@ -241,7 +241,7 @@ good → <b>the best</b> | bad → <b>the worst</b> | many → <b>the most</b> |
 ✅ I <b>must</b> study harder. — لازم أذاكر أكتر. (شعور داخلي)<br>
 ✅ You <b>have to</b> wear a seatbelt. — لازم تلبس حزام الأمان. (قانون)<br>
 ✅ She <b>must</b> be tired. — لازم تكون تعبانة. (استنتاج)<br>
-✅ He <b>has to</b> work tomorrow. — لازم يشتغل بكرة. (规则)<br><br>
+✅ He <b>has to</b> work tomorrow. — لازم يشتغل بكرة. (القاعدة)<br><br>
 <b>⚠️ ملاحظة:</b> "mustn't" معناها "ممنوع" مش "مش لازم". "don't have to" معناها "مش لازم" (اختياري).`},
     {title:"Should / Ought to (النصيحة)",content:`<b>Should:</b> نصيحة أو الإتجاه الصح<br>
 <b>Ought to:</b> نفس المعنى بس أ formal<br><br>
@@ -269,8 +269,8 @@ good → <b>the best</b> | bad → <b>the worst</b> | many → <b>the most</b> |
     ]
   },
   {
-    id:"conditionals",cat:"核心",icon:"🔀",title:"الجمل الشرطية (Conditionals)",
-    intro:"الجمل الشرطية (If clauses) بت表达 شروط ونتائج. في 4 أنواع رئيسية لازم تفهمها عشان تتكلم صح.",
+    id:"conditionals",cat:"CORE",icon:"🔀",title:"الجمل الشرطية (Conditionals)",
+    intro:"الجمل الشرطية (If clauses) بتعبر عن شروط ونتائج. في 4 أنواع رئيسية لازم تفهمها عشان تتكلم صح.",
     sections:[
     {title:"Zero Conditional (الصفر)",content:`<b>لو → دايماً بيحصل (حقائق علمية)</b><br><br>
 <b>القاعدة:</b> If + Present Simple, Present Simple<br><br>
@@ -310,7 +310,7 @@ good → <b>the best</b> | bad → <b>the worst</b> | many → <b>the most</b> |
     ]
   },
   {
-    id:"passive",cat:"核心",icon:"🎭",title:"المبني للمجهول (Passive Voice)",
+    id:"passive",cat:"CORE",icon:"🎭",title:"المبني للمجهول (Passive Voice)",
     intro:"المبني للمجهول بيستخدم لما العامل مش مهم أو مش معروف. التركيز على الفعل والنتيجة مش على مين عملها.",
     sections:[
     {title:"القاعدة الأساسية",content:`<b>المبني للمجول:</b> subject + to be + verb-3<br><br>
@@ -344,7 +344,7 @@ good → <b>the best</b> | bad → <b>the worst</b> | many → <b>the most</b> |
     ]
   },
   {
-    id:"relatives",cat:"核心",icon:"🔗",title:"الجمل الوصفية (Relative Clauses)",
+    id:"relatives",cat:"CORE",icon:"🔗",title:"الجمل الوصفية (Relative Clauses)",
     intro:"الجمل الوصفية بتوصف أو بتحدد اسم. بتبدأ بـ who, which, that, whose, where, when.",
     sections:[
     {title:"Who / That (للأشخاص)",content:`<b>Who:</b> للأشخاص بس<br>
@@ -379,10 +379,10 @@ good → <b>the best</b> | bad → <b>the worst</b> | many → <b>the most</b> |
     ]
   },
   {
-    id:"gerunds",cat:"核心",icon:"🎯",title:"Gerunds & Infinitives",
+    id:"gerunds",cat:"CORE",icon:"🎯",title:"Gerunds & Infinitives",
     intro:"Gerund = verb + ing كاسم. Infinitive = to + verb. في أفعال بتاخد gerund وبعضها بتاخد infinitive وبعضها الاتنين.",
     sections:[
-    {title:"Gerund (التصريف作为一名)",content:`<b>بيتستخدم كاسم:</b><br><br>
+    {title:"Gerund (التصريف كاسم)",content:`<b>بيتستخدم كاسم:</b><br><br>
 ✅ <b>Swimming</b> is fun. — السباحة ممتعة. (السباحة = something)<br>
 ✅ I enjoy <b>reading</b>. — أنا بستمتع بالقراءة.<br>
 ✅ She is good at <b>teaching</b>. — هي كويسة في التدريس.<br>
@@ -411,7 +411,7 @@ want, need, hope, decide, plan, promise, agree, refuse, learn, manage, afford, o
     ]
   },
   {
-    id:"questions",cat:"核心",icon:"❓",title:"أنواع الأسئلة (Question Forms)",
+    id:"questions",cat:"CORE",icon:"❓",title:"أنواع الأسئلة (Question Forms)",
     intro:"في أنواع كتير للأسئلة في الإنجليزي. محتاج تعرف تتفرج بينها عشان تفهم وتقرا صح.",
     sections:[
     {title:"Yes/No Questions",content:`<b>بتبدأ بـ auxiliary verb:</b><br><br>
@@ -446,7 +446,7 @@ Yes, she is. / No, she isn't.`},
     ]
   },
   {
-    id:"negation",cat:"核心",icon:"🚫",title:"النفي (Negation)",
+    id:"negation",cat:"CORE",icon:"🚫",title:"النفي (Negation)",
     intro:"في طرق كتير للنفي في الإنجليزي. المفتاح هوauxiliary verb + not.",
     sections:[
     {title:"النفي الأساسي",content:`<b>مع every auxiliary verb:</b><br><br>
@@ -471,7 +471,7 @@ Yes, she is. / No, she isn't.`},
     ]
   },
   {
-    id:"prepositions",cat:"基础",icon:"📍",title:"حروف الجر (Prepositions)",
+    id:"prepositions",cat:"BASIC",icon:"📍",title:"حروف الجر (Prepositions)",
     intro:"حروف الجر بتربط الأسماء بالباقي. في أزمنة ومكان واتجاه. لازم تحفظ الأزواج الصح.",
     sections:[
     {title:"Prepositions of Time (الوقت)",content:`<table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -513,7 +513,7 @@ Yes, she is. / No, she isn't.`},
     ]
   },
   {
-    id:"conjunctions",cat:"基础",icon:"🔗",title:"حروف الربط (Conjunctions)",
+    id:"conjunctions",cat:"BASIC",icon:"🔗",title:"حروف الربط (Conjunctions)",
     intro:"حروف الربط بتربط جمل ببعضها. في است additive (وأنا)، contrastive (بس)، وcausal (علشان).",
     sections:[
     {title:"FANBOYS (الأساسية)",content:`<b>في 7 حروف ربط أساسية:</b><br><br>
@@ -550,7 +550,7 @@ Yes, she is. / No, she isn't.`},
     ]
   },
   {
-    id:"phrasal",cat:"核心",icon:"🚀",title:"الأفعال المركبة (Phrasal Verbs)",
+    id:"phrasal",cat:"CORE",icon:"🚀",title:"الأفعال المركبة (Phrasal Verbs)",
     intro:"phrasal verb = فعل + حرف جر/ ظرف. المعنى مش بيتحسب من الفعل لوحده. لازم تحفظهم كـ chunks.",
     sections:[
     {title:"الأساسيات اليومية",content:`<b>أهم 20 phrasal verb لازم تعرفها:</b><br><br>
@@ -577,7 +577,7 @@ Yes, she is. / No, she isn't.`},
     ]
   },
   {
-    id:"writing",cat:"基础",icon:"✍️",title:"قواعد الكتابة (Writing Rules)",
+    id:"writing",cat:"BASIC",icon:"✍️",title:"قواعد الكتابة (Writing Rules)",
     intro:"قواعد الكتابة الإنجليزية بتفرق بين الكتابة الصحيحة والغلط. هنغطي أهم القواعد.",
     sections:[
     {title:" Capitalization (الأحرف الكبيرة)",content:`<b>اتكتب كبير في الحالات دي:</b><br><br>
@@ -593,7 +593,7 @@ Yes, she is. / No, she isn't.`},
 ❌ أسماء عامة: the university, the hospital<br>
 ❌ أسماء مواد دروس: I study english (غلط) → I study <b>E</b>nglish.`},
     {title:"Punctuation (علامات الترقيم)",content:`<b>أهم علامات الترقيم:</b><br><br>
-<b>.</b> Period — آخر جملة陈述: I like cats.<br>
+<b>.</b> Period — آخر جملة (جملة خبرية): I like cats.<br>
 <b>?</b> Question mark — أسئلة: Do you like cats?<br>
 <b>!</b> Exclamation — تعجب: I love cats!<br>
 <b>,</b> Comma — فاصلة: I like cats, dogs, and birds.<br>
@@ -1065,7 +1065,7 @@ like, want, need, prefer, know, realise, understand, recognise, believe, suppose
 ✅ I haven't <b>been able to</b> sleep recently.<br>
 ✅ Tom <b>might be able to</b> come tomorrow.<br><br>
 <b>⚠️ غلطة شائعة:</b> لا نقول "I could escape" لنجاح محدد بل "I was able to escape" أو "I managed to escape".`},
-    {title:"could (للإمكانية) و could have (الماضي) (الوحدة 27)",content:`<b>could لل醐صات في الحاضر/المستقبل:</b><br>
+    {title:"could (للإمكانية) و could have (الماضي) (الوحدة 27)",content:`<b>could (للأفعال) في الحاضر/المستقبل:</b><br>
 ✅ We <b>could go</b> to the cinema. (= ممكن)<br>
 ✅ When you go to Paris, you <b>could stay</b> with Sarah.<br>
 ✅ I'm so tired, I <b>could sleep</b> for a week. (مبالغة)<br><br>
@@ -1218,7 +1218,7 @@ something was possible but didn't happen:<br>
 <b>would للعادات الماضي:</b><br>
 ✅ In summer, if the weather was fine, we <b>would all get</b> up early and go for a swim.<br>
 ✅ Whenever Richard was angry, he <b>would walk</b> out. (= used to)<br><br>
-<b>would for拒绝:</b><br>
+<b>would (للرفض):</b><br>
 ✅ He <b>wouldn't listen</b> to me. (= رفض أن يستمع)<br><br>
 <b>⚠️ غلطة شائعة:</b> لا نقول "If I would be rich" بل "If I were rich". would لا تأتي في جملة if.`},
     {title:"الطلبات والعروض (الوحدة 37)",content:`<b>الطلبات — can / could:</b><br>
@@ -1457,7 +1457,7 @@ something was possible but didn't happen:<br>
 ✅ مباشر: 'Don't work too hard,' I said to Joe.<br>
 ✅ غير مباشر: I <b>told Joe not to work</b> too hard.<br><br>
 ✅ مباشر: 'Can you help me?' Jackie said to me.<br>
-✅ غير间接: Jackie <b>asked me to help</b> her.<br><br>
+✅ غير مباشرة: Jackie <b>asked me to help</b> her.<br><br>
 <b>⚠️ غلطة شائعة:</b> لا نقول "Paul said me" بل "Paul told me" أو "Paul said to me".`}
     ]
   },
@@ -1491,7 +1491,7 @@ something was possible but didn't happen:<br>
 ✅ Where has Tom gone? → Do you know where <b>Tom has gone</b>? (ليس has Tom gone)<br>
 ✅ What time is it? → Do you know what time <b>it is</b>?<br>
 ✅ Who are those people? → I don't know who <b>those people are</b>.<br><br>
-<b>مع do/does/did — بدون助动词:</b><br>
+<b>مع do/does/did — بدون (فعل مساعد):</b><br>
 ✅ What time does the film start? → Do you know what time <b>the film starts</b>? (ليس does start)<br>
 ✅ What do you mean? → Please explain what <b>you mean</b>.<br>
 ✅ Why did she leave? → I wonder why <b>she left</b>.<br><br>
@@ -2174,8 +2174,8 @@ good → <b>better</b> → <b>best</b> | bad → <b>worse</b> → <b>worst</b> |
 ]
 
 export const GRAMMAR_CATS=[
-  {id:"基础",label:"الأساسيات",icon:"📖",color:"#22C55E"},
-  {id:"核心",label:"القواعد الجوهرية",icon:"🎯",color:"#3B82F6"},
+  {id:"BASIC",label:"الأساسيات",icon:"📖",color:"#22C55E"},
+  {id:"CORE",label:"القواعد الجوهرية",icon:"🎯",color:"#3B82F6"},
   {id:"tenses",label:"الأزمنة المتقدمة",icon:"⏰",color:"#3B82F6"},
   {id:"modals",label:"أفعال المساعدة",icon:"🔧",color:"#F97316"},
   {id:"syntax",label:"نحو الجملة",icon:"📐",color:"#8B5CF6"},
