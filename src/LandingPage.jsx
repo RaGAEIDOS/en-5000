@@ -730,7 +730,7 @@ export default function LandingPage() {
     setMobileNav(false);
   };
 
-  const goApp = () => { window.location.hash = '#app'; };
+  const goApp = () => { window.location.hash = '#/desktop'; };
 
   return (
     <>
@@ -1306,26 +1306,19 @@ export default function LandingPage() {
               <p style={S.footerText(c)}>
                 تطبيق ذكي مجاني لتعلم الإنجليزي. مصمم للمصريين والعرب مع AI coaching.
               </p>
-              <div style={S.footerSocials}>
-                {['\u{1F426}', '\u{1F4F7}', '\u{1F4E2}', '\u{1F4AC}'].map((icon, i) => (
-                  <div
-                    key={i}
-                    className="social-icon"
-                    style={S.socialIcon(c)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#3B82F6';
-                      e.currentTarget.style.color = '#fff';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = c.cardBorder;
-                      e.currentTarget.style.color = c.text;
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    {icon}
-                  </div>
-                ))}
+              <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.8rem' }}>
+                <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer">
+                  <img src="/google-play-badge.svg" alt="Get it on Google Play" style={{ height: 40, borderRadius: 8, transition: 'transform .2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                </a>
+                <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer">
+                  <img src="/app-store-badge.svg" alt="Download on the App Store" style={{ height: 40, borderRadius: 8, transition: 'transform .2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                </a>
               </div>
             </div>
             <div style={S.footerCol}>
@@ -1360,30 +1353,18 @@ export default function LandingPage() {
             <div style={S.footerCol}>
               <h4 style={{ color: c.text, marginBottom: '0.8rem', fontWeight: 800 }}>حمّل التطبيق</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                {[
-                  { icon: '\u{1F4F1}', label: 'App Store' },
-                  { icon: '\u26A1', label: 'Google Play' },
-                ].map((s, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '0.5rem',
-                      padding: '0.6rem 1rem', borderRadius: '10px',
-                      background: c.cardBorder, color: c.text,
-                      cursor: 'pointer', transition: 'all 0.3s', fontWeight: 600, fontSize: '0.9rem',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#3B82F6';
-                      e.currentTarget.style.color = '#fff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = c.cardBorder;
-                      e.currentTarget.style.color = c.text;
-                    }}
-                  >
-                    {s.icon} {s.label}
-                  </div>
-                ))}
+                <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <img src="/app-store-badge.svg" alt="Download on the App Store" style={{ height: 40, borderRadius: 8, transition: 'transform .2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                </a>
+                <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <img src="/google-play-badge.svg" alt="Get it on Google Play" style={{ height: 40, borderRadius: 8, transition: 'transform .2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                </a>
               </div>
             </div>
           </div>

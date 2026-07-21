@@ -397,7 +397,7 @@ function GenScreen({prog,lv,T,gs,isCS}){
   </div>);}
 
 export default function App(){
-  const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";if(h==="landing")return"landing";return window.innerWidth>=1024?"desktop":"app";};
+  const getRoute=()=>{const h=window.location.hash.replace("#","").replace("/","");if(h==="desktop")return"desktop";if(h==="app")return"app";return"landing";};
   const [route,setRoute]=useState(getRoute);
   useEffect(()=>{const h=()=>setRoute(getRoute());window.addEventListener("hashchange",h);return()=>window.removeEventListener("hashchange",h);},[]);
 

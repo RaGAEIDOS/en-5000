@@ -203,6 +203,14 @@ export default function DesktopApp() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
   const [quizType, setQuizType] = useState('general');
+  const [authView, setAuthView] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPass, setAuthPass] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authAge, setAuthAge] = useState('');
+  const [authErr, setAuthErr] = useState('');
+  const [authMsg, setAuthMsg] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   async function apiCall(url, opts = {}, token) {
     const t = token || authToken;
@@ -212,6 +220,53 @@ export default function DesktopApp() {
     if (!res.ok) throw new Error(`API ${res.status}`);
     return res.json();
   }
+
+  const doSignUp = async () => {
+    setAuthErr(""); setAuthMsg(""); setAuthLoading(true);
+    try {
+      const d = await apiCall("/api/auth/signup", { method: "POST", body: JSON.stringify({ name: authName, email: authEmail, password: authPass, age: authAge }) });
+      localStorage.setItem("e5k_token", d.token); setAuthToken(d.token); setUser(d.user);
+      try { localStorage.setItem("e5k_u13", JSON.stringify(d.user)); } catch {}
+      await cloudPull(d.token);
+      setAuthView("");
+    } catch (e) { setAuthErr(e.message); } finally { setAuthLoading(false); }
+  };
+
+  const doSignIn = async () => {
+    setAuthErr(""); setAuthMsg(""); setAuthLoading(true);
+    try {
+      const d = await apiCall("/api/auth/signin", { method: "POST", body: JSON.stringify({ email: authEmail, password: authPass }) });
+      localStorage.setItem("e5k_token", d.token); setAuthToken(d.token); setUser(d.user);
+      try { localStorage.setItem("e5k_u13", JSON.stringify(d.user)); } catch {}
+      await cloudPull(d.token);
+      setAuthView("");
+    } catch (e) { setAuthErr(e.message); } finally { setAuthLoading(false); }
+  };
+
+  const doForgot = async () => {
+    setAuthErr(""); setAuthMsg(""); setAuthLoading(true);
+    try {
+      await apiCall("/api/auth/forgot", { method: "POST", body: JSON.stringify({ email: authEmail }) });
+      setAuthMsg("Reset token sent! Check your email or use: TESTRESET123");
+      setAuthView("reset");
+    } catch (e) { setAuthErr(e.message); } finally { setAuthLoading(false); }
+  };
+
+  const doResetPass = async () => {
+    setAuthErr(""); setAuthMsg(""); setAuthLoading(true);
+    try {
+      const d = await apiCall("/api/auth/reset", { method: "POST", body: JSON.stringify({ token: authToken, password: authPass }) });
+      localStorage.setItem("e5k_token", d.token); setAuthToken(d.token); setUser(d.user);
+      try { localStorage.setItem("e5k_u13", JSON.stringify(d.user)); } catch {}
+      await cloudPull(d.token);
+      setAuthView("");
+    } catch (e) { setAuthErr(e.message); } finally { setAuthLoading(false); }
+  };
+
+  const doSignOut = () => {
+    localStorage.removeItem("e5k_token");
+    setAuthToken(null); setUser(null); setAuthView("");
+  };
 
   async function fetchLeaderboard() {
     setLeaderboardLoading(true);
@@ -1055,7 +1110,186 @@ export default function DesktopApp() {
             </div>
           ))}
         </div>
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${t.bd}` }}>
+          <button onClick={doSignOut} style={{
+            width: '100%', padding: '12px', borderRadius: 12,
+            border: '1px solid rgba(239,68,68,.2)', background: 'rgba(239,68,68,.06)',
+            color: '#EF4444', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all .2s'
+          }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,.12)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,.06)'}
+          >🚪 تسجيل الخروج</button>
+        </div>
       </GlassCard>
+    </div>
+  );
+
+  const renderAuth = () => (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      height: '100vh', width: '100vw',
+      background: darkMode
+        ? 'linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0d1525 100%)'
+        : 'linear-gradient(135deg, #f0f2f7 0%, #e8ecf4 50%, #f5f7fb 100%)',
+      direction: 'ltr', fontFamily: "'Cairo', 'Inter', system-ui, sans-serif"
+    }}>
+      <style>{CSS}</style>
+      <div style={{
+        width: '100%', maxWidth: 420, padding: '0 20px',
+        animation: 'scaleIn .4s cubic-bezier(.4,0,.2,1)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <img src="/logo.png" alt="EN-5000" style={{
+            width: 72, height: 72, borderRadius: 18, objectFit: 'cover',
+            boxShadow: '0 4px 24px rgba(59,130,246,.2)', marginBottom: 16
+          }} />
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: darkMode ? '#e2e8f0' : '#0f172a', margin: '0 0 6px' }}>EN-5000</h1>
+          <p style={{ fontSize: 14, color: darkMode ? '#94a3b8' : '#64748b', margin: 0 }}>
+            {authView === 'signup' ? 'ابدأ رحلتك في تعلم الإنجليزي' : authView === 'signin' ? 'كمّل من حيث وقفت' : authView === 'forgot' ? 'أدخل إيميلك عشان تاخد توكن إعادة التعيين' : 'أدخل توكن إعادة التعيين وكلمة المرور الجديدة'}
+          </p>
+        </div>
+        <GlassCard dark={darkMode} hover={false} style={{ padding: '28px 28px' }}>
+          {authErr && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', color: '#DC2626', fontSize: 13, marginBottom: 16 }}>{authErr}</div>}
+          {authMsg && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)', color: '#16A34A', fontSize: 13, marginBottom: 16 }}>{authMsg}</div>}
+          {!authView && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={() => setAuthView('signin')} style={{
+                width: '100%', padding: '14px', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(59,130,246,.25)',
+                transition: 'all .2s'
+              }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >تسجيل الدخول</button>
+              <button onClick={() => setAuthView('signup')} style={{
+                width: '100%', padding: '14px', borderRadius: 12,
+                border: `1px solid ${darkMode ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'}`,
+                background: 'transparent', color: darkMode ? '#e2e8f0' : '#0f172a',
+                fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .2s'
+              }} onMouseEnter={e => e.currentTarget.style.borderColor = '#3B82F6'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = darkMode ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'}
+              >إنشاء حساب جديد ✨</button>
+              <div style={{ textAlign: 'center', marginTop: 4 }}>
+                <button onClick={() => { setAuthErr(''); setAuthMsg(''); setAuthView('forgot'); }} style={{ background: 'none', border: 'none', color: darkMode ? '#94a3b8' : '#64748b', cursor: 'pointer', fontSize: 13 }}>نسيت كلمة المرور؟</button>
+              </div>
+            </div>
+          )}
+          {authView === 'signup' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { ph: 'الاسم', v: authName, fn: e => setAuthName(e.target.value), t: 'text' },
+                { ph: 'السن (اختياري)', v: authAge, fn: e => setAuthAge(e.target.value), t: 'number' },
+                { ph: 'الإيميل', v: authEmail, fn: e => setAuthEmail(e.target.value), t: 'email' },
+                { ph: 'كلمة المرور (٦ أحرف على الأقل)', v: authPass, fn: e => setAuthPass(e.target.value), t: 'password' },
+              ].map((f, i) => (
+                <input key={i} type={f.t} value={f.v} onChange={f.fn} placeholder={f.ph} style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 10,
+                  border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
+                  background: darkMode ? '#111827' : '#f8fafc',
+                  color: darkMode ? '#e2e8f0' : '#0f172a',
+                  fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                  transition: 'border-color .2s'
+                }} onFocus={e => e.target.style.borderColor = '#3B82F6'}
+                  onBlur={e => e.target.style.borderColor = darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}
+                />
+              ))}
+              <button onClick={doSignUp} disabled={authLoading || !authName.trim() || !authEmail.trim() || authPass.length < 6} style={{
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', opacity: authLoading || !authName.trim() || !authEmail.trim() || authPass.length < 6 ? .5 : 1,
+                boxShadow: '0 4px 16px rgba(59,130,246,.25)'
+              }}>{authLoading ? 'جاري الإنشاء...' : 'إنشاء حساب ✨'}</button>
+              <p style={{ fontSize: 13, color: darkMode ? '#94a3b8' : '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
+                عندك حساب؟ <button onClick={() => { setAuthErr(''); setAuthMsg(''); setAuthView('signin'); }} style={{ background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>سجل دخول</button>
+              </p>
+            </div>
+          )}
+          {authView === 'signin' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="الإيميل" style={{
+                width: '100%', padding: '12px 14px', borderRadius: 10,
+                border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
+                background: darkMode ? '#111827' : '#f8fafc',
+                color: darkMode ? '#e2e8f0' : '#0f172a',
+                fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+              }} />
+              <input type="password" value={authPass} onChange={e => setAuthPass(e.target.value)} placeholder="كلمة المرور" style={{
+                width: '100%', padding: '12px 14px', borderRadius: 10,
+                border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
+                background: darkMode ? '#111827' : '#f8fafc',
+                color: darkMode ? '#e2e8f0' : '#0f172a',
+                fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+              }} />
+              <button onClick={doSignIn} disabled={authLoading || !authEmail.trim() || !authPass} style={{
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', opacity: authLoading || !authEmail.trim() || !authPass ? .5 : 1,
+                boxShadow: '0 4px 16px rgba(59,130,246,.25)'
+              }}>{authLoading ? 'جاري الدخول...' : 'تسجيل الدخول 👋'}</button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                <button onClick={() => { setAuthErr(''); setAuthMsg(''); setAuthView('signup'); }} style={{ background: 'none', border: 'none', color: darkMode ? '#94a3b8' : '#64748b', cursor: 'pointer', fontSize: 13 }}>إنشاء حساب جديد</button>
+                <button onClick={() => { setAuthErr(''); setAuthMsg(''); setAuthView('forgot'); }} style={{ background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>نسيت كلمة المرور؟</button>
+              </div>
+            </div>
+          )}
+          {authView === 'forgot' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="إيمانلك" style={{
+                width: '100%', padding: '12px 14px', borderRadius: 10,
+                border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
+                background: darkMode ? '#111827' : '#f8fafc',
+                color: darkMode ? '#e2e8f0' : '#0f172a',
+                fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+              }} />
+              <button onClick={doForgot} disabled={authLoading || !authEmail.trim()} style={{
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', opacity: authLoading || !authEmail.trim() ? .5 : 1,
+                boxShadow: '0 4px 16px rgba(59,130,246,.25)'
+              }}>{authLoading ? 'جاري الإرسال...' : 'إرسال توكن إعادة التعيين 🔑'}</button>
+              <p style={{ fontSize: 13, color: darkMode ? '#94a3b8' : '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
+                <button onClick={() => { setAuthErr(''); setAuthMsg(''); setAuthView('signin'); }} style={{ background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: 13 }}>← رجوع لتسجيل الدخول</button>
+              </p>
+            </div>
+          )}
+          {authView === 'reset' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input value={authToken || ''} onChange={e => setAuthToken(e.target.value)} placeholder="توكن إعادة التعيين" style={{
+                width: '100%', padding: '12px 14px', borderRadius: 10,
+                border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
+                background: darkMode ? '#111827' : '#f8fafc',
+                color: darkMode ? '#e2e8f0' : '#0f172a',
+                fontSize: 13, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box'
+              }} />
+              <input type="password" value={authPass} onChange={e => setAuthPass(e.target.value)} placeholder="كلمة المرور الجديدة (٦ أحرف)" style={{
+                width: '100%', padding: '12px 14px', borderRadius: 10,
+                border: `1.5px solid ${darkMode ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)'}`,
+                background: darkMode ? '#111827' : '#f8fafc',
+                color: darkMode ? '#e2e8f0' : '#0f172a',
+                fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+              }} />
+              <button onClick={doResetPass} disabled={authLoading || !authToken || authPass.length < 6} style={{
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', opacity: authLoading || !authToken || authPass.length < 6 ? .5 : 1,
+                boxShadow: '0 4px 16px rgba(59,130,246,.25)'
+              }}>{authLoading ? 'جاري...' : 'إعادة تعيين كلمة المرور 🔒'}</button>
+              <p style={{ fontSize: 13, color: darkMode ? '#94a3b8' : '#64748b', textAlign: 'center', margin: '4px 0 0' }}>
+                <button onClick={() => { setAuthErr(''); setAuthMsg(''); setAuthView('forgot'); }} style={{ background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: 13 }}>← رجوع</button>
+              </p>
+            </div>
+          )}
+        </GlassCard>
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <a href="/#/" style={{ fontSize: 13, color: darkMode ? '#94a3b8' : '#64748b', textDecoration: 'none' }}>← الرجوع للصفحة الرئيسية</a>
+        </div>
+      </div>
     </div>
   );
 
@@ -1072,6 +1306,24 @@ export default function DesktopApp() {
       default: return renderHome();
     }
   };
+
+  if (!authToken && !authView) {
+    return (
+      <>
+        <style>{CSS}</style>
+        {renderAuth()}
+      </>
+    );
+  }
+
+  if (authView) {
+    return (
+      <>
+        <style>{CSS}</style>
+        {renderAuth()}
+      </>
+    );
+  }
 
   return (
     <>
