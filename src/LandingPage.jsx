@@ -1109,8 +1109,16 @@ export default function LandingPage() {
         {/* ARTICLE */}
         <section style={{ padding: '4rem 2rem', maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ background: c.card, backdropFilter: 'blur(12px)', border: `1px solid ${c.cardBorder}`, borderRadius: '24px', overflow: 'hidden', transition: 'all 0.3s' }}>
+            {/* Article Banner Image */}
+            <div style={{ position: 'relative', width: '100%', height: '340px', overflow: 'hidden' }}>
+              <img src="/article-banner.png" alt="حراس الضاد" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: `linear-gradient(to top, ${c.card} 0%, transparent 100%)` }} />
+              <div style={{ position: 'absolute', bottom: '1rem', left: '1.5rem', right: '1.5rem' }}>
+                <span style={{ display: 'inline-block', background: 'rgba(59,130,246,0.9)', color: '#fff', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.5rem' }}>{'\u{1F4DD}'} مقال تحليلي</span>
+              </div>
+            </div>
             {/* Article Header */}
-            <div style={{ padding: '2.5rem 2.5rem 1.5rem', borderBottom: `1px solid ${c.cardBorder}` }}>
+            <div style={{ padding: '1.5rem 2.5rem 1.5rem', borderBottom: `1px solid ${c.cardBorder}` }}>
               <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 900, color: c.text, lineHeight: 1.4, marginBottom: '0.8rem' }}>
                 حراس الضاد: لماذا يعد الحفاظ على الهوية العربية ضرورة وجودية في عصر العولمة؟
               </h1>
