@@ -294,7 +294,7 @@ function genLocalQs(isCS,difficulty){
 
 async function genQs(day,ln,isCS=false){
   try{
-    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"gemini-2.0-flash",max_tokens:9000,messages:[{role:"user",content:`Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS?"CS/Programming":"General"} mode.\n${isCS?CS_TOPICS[ln]:TOPICS[ln]}\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.`}]})});
+    const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"gemini-2.0-flash",max_tokens:9000,messages:[{role:"user",content:`Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS?"CS/Programming":"General"} mode.\n${isCS?CS_TOPICS[ln]:TOPICS[ln]}\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.`}]})});
     if(!res.ok){const d=await res.json().catch(()=>({}));throw new Error(d.error||`API error ${res.status}`);}
     const d=await res.json();if(d.error)throw new Error(d.error);
     const content=d.content;const txt=Array.isArray(content)?content.map(b=>b.text||"").join(""):"";
@@ -600,7 +600,7 @@ export default function App(){
   const doForgot=useCallback(async()=>{
     setAuthErr("");setAuthMsg("");setAuthLoading(true);
     try{
-      const d=await apiCall("/api/auth/forgot-password",{method:"POST",body:JSON.stringify({email:authEmail})});
+      const d=await apiCall("/api/auth/password?action=forgot",{method:"POST",body:JSON.stringify({email:authEmail})});
       setAuthMsg(d.message||"Reset link sent! Check your email.");
       if(d.resetToken)setAuthToken(d.resetToken);
     }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
@@ -609,7 +609,7 @@ export default function App(){
   const doResetPass=useCallback(async()=>{
     setAuthErr("");setAuthMsg("");setAuthLoading(true);
     try{
-      const d=await apiCall("/api/auth/reset-password",{method:"POST",body:JSON.stringify({token:authToken,password:authPass})});
+      const d=await apiCall("/api/auth/password?action=reset",{method:"POST",body:JSON.stringify({token:authToken,password:authPass})});
       setAuthMsg(d.message||"Password reset! You can now sign in.");
       setAuthView("signin");setAuthToken(null);localStorage.removeItem("e5k_token");
     }catch(e){setAuthErr(e.message);}finally{setAuthLoading(false);}
@@ -633,7 +633,7 @@ export default function App(){
   useEffect(()=>{const handle=()=>{if(document.visibilityState==="visible"&&authToken)cloudPush();};document.addEventListener("visibilitychange",handle);return()=>document.removeEventListener("visibilitychange",handle);},[authToken]);
 
   // Heartbeat for online status
-  useEffect(()=>{if(!authToken)return;const hb=()=>fetch("/api/user/heartbeat",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authToken}`}}).catch(()=>{});hb();const i=setInterval(hb,30000);return()=>clearInterval(i);},[authToken]);
+  useEffect(()=>{if(!authToken)return;const hb=()=>fetch("/api/user?action=heartbeat",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authToken}`}}).catch(()=>{});hb();const i=setInterval(hb,30000);return()=>clearInterval(i);},[authToken]);
 
   // Chat state
   const [chatTarget,setChatTarget]=useState(null);

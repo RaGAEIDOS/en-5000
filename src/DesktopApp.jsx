@@ -251,7 +251,7 @@ function genLocalQs(isCS, difficulty) {
 
 async function genQs(day, ln, isCS = false) {
   try {
-    const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "gemini-2.0-flash", max_tokens: 9000, messages: [{ role: "user", content: `Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS ? "CS/Programming" : "General"} mode.\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.` }] }) });
+    const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "gemini-2.0-flash", max_tokens: 9000, messages: [{ role: "user", content: `Generate exactly 50 English learning questions for Egyptian Arabic speakers. Level:${ln} Day:${day}/100. ${isCS ? "CS/Programming" : "General"} mode.\nOutput ONLY valid JSON array:\n[{"ar":"Arabic sentence","en":"English","pron":"نطق بالعربي","opts":["A","B","C","D"],"c":1,"cat":"Category"}]\nRules: c=0-3 index of correct; opts[c]=en exactly; 4 options; Egyptian dialect; distribute c evenly; exactly 50 items.` }] }) });
     if (!res.ok) throw new Error(`API error ${res.status}`);
     const d = await res.json(); if (d.error) throw new Error(d.error);
     const content = d.content; const txt = Array.isArray(content) ? content.map(b => b.text || "").join("") : "";
@@ -529,7 +529,7 @@ export default function DesktopApp() {
   const [chatTarget, setChatTarget] = useState(null);
 
   // Heartbeat for online status
-  useEffect(() => { if (!authToken) return; const hb = () => fetch("/api/user/heartbeat", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` } }).catch(() => {}); hb(); const i = setInterval(hb, 30000); return () => clearInterval(i); }, [authToken]);
+  useEffect(() => { if (!authToken) return; const hb = () => fetch("/api/user?action=heartbeat", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` } }).catch(() => {}); hb(); const i = setInterval(hb, 30000); return () => clearInterval(i); }, [authToken]);
 
   async function apiCall(url, opts = {}, token) {
     const t = token || authToken;

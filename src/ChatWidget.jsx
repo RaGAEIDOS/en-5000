@@ -30,7 +30,7 @@ export default function ChatWidget({ token, userId, dark, openChat: chatProp }) 
   const fetchUnread = useCallback(async () => {
     if (!token) return;
     try {
-      const r = await fetch("/api/chat/unread", { headers });
+      const r = await fetch("/api/chat?action=unread", { headers });
       const d = await r.json();
       const total = Object.values(d.unread || {}).reduce((a, b) => a + b, 0);
       setUnreadTotal(total);
@@ -48,7 +48,7 @@ export default function ChatWidget({ token, userId, dark, openChat: chatProp }) 
   const fetchMessages = useCallback(async (otherId) => {
     if (!token || !otherId) return;
     try {
-      const r = await fetch(`/api/chat/messages?with=${otherId}`, { headers });
+      const r = await fetch(`/api/chat?action=messages&with=${otherId}`, { headers });
       const d = await r.json();
       setMsgs(d.messages || []);
     } catch {}
@@ -81,7 +81,7 @@ export default function ChatWidget({ token, userId, dark, openChat: chatProp }) 
     setInput("");
     setMsgs((m) => [...m, { sender_id: userId, receiver_id: openChat.id, message: text, created_at: new Date().toISOString() }]);
     try {
-      await fetch("/api/chat/send", { method: "POST", headers, body: JSON.stringify({ receiverId: openChat.id, message: text }) });
+      await fetch("/api/chat?action=send", { method: "POST", headers, body: JSON.stringify({ receiverId: openChat.id, message: text }) });
     } catch {}
   };
 
