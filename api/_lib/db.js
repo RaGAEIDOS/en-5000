@@ -33,6 +33,17 @@ async function ensureTables() {
     );
     DO $$ BEGIN ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
     DO $$ BEGIN ALTER TABLE users ADD COLUMN IF NOT EXISTS photo TEXT; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+    DO $$ BEGIN ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMP; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      message TEXT NOT NULL,
+      read BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_messages_pair ON messages(sender_id, receiver_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id, read);
     CREATE TABLE IF NOT EXISTS progress (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

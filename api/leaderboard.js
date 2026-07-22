@@ -15,6 +15,7 @@ module.exports = async function handler(req, res) {
         u.name,
         u.username,
         u.photo,
+        u.last_active,
         COALESCE(SUM(p.xp), 0) AS total_xp,
         COALESCE(SUM(p.total_correct), 0) AS total_correct,
         COALESCE(SUM(p.total_answered), 0) AS total_answered,
@@ -25,7 +26,7 @@ module.exports = async function handler(req, res) {
           ELSE 0 END AS accuracy
       FROM users u
       LEFT JOIN progress p ON p.user_id = u.id
-      GROUP BY u.id, u.name, u.photo
+      GROUP BY u.id, u.name, u.username, u.photo, u.last_active
       ORDER BY total_xp DESC, best_streak DESC
     `);
 
@@ -61,6 +62,7 @@ module.exports = async function handler(req, res) {
         name: row.name,
         username: row.username,
         photo: row.photo,
+        lastActive: row.last_active,
         xp,
         bestStreak,
         accuracy,

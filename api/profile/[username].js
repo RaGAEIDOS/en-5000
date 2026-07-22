@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
     const cleanUsername = username.toLowerCase().trim();
 
     const userResult = await query(
-      "SELECT id, name, username, photo, created_at FROM users WHERE username = $1",
+      "SELECT id, name, username, photo, last_active, created_at FROM users WHERE username = $1",
       [cleanUsername]
     );
     if (userResult.rows.length === 0) return res.status(404).json({ error: "User not found" });
@@ -76,6 +76,7 @@ module.exports = async function handler(req, res) {
         name: user.name,
         username: user.username,
         photo: user.photo,
+        lastActive: user.last_active,
         joinedAt: user.created_at,
         rank,
         totalXP,

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { GRAMMAR_TOPICS,GRAMMAR_CATS } from "./grammarData";
 import LandingPage from "./LandingPage";
 import DesktopApp from "./DesktopApp";
+import ChatWidget from "./ChatWidget";
 const LOGO="/logo.png";
 
 const PK="e5k_p13",QK="e5k_q13_",CS_PK="e5k_cs13",CS_QK="e5k_csq13_",SK="e5k_s13",UK="e5k_u13";
@@ -396,7 +397,7 @@ function GenScreen({prog,lv,T,gs,isCS}){
     <div style={{background:T.s2,border:`0.5px solid ${T.bd}`,borderRadius:12,padding:"12px 18px",maxWidth:300,animation:"fUp .4s ease .2s both"}}><p style={{fontSize:11,color:T.m,margin:0,lineHeight:1.6}}>{isCS?"💡 كل سؤال فيه النطق الإنجليزي بالعربي — زي \"جيت كوميت\" لـ git commit":"💡 كل سؤال فيه كيفية نطق الإنجليزي بالعربي — زي \"هاو أر يو؟\""}</p></div>
   </div>);}
 
-function ProfileView({username,T,K,dark,onBack}){
+function ProfileView({username,T,K,dark,onBack,onChat}){
   const [data,setData]=useState(null);
   const [loading,setLoading]=useState(true);
   useEffect(()=>{
@@ -419,6 +420,7 @@ function ProfileView({username,T,K,dark,onBack}){
         <div style={{fontSize:20,fontWeight:700,color:T.txt}}>{data.name}</div>
         {data.username&&<div style={{fontSize:14,color:LC.Easy.tx,marginTop:3}}>@{data.username}</div>}
         <div style={{display:"inline-flex",alignItems:"center",gap:6,background:pLv.bg,border:`1px solid ${pLv.br}`,color:pLv.tx,padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:700,marginTop:8}}>{pLv.i} {pLv.n}</div>
+        {onChat&&<button onClick={()=>onChat(data.id,data.name,data.photo)} style={{marginTop:10,padding:"6px 18px",borderRadius:20,border:"none",background:"linear-gradient(135deg,#3B82F6,#2563EB)",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",boxShadow:"0 2px 8px rgba(59,130,246,.3)"}}>💬 Message</button>}
         {data.joinedAt&&<div style={{fontSize:11,color:T.m,marginTop:8}}>📅 انضم في {new Date(data.joinedAt).toLocaleDateString("ar-EG",{year:"numeric",month:"long",day:"numeric"})}</div>}
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -630,6 +632,12 @@ export default function App(){
   useEffect(()=>{if(!authToken)return;const interval=setInterval(()=>{cloudPush();},300000);return()=>clearInterval(interval);},[authToken,prog,csProg]);
   useEffect(()=>{const handle=()=>{if(document.visibilityState==="visible"&&authToken)cloudPush();};document.addEventListener("visibilitychange",handle);return()=>document.removeEventListener("visibilitychange",handle);},[authToken]);
 
+  // Heartbeat for online status
+  useEffect(()=>{if(!authToken)return;const hb=()=>fetch("/api/user/heartbeat",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authToken}`}}).catch(()=>{});hb();const i=setInterval(hb,30000);return()=>clearInterval(i);},[authToken]);
+
+  // Chat state
+  const [chatTarget,setChatTarget]=useState(null);
+
   const W={maxWidth:620,margin:"0 auto",padding:"1rem",color:T.txt,background:T.root,minHeight:"100vh",fontFamily:"system-ui,sans-serif",direction:"ltr",textAlign:"left"};
   const K=(e={})=>({background:T.s2,border:`0.5px solid ${T.bd}`,borderRadius:14,padding:"1.1rem 1.25rem",marginBottom:".85rem",...e});
   const Btn=(bg,cl="#fff",e={})=>({width:"100%",padding:".82rem",borderRadius:10,border:"none",background:bg,color:cl,fontSize:15,fontWeight:700,cursor:"pointer",...e});
@@ -703,7 +711,7 @@ export default function App(){
 
   if(route==="landing")return <LandingPage/>;
   if(route==="desktop")return <DesktopApp/>;
-  if(route==="profile")return <div style={{minHeight:"100vh",background:T.bg}}><ProfileView username={routeProfile} T={T} K={K} dark={dark} onBack={()=>window.location.hash=""}/></div>;
+  if(route==="profile")return<><div style={{minHeight:"100vh",background:T.bg}}><style>{CSS}</style><ProfileView username={routeProfile} T={T} K={K} dark={dark} onBack={()=>window.location.hash=""} onChat={(id,name,photo)=>setChatTarget({id,name,photo})}/></div>{authToken&&user&&<ChatWidget token={authToken} userId={user.id} dark={dark} openChat={chatTarget} />}</>;
 
 
   const startQuiz=async(isPrac=false,csMode=false)=>{
@@ -941,6 +949,7 @@ export default function App(){
         </div>
       </div>}
       <div style={{marginTop:12}}><Ad idx={botAd.current} T={T}/></div>
+      {authToken&&user&&<ChatWidget token={authToken} userId={user.id} dark={dark} openChat={chatTarget} />}
     </div>
   );
 
@@ -1266,11 +1275,15 @@ export default function App(){
             <div style={{width:32,textAlign:"center",flexShrink:0}}>
               {u.medal?<span style={{fontSize:22}}>{u.medal}</span>:<span style={{fontSize:14,fontWeight:700,color:T.m}}>#{u.rank}</span>}
             </div>
-            <div style={{width:36,height:36,borderRadius:"50%",background:u.photo?"#000":avC(u.name||"?"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0,overflow:"hidden"}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:u.photo?"#000":avC(u.name||"?"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0,overflow:"hidden",position:"relative"}}>
               {u.photo?<img src={u.photo} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>:(u.name||"?").charAt(0).toUpperCase()}
+              {u.lastActive&&((Date.now()-new Date(u.lastActive).getTime())<120000)&&<span style={{position:"absolute",bottom:0,right:0,width:10,height:10,borderRadius:"50%",background:"#22C55E",border:`2px solid ${T.s2}`,boxShadow:"0 0 4px rgba(34,197,94,.6)"}}/>}
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div onClick={()=>{if(u.username&&!isMe)window.location.hash="#/"+u.username;}} style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:u.username&&!isMe?"pointer":"default",textDecoration:u.username&&!isMe?"underline":"none",textDecorationColor:"rgba(59,130,246,.4)"}}>{u.name}{isMe?" (أنت)":""}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <div onClick={()=>{if(u.username&&!isMe)window.location.hash="#/"+u.username;}} style={{fontSize:13,fontWeight:700,color:isMe?"#3B82F6":T.txt,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:u.username&&!isMe?"pointer":"default",textDecoration:u.username&&!isMe?"underline":"none",textDecorationColor:"rgba(59,130,246,.4)"}}>{u.name}{isMe?" (أنت)":""}</div>
+                {u.username&&!isMe&&<span onClick={()=>setChatTarget({id:u.id,name:u.name,photo:u.photo})} style={{fontSize:14,cursor:"pointer",opacity:.7}} title="Send message">💬</span>}
+              </div>
               <div style={{fontSize:11,color:T.m,marginTop:1,display:"flex",gap:8}}>
                 <span>{u.levelIcon} {u.level}</span>
                 <span>🔥 {u.bestStreak}</span>
@@ -1295,6 +1308,7 @@ export default function App(){
           • <b>20%</b> نسبة الإجابة الصحيحة (Accuracy)
         </div>
       </div>
+      {authToken&&user&&<ChatWidget token={authToken} userId={user.id} dark={dark} openChat={chatTarget} />}
     </div>
   );
 

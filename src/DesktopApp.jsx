@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { GRAMMAR_TOPICS, GRAMMAR_CATS } from './grammarData';
+import ChatWidget from './ChatWidget';
 
 const PK = 'e5k_p13', CS_PK = 'e5k_cs13', QK = 'e5k_q13_', CS_QK = 'e5k_csq13_', PERF_PK = 'e5k_perf', SK = 'e5k_s13', UK = 'e5k_u13';
 const toStr = () => new Date().toISOString().slice(0, 10);
@@ -525,6 +526,10 @@ export default function DesktopApp() {
   const [authErr, setAuthErr] = useState('');
   const [authMsg, setAuthMsg] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [chatTarget, setChatTarget] = useState(null);
+
+  // Heartbeat for online status
+  useEffect(() => { if (!authToken) return; const hb = () => fetch("/api/user/heartbeat", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` } }).catch(() => {}); hb(); const i = setInterval(hb, 30000); return () => clearInterval(i); }, [authToken]);
 
   async function apiCall(url, opts = {}, token) {
     const t = token || authToken;
@@ -1516,8 +1521,9 @@ export default function DesktopApp() {
                         {u.medal ? <span style={{ fontSize: 18 }}>{u.medal}</span> : <span style={{ fontSize: 12 }}>#{u.rank}</span>}
                       </div>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: u.photo ? '#000' : avC(u.name || "?"), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 2px 8px ${avC(u.name || "?")}30` }}>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: u.photo ? '#000' : avC(u.name || "?"), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0, overflow: 'hidden', boxShadow: `0 2px 8px ${avC(u.name || "?")}30`, position: 'relative' }}>
                           {u.photo ? <img src={u.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : (u.name || "?").charAt(0).toUpperCase()}
+                          {u.lastActive && ((Date.now() - new Date(u.lastActive).getTime()) < 120000) && <span style={{ position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, borderRadius: '50%', background: '#22C55E', border: `2px solid ${t.card || t.s2}`, boxShadow: '0 0 4px rgba(34,197,94,.6)' }} />}
                         </div>
                         <span
                           onClick={(e) => { e.stopPropagation(); if (u.username && !isMe) { window.location.hash="#/"+u.username; } }}
@@ -1525,6 +1531,7 @@ export default function DesktopApp() {
                           onMouseEnter={e => { if (u.username && !isMe) e.currentTarget.style.color = '#60a5fa'; }}
                           onMouseLeave={e => { if (u.username && !isMe) e.currentTarget.style.color = t.txt; }}
                         >{u.name}{isMe ? " (أنت)" : ""}</span>
+                        {!isMe && u.username && <span onClick={(e) => { e.stopPropagation(); setChatTarget({ id: u.id, name: u.name, photo: u.photo }); }} style={{ fontSize: 13, cursor: 'pointer', opacity: .6, marginLeft: 4 }} title="Send message">💬</span>}
                       </div>
                       <div style={{ width: 90, textAlign: 'center', fontSize: 12, color: u.levelColor }}>{u.levelIcon} {u.level}</div>
                       <div style={{ width: 70, textAlign: 'center', fontWeight: 600, color: t.txt }}>{u.bestStreak}</div>
@@ -1839,6 +1846,7 @@ export default function DesktopApp() {
           </div>
         </div>
       </div>
+      {authToken && user && <ChatWidget token={authToken} userId={user.id} dark={darkMode} openChat={chatTarget} />}
     </>
   );
 }
