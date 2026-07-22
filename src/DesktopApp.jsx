@@ -321,6 +321,8 @@ const WORD_DICT={i:"أنا",you:"إنت",he:"هو",she:"هي",it:"هو(حاجة)
 
 function speakEn(text){try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=0.82;u.pitch=1;window.speechSynthesis.speak(u);}catch(e){}}
 
+function useSnd(on){const ctx=useRef(null);return useCallback((t)=>{if(!on)return;try{if(!ctx.current)ctx.current=new(window.AudioContext||window.webkitAudioContext)();const ac=ctx.current;if(ac.state==="suspended")ac.resume();const now=ac.currentTime;const tone=(f,s,d,v=.22,w="sine")=>{const o=ac.createOscillator(),g=ac.createGain();o.type=w;o.frequency.value=f;g.gain.setValueAtTime(v,now+s);g.gain.exponentialRampToValueAtTime(.001,now+s+d);o.connect(g);g.connect(ac.destination);o.start(now+s);o.stop(now+s+d+.05);};if(t==="ok"){tone(523,0,.1);tone(659,.1,.1);tone(784,.18,.25);}else if(t==="close"){tone(440,0,.1);tone(523,.1,.18);}else if(t==="no"){tone(280,0,.08,.18,"sawtooth");tone(210,.09,.18,.18,"sawtooth");}else if(t==="hint"){tone(350,0,.07,.12);}else if(t==="nxt"){tone(440,0,.03,.1);tone(523,.04,.07,.08);}else if(t==="done"){tone(523,0,.1);tone(659,.12,.1);tone(784,.22,.1);tone(1047,.34,.3,.18);}else if(t==="stk"){tone(659,0,.08);tone(784,.08,.08);tone(1047,.16,.22);}else if(t==="flip"){tone(440,0,.05,.1);}}catch(e){};},[on]);}
+
 function WordTrans({text,T:theme,lv}){
   const [open,setOpen]=useState(null);
   if(!text)return null;
@@ -469,6 +471,7 @@ export default function DesktopApp() {
   const [section, setSection] = useState('home');
   const [darkMode, setDarkMode] = useState(false);
   const [cfg, setCfg] = useState(CFG_DEF);
+  const play = useSnd(cfg.sound);
   const [progress, setProgress] = useState(DEF);
   const [user, setUser] = useState(null);
   const [gramCat, setGramCat] = useState(null);
@@ -691,11 +694,12 @@ export default function DesktopApp() {
   const awardXp = useCallback((amt) => { if (!amt) return; setSXp(s => s + amt); setXpPop("+" + amt + " XP"); setTimeout(() => setXpPop(null), 1100); }, []);
 
   const advance = useCallback((xpAmt) => {
+    play("nxt");
     const isOk = xpAmt > 0; const curQ = qs[qi];
     if (!isOk && curQ) setWrongQs(w => [...w, { ...curQ }]);
     if (isOk && curQ?.en) speakEn(curQ.en);
     const nOk = ok + (isOk ? 1 : 0); const nStr = isOk ? cStreak + 1 : 0; setCStreak(nStr);
-    let bonus = 0; if (nStr > 0 && (nStr === 5 || nStr === 10 || nStr === 20)) { bonus = nStr === 5 ? XP.s5 : nStr === 10 ? XP.s10 : XP.s20; setStkPop("+" + bonus + "🔥"); setTimeout(() => setStkPop(null), 1400); }
+    let bonus = 0; if (nStr > 0 && (nStr === 5 || nStr === 10 || nStr === 20)) { bonus = nStr === 5 ? XP.s5 : nStr === 10 ? XP.s10 : XP.s20; play("stk"); setStkPop("+" + bonus + "🔥"); setTimeout(() => setStkPop(null), 1400); }
     awardXp(xpAmt + bonus);
     if (qi + 1 >= qs.length) {
       const total = sXp + xpAmt + bonus;
@@ -705,24 +709,25 @@ export default function DesktopApp() {
       if (isCS) { setProgress(np); sP(np, CS_PK); } else { setProgress(np); sP(np); }
       setOk(nOk); setSXp(total); setQuizPhase('results');
       if (!practice) recordPerf(Math.round(nOk / qs.length * 100));
+      if (nOk >= qs.length * .9) play("done");
     } else { setOk(nOk); setQi(q => q + 1); resetQ(); setQKey(k => k + 1); }
-  }, [ok, cStreak, qi, qs, sXp, progress, practice, isCS, awardXp, resetQ]);
+  }, [ok, cStreak, qi, qs, sXp, progress, practice, isCS, awardXp, resetQ, play]);
 
   const handleMCQ = useCallback((i) => {
     if (sel !== null) return; setSel(i);
-    if (i === qs[qi]?.c) { setPtcl(true); setTimeout(() => setPtcl(false), 700); }
-    else { setShkIdx(i); setTimeout(() => setShkIdx(null), 500); setHrt(h => Math.max(0, h - 1)); setWrongQs(w => [...w, { ...qs[qi], userAns: qs[qi].opts[i] }]); }
-  }, [sel, qs, qi]);
+    if (i === qs[qi]?.c) { play("ok"); setPtcl(true); setTimeout(() => setPtcl(false), 700); }
+    else { play("no"); setShkIdx(i); setTimeout(() => setShkIdx(null), 500); setHrt(h => Math.max(0, h - 1)); setWrongQs(w => [...w, { ...qs[qi], userAns: qs[qi].opts[i] }]); }
+  }, [sel, qs, qi, play]);
 
   const handleWrite = useCallback(() => {
     if (!inp.trim() || showA) return;
     const r = checkAns(inp, qs[qi]?.en || ""); setRes(r); setTries(t => t + 1);
-    if (r === "ok" || r === "close") { setPtcl(true); setTimeout(() => setPtcl(false), 700); }
-    else { setShkIdx(-1); setTimeout(() => setShkIdx(null), 500); }
-  }, [inp, showA, qs, qi]);
+    if (r === "ok" || r === "close") { play(r === "ok" ? "ok" : "close"); setPtcl(true); setTimeout(() => setPtcl(false), 700); }
+    else { play("no"); setShkIdx(-1); setTimeout(() => setShkIdx(null), 500); }
+  }, [inp, showA, qs, qi, play]);
 
-  const handleHint = useCallback(() => { setHl(h => Math.min(h + 1, 2)); setRes(null); setInp(""); }, []);
-  const handleShowA = useCallback(() => { setShowA(true); setHrt(h => Math.max(0, h - 1)); }, []);
+  const handleHint = useCallback(() => { play("hint"); setHl(h => Math.min(h + 1, 2)); setRes(null); setInp(""); }, [play]);
+  const handleShowA = useCallback(() => { setShowA(true); setHrt(h => Math.max(0, h - 1)); play("no"); }, [play]);
 
   const startQuizFromStudy = useCallback(() => {
     setQi(0); setSel(null); setInp(""); setRes(null); setHl(0); setShowA(false);
@@ -762,7 +767,7 @@ export default function DesktopApp() {
     const fn = (e) => {
       if (e.key === "ArrowRight" || e.key === "d") { if (studyIdx + 1 < qs.length) { setStudyIdx(i => i + 1); setStudyFlipped(false); } else startQuizFromStudy(); }
       else if (e.key === "ArrowLeft" || e.key === "a") { if (studyIdx > 0) { setStudyIdx(i => i - 1); setStudyFlipped(false); } }
-      else if (e.key === " " || e.key === "Enter") { e.preventDefault(); setStudyFlipped(f => !f); }
+      else if (e.key === " " || e.key === "Enter") { e.preventDefault(); play("flip"); setStudyFlipped(f => !f); }
     };
     window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
   }, [quizPhase, studyIdx, qs.length, startQuizFromStudy]);
@@ -1016,7 +1021,7 @@ export default function DesktopApp() {
           <div style={{ height: 4, background: t.s1, borderRadius: 2, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ height: '100%', width: `${((studyIdx + 1) / qs.length * 100).toFixed(1)}%`, background: lc.fill, borderRadius: 2, transition: 'width .3s' }} />
           </div>
-          <div onClick={() => setStudyFlipped(f => !f)} style={{ background: studyFlipped ? lc.bg : t.s2, border: `1px solid ${studyFlipped ? lc.br : t.glassBd}`, borderRadius: 16, padding: 24, cursor: 'pointer', textAlign: 'center', minHeight: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center', transition: 'all .2s', userSelect: 'none', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,.2)' : '0 2px 12px rgba(0,0,0,.04)' }}>
+          <div onClick={() => { play("flip"); setStudyFlipped(f => !f); }} style={{ background: studyFlipped ? lc.bg : t.s2, border: `1px solid ${studyFlipped ? lc.br : t.glassBd}`, borderRadius: 16, padding: 24, cursor: 'pointer', textAlign: 'center', minHeight: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center', transition: 'all .2s', userSelect: 'none', boxShadow: darkMode ? '0 2px 12px rgba(0,0,0,.2)' : '0 2px 12px rgba(0,0,0,.04)' }}>
             {!studyFlipped ? (
               <>
                 <div style={{ fontSize: 11, fontWeight: 600, color: lc.tx, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 12 }}>{q.cat}</div>
