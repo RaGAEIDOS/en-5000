@@ -807,7 +807,7 @@ export default function DesktopApp() {
 
 
   const styles = {
-    root: { display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: "'Cairo', 'Inter', system-ui, sans-serif", background: t.root, color: t.txt, direction: 'rtl', transition: 'background .3s ease' },
+    root: { display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: "'Cairo', 'Inter', system-ui, sans-serif", background: t.root, color: t.txt, direction: 'ltr', transition: 'background .3s ease' },
     sidebar: {
       width: sidebarCollapsed ? 72 : 260,
       minWidth: sidebarCollapsed ? 72 : 260,
@@ -838,7 +838,7 @@ export default function DesktopApp() {
       transition: 'all .2s',
       border: 'none',
       width: sidebarCollapsed ? 'calc(100% - 16px)' : 'calc(100% - 20px)',
-      textAlign: 'right',
+      textAlign: 'left',
       justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
       position: 'relative',
       fontFamily: 'inherit',

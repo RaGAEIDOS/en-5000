@@ -1266,7 +1266,7 @@ export default function App(){
       {leaderboardLoading&&<div style={{textAlign:"center",padding:40,color:T.m}}>⏳ جاري التحميل...</div>}
 
       {/* Leaderboard list */}
-      {!leaderboardLoading&&leaderboard.length===0&&<div style={{textAlign:"sharp",padding:40,color:T.m}}>لا يوجد مستخدمين بعد</div>}
+      {!leaderboardLoading&&leaderboard.length===0&&<div style={{textAlign:"center",padding:40,color:T.m}}>لا يوجد مستخدمين بعد</div>}
 
       {!leaderboardLoading&&leaderboard.map((u,i)=>{
         const isMe=u.id===user?.id;

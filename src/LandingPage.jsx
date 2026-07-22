@@ -41,7 +41,7 @@ S.page = (dark, c) => ({
   minHeight: '100vh',
   overflowX: 'hidden',
   transition: 'background 0.4s, color 0.4s',
-  direction: 'rtl',
+  direction: 'ltr',
 });
 
 S.nav = (c) => ({
@@ -534,7 +534,7 @@ S.faqQ = (c) => ({
   border: 'none',
   width: '100%',
   fontFamily: "'Cairo', sans-serif",
-  textAlign: 'right',
+  textAlign: 'left',
 });
 
 S.faqA = (c) => ({

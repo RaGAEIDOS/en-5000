@@ -129,7 +129,7 @@ export default function ChatWidget({ token, userId, dark, openChat: chatProp }) 
           position: "fixed", bottom: 86, right: 20, zIndex: 9999,
           width: 280, maxHeight: 400, background: t.card, borderRadius: 16,
           border: `1px solid ${t.bd}`, boxShadow: "0 8px 32px rgba(0,0,0,.18)",
-          overflow: "hidden", animation: "slideUp .25s ease"
+          overflow: "hidden", animation: "slideUp .25s ease", direction: "ltr"
         }}>
           <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${t.bd}` }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: t.txt }}>Messages</div>
@@ -150,7 +150,7 @@ export default function ChatWidget({ token, userId, dark, openChat: chatProp }) 
           background: t.card, borderRadius: 16,
           border: `1px solid ${t.bd}`,
           boxShadow: "0 8px 32px rgba(0,0,0,.22)",
-          display: "flex", flexDirection: "column", overflow: "hidden",
+          display: "flex", flexDirection: "column", overflow: "hidden", direction: "ltr",
           animation: "slideUp .25s ease", transition: "height .2s"
         }}>
           {/* Header */}
