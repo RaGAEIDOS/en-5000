@@ -772,6 +772,12 @@ export default function DesktopApp() {
     window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn);
   }, [quizPhase, studyIdx, qs.length, startQuizFromStudy]);
 
+  // Auto-speak English when study card flips
+  useEffect(() => { if (quizPhase === 'study' && studyFlipped && qs[studyIdx]?.en) speakEn(qs[studyIdx].en); }, [quizPhase, studyFlipped, studyIdx, qs]);
+
+  // Auto-speak when new quiz question appears
+  useEffect(() => { if (quizPhase === 'quiz' && qs[qi]?.en) speakEn(qs[qi].en); }, [quizPhase, qKey, qs, qi]);
+
   useEffect(() => {
     if (quizPhase !== 'quiz') return;
     const q = qs[qi]; if (!q || q.qt !== "p") return;
@@ -1032,7 +1038,10 @@ export default function DesktopApp() {
             ) : (
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: lc.tx, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 10 }}>{q.cat} ✓</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: t.txt, fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>{q.en}</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: t.txt, fontFamily: "'Inter', sans-serif", lineHeight: 1.6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  <span>{q.en}</span>
+                  <button onClick={(e) => { e.stopPropagation(); speakEn(q.en); }} style={{ background: lc.fill, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 16, cursor: 'pointer', flexShrink: 0 }} title="Listen">🔊</button>
+                </div>
                 {q.pron && <div style={{ marginTop: 12, padding: '8px 16px', borderRadius: 8, background: lc.bg, border: `1px solid ${lc.br}` }}><div style={{ fontSize: 10, fontWeight: 600, color: lc.tx, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>النطق بالعربي</div><div style={{ direction: 'rtl', fontSize: 18, fontWeight: 600, color: t.txt, fontFamily: "'Cairo', sans-serif", lineHeight: 1.6 }}>{q.pron}</div></div>}
                 <p style={{ fontSize: 11, color: t.m, marginTop: 12, opacity: .7 }}>👆 اضغط للرجوع</p>
               </div>
@@ -1096,7 +1105,10 @@ export default function DesktopApp() {
             <span style={{ fontSize: 10, color: t.m }}>{q.cat}</span>
           </div>
           <div key={qKey} style={{ background: lc.bg, border: `1px solid ${lc.br}`, borderRadius: 16, padding: '20px 24px', marginBottom: 16, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ direction: 'rtl', fontSize: 24, fontWeight: 700, lineHeight: 1.7, color: t.txt, fontFamily: "'Cairo', sans-serif" }}>{q.ar}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <div style={{ direction: 'rtl', fontSize: 24, fontWeight: 700, lineHeight: 1.7, color: t.txt, fontFamily: "'Cairo', sans-serif" }}>{q.ar}</div>
+              <button onClick={() => speakEn(q.en)} style={{ background: lc.fill, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 16, cursor: 'pointer', flexShrink: 0 }} title="Listen">🔊</button>
+            </div>
             <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: t.s1, border: `1px solid ${t.bd}` }}><div style={{ fontSize: 10, fontWeight: 600, color: t.m, letterSpacing: '.05em', textTransform: 'uppercase', marginBottom: 4 }}>اضغط على الكلمة لترجمتها</div><WordTrans text={q.en} T={t} lv={lc} /></div>
             <p style={{ fontSize: 12, color: t.m, marginTop: 4 }}>{isMCQ ? "اختار الترجمة الصح" : isPuzzle ? "رتّب الكلمات عشان تكوّن الجملة" : "اكتب الترجمة الصح بالإنجليزي"}</p>
             {ptcl && [0, 1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} style={{ position: 'absolute', top: '50%', left: `${4 + i * 12}%`, width: 10, height: 10, borderRadius: '50%', background: ['#22C55E', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#EC4899'][i], opacity: 0, animation: 'fadeIn .3s ease', pointerEvents: 'none' }} />)}
